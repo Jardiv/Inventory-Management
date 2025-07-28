@@ -4,22 +4,21 @@ import Modal from '../../components/Modal.astro';
 import Button from '../../components/Button.astro';
 ---
 
-<!-- STOCK TRANSACTION DASHBOARD -->
 <Layout>
-	<div class="flex flex-col gap-1 w-full bg-primary p-4 rounded">
-		<a  href="/stockTransaction/Logs/">
-			<Button class="text-btn-primary py-2 w-[20%] hover:text-btn-primary">See Transaction Logs</Button>
-		</a>
+
+	<div class="flex gap-5 w-full bg-primary p-4 rounded">
+		<label>from <input class="border-2 border-border_color px-2 py-1" type="date" name="" id=""></label>
+		<label>to <input class="border-2 border-border_color px-2 py-1" type="date" name="" id=""></label>
 	</div>
 
 	<div class="flex flex-col gap-1 w-full bg-primary p-4 mt-4">
 		<div class="w-full flex justify-between">
 			<h1 class="text-xl font-bold">Stock In Transactions</h1>
-			<a href="/stockTransaction/StockInTransactions/">
-				<Button class="text-btn-primary border-none w-fit hover:text-btn-primary">See All</Button>
+			<a href="/stockTransaction/Dashboard/">
+				<Button class="text-btn-primary border-none w-fit hover:text-btn-primary">Back</Button>
 			</a>
 		</div>
-		<div class="p-2">
+		<div class="p-2 flex flex-col gap-4">
 			<table class="w-full text-left">
 				<thead>
 					<tr>
@@ -52,30 +51,13 @@ import Button from '../../components/Button.astro';
 						<td class="table-data text-green">Pending</td>
 						<td class="table-data text-center"><Button class="table-view-btn">View</Button></td>
 					</tr>
-				</tbody>
-			</table>
-		</div>
-	</div>
-
-	<div class="flex flex-col gap-1 w-full bg-primary p-4 mt-4">
-		<div class="w-full flex justify-between">
-			<h1 class="text-xl font-bold">Stock Out Transactions</h1>
-			<a href="/stockTransaction/StockOutTransactions/">
-				<Button class="text-btn-primary border-none w-fit hover:text-btn-primary">See All</Button>
-			</a>
-		</div>
-		<div class="p-2">
-			<table class="w-full text-left">
-				<thead>
-					<tr>
-						<th class="table-header">Reference no</th>
-						<th class="table-header">Date</th>
-						<th class="table-header">Supplier</th>
-						<th class="table-header">Status</th>
-						<th class="table-header text-center">Action</th>
+					<tr class="table-row">
+						<td class="table-data">4353923345</td>
+						<td class="table-data">20/12/2025</td>
+						<td class="table-data">Ecco Food Corp</td>
+						<td class="table-data text-green">Pending</td>
+						<td class="table-data text-center"><Button class="table-view-btn">View</Button></td>
 					</tr>
-				</thead>
-				<tbody>
 					<tr class="table-row">
 						<td class="table-data">4353923345</td>
 						<td class="table-data">20/12/2025</td>
@@ -99,6 +81,15 @@ import Button from '../../components/Button.astro';
 					</tr>
 				</tbody>
 			</table>
+			<div class="flex justify-between items-center flex-shrink-0">
+				<button class="bg-btn-primary hover:bg-gray-600 text-textColor-secondary px-4 py-2 rounded font-medium transition-colors text-sm">
+					Previous
+				</button>
+				<span class="text-textColor-primary text-sm">Page 1 of 1</span>
+				<button class="bg-btn-primary hover:bg-gray-600 text-textColor-secondary px-4 py-2 rounded font-medium transition-colors text-sm">
+					Next
+				</button>
+			</div>
 		</div>
 	</div>
 
