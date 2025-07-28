@@ -106,10 +106,15 @@
 		@apply opacity-100;
 	}
 
-	
-	/* Dito nyo lagay yung class na madaming element na gumagamit */
+	.table-row {
+		@apply bg-primary text-textColor-primary border-t-2 border-border_color;
+	}
 
-	.table-row-sample {
-		@apply bg-primary text-textColor-primary border border-t-2 border-textColor-secondary;
+	.table-data {
+		@apply py-2;
+	}
+
+	.table-view-btn {
+		@apply text-center px-2 py-1 bg-green hover:text-btn-primary;
 	}
 }
