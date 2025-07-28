@@ -3,7 +3,6 @@
 const { class: className } = Astro.props;
 ---
 
-
-<table class={`w-full ${className ?? ''}`}>
+<thead class={`bg-primary text-textColor-primary ${className ?? ''}`}>
 	<slot />
-</table>
+</thead>
