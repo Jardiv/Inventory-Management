@@ -49,6 +49,9 @@
 	--color-border_color: var(--color-border_color);
 	--color-textColor-primary: var(--color-textColor-primary);
 	--color-textColor-secondary: var(--color-textColor-secondary);
+	--color-orange: var(--color-orange);
+	--color-red: var(--color-red);
+	--color-green: var(--color-green);
 
 	--color-check: hsl(from var(--color-primary) h calc(s + 20) calc(l + 40));
 	--font-family-sans: "Poppins", sans-serif;
