@@ -1,22 +1,53 @@
+---
+import Sidebar from '../components/Sidebar.astro';
+import Header from '../components/Header.astro';
+import Main from '../components/Main.astro';
+
+import "/src/styles/global.css"; 
+---
+
 <!doctype html>
-<html lang="en">
+<html lang="en" class="">
 	<head>
 		<meta charset="UTF-8" />
 		<meta name="viewport" content="width=device-width" />
 		<link rel="icon" type="image/svg+xml" href="/favicon.svg" />
 		<meta name="generator" content={Astro.generator} />
-		<title>Astro Basics</title>
+		<!-- <link rel="stylesheet" href="../src/styles/global.css"> -->
+		<title>Inventory Management Module</title>
 	</head>
-	<body>
-		<slot />
+	
+	<body class="h-[100dvh] bg-background flex text-textColor-primary overflow-hidden">
+		<Sidebar />
+		<div class="flex flex-col w-full">
+			<Header />
+			<Main />
+		</div>
+		<!-- <slot /> -->
+		 
+		<div class="neon bg-[#BF00FF] dark:bg-[#8A00C4] rounded-full w-[500px] h-[500px] absolute blur-[600px] bottom-[-250px] right-[-250px]"></div>
 	</body>
+
+	<script>
+		function toggleMenu() {
+			const burger_menu = document.querySelector('.burger-menu');
+			const sidebar = document.querySelector('aside');
+			console.log("TOGGLED");
+			
+
+			sidebar.classList.toggle('hidden');
+			burger_menu.classList.contains("active") ? burger_menu.classList.remove("active") : burger_menu.classList.add("active");
+		}
+
+		function changeActive(e) {
+			const nav_items = document.querySelectorAll('.nav_item');
+			nav_items.forEach(item => {
+				item.classList.remove('active');
+			});
+			e.classList.add('active');
+		}
+
+		
+	</script>
 </html>
 
-<style>
-	html,
-	body {
-		margin: 0;
-		width: 100%;
-		height: 100%;
-	}
-</style>

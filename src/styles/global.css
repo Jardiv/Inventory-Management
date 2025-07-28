@@ -1,1 +1,102 @@
 @import "tailwindcss";
+
+@keyframes themeRotate {
+	0% {
+		transform: rotate(0deg);
+	}
+	100% {
+		transform: rotate(360deg);
+	}
+}
+
+:root {
+	--color-background: #dfdfdf;
+	--color-primary: #fff;
+	--color-secondary: #10b981;
+	--color-btn-primary: #8100c4;
+	--color-border_color: #9e9e9e;
+	--color-textColor-primary: #000000;
+	--color-textColor-secondary: #ffffff;
+
+	--color-check: red; 
+	/* hsl(from var(--color-primary) h calc(s + 200) calc(l + 40)); */
+
+	--filter-logo: invert(100%);
+}
+
+.dark {
+	--color-background: #212121;
+	--color-primary: #121212;
+	--color-secondary: #10b981;
+	--color-btn-primary: #8100c4;
+	--color-border_color: #e5e7eb;
+	--color-textColor-primary: #f9fafb;
+	--color-textColor-secondary: #f9fafb;
+
+	--color-check: hsl(from var(--color-primary) h calc(s + 20) calc(l + 40));
+
+	--filter-logo: invert(0%);
+}
+
+@theme {
+	--color-background: var(--color-background);
+	--color-primary: var(--color-primary);
+	--color-secondary: var(--color-secondary);
+	--color-btn-primary: var(--color-btn-primary);
+	--color-border_color: var(--color-border_color);
+	--color-textColor-primary: var(--color-textColor-primary);
+	--color-textColor-secondary: var(--color-textColor-secondary);
+
+	--color-check: hsl(from var(--color-primary) h calc(s + 20) calc(l + 40));
+	--font-family-sans: "Poppins", sans-serif;
+
+	--filter-logo: var(--filter-logo);
+	--height-header: 4.5rem;
+}
+
+@layer components {
+	* {
+		@apply transition-colors duration-1000 ease-in-out;
+	}
+	.nav_item {
+		@apply text-textColor-primary hover:text-textColor-secondary sm:text-sm lg:text-base py-2.5 px-4 hover:bg-btn-primary rounded text-left cursor-pointer flex items-center gap-5;
+	}
+	.nav_item.active {
+		@apply bg-btn-primary text-textColor-secondary;
+	}
+	.nav_item_icon {
+		@apply w-[12%];
+	}
+
+	.icon {
+		@apply sm:w-6 sm:h-6 w-8 h-8;
+	}
+	.bar {
+		@apply bg-textColor-primary w-10 h-0.5 mx-[6px] transform transition duration-400 ease-in-out;
+	}
+	.burger-menu.active .bar1 {
+		@apply rotate-45 translate-y-3;
+	}
+	.burger-menu.active .bar2 {
+		@apply opacity-0;
+	}
+	.burger-menu.active .bar3 {
+		@apply -rotate-45 -translate-y-2;
+	}
+
+	.sidebar.active {
+		@apply left-0;
+	}
+
+	.btn-theme.active {
+		@apply animate-[themeRotate_1000ms_ease-in-out];
+	}
+
+	.btn-theme .icon {
+		@apply transition-all duration-700 ease-in-out opacity-0 absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2;
+	}
+
+	.btn-theme .icon.active {
+		@apply opacity-100;
+	}
+}
