@@ -4,5 +4,88 @@ import Layout from '../../layouts/Layout.astro';
 
 <!-- REPORT DASHBOARD -->
 <Layout>
-	Report Dashboard
+  <!-- Main Content -->
+  <main class="flex-1 bg-[#1e1e1e]">
+
+    <!-- Inventory Stock Status -->
+    <div class="p-6 ">
+      <section class="bg-[#121212] rounded p-4  fade-in-up">
+        <div class="flex justify-between items-center mb-4">
+          <h2 class="text-lg font-semibold">Inventory Stock Status</h2>
+          <a href="inventory.html" class="text-[#8A00C4] text-sm hover:scale-105 transition-transform">See All</a>
+        </div>
+        <div class="grid grid-cols-6 text-sm text-gray-400 border-b border-gray-700 pb-2">
+          <div>Item</div><div>Current</div><div>Min</div><div>Max</div><div>Auto-Reorder</div><div>Status</div>
+        </div>
+        <div class="grid grid-cols-6 py-2 border-b border-gray-700">
+          <div>Product 1</div><div>50</div><div>20</div><div>100</div><div>Enabled</div><div class="text-green-400">OK</div>
+        </div>
+        <div class="grid grid-cols-6 py-2 border-b border-gray-700">
+          <div>Product 2</div><div>15</div><div>20</div><div>100</div><div>Disabled</div><div class="text-yellow-400">LOW</div>
+        </div>
+        <div class="grid grid-cols-6 py-2 border-b border-gray-700">
+          <div>Product 3</div><div>0</div><div>10</div><div>200</div><div>Disabled</div><div class="text-red-500">OUT OF STOCK</div>
+        </div>
+        <div class="grid grid-cols-6 py-2">
+          <div>Product 4</div><div>0</div><div>10</div><div>200</div><div>Disabled</div><div class="text-red-500">OUT OF STOCK</div>
+        </div>
+      </section>
+    </div>
+
+    <!-- Warehouse + Low Quantity -->
+    <div class="grid grid-cols-3 p-6 gap-6">
+
+      <!-- Warehouse -->
+      <section class="bg-[#121212] rounded p-4 col-span-2 fade-in-up">
+        <div class="flex justify-between items-center mb-4">
+          <h2 class="text-lg font-semibold">Warehouse Capacity Status</h2>
+          <a href="warehouse.html" class="text-[#8A00C4] text-sm hover:scale-105 transition-transform">See All</a>
+        </div>
+        <div class="grid grid-cols-6 text-sm text-gray-400 border-b border-gray-700 pb-2">
+          <div>Warehouse</div><div>Used</div><div>Max</div><div>Available</div><div>Utilization</div><div>Status</div>
+        </div>
+        <div class="grid grid-cols-6 py-2 border-b border-gray-700">
+          <div>Main Warehouse</div><div>1,243</div><div>5,000</div><div>3,757</div><div>24.86%</div><div class="text-green-400">Normal</div>
+        </div>
+        <div class="grid grid-cols-6 py-2 border-b border-gray-700">
+          <div>Warehouse A</div><div>2,900</div><div>3,000</div><div>100</div><div>96.66%</div><div class="text-yellow-400">Almost Full</div>
+        </div>
+        <div class="grid grid-cols-6 py-2 border-b border-gray-700">
+          <div>Warehouse B</div><div>2,000</div><div>2,000</div><div>0</div><div>100%</div><div class="text-red-500">Full</div>
+        </div>
+        <div class="grid grid-cols-6 py-2">
+          <div>Warehouse C</div><div>2,000</div><div>2,000</div><div>0</div><div>100%</div><div class="text-red-500">Full</div>
+        </div>
+      </section>
+
+      <!-- Low Quantity Stock -->
+      <section class="bg-[#121212] rounded p-4 fade-in-up">
+        <div class="flex justify-between items-center mb-4">
+          <h2 class="text-lg font-semibold">Low Quantity Stock</h2>
+          <a href="LowStock.html" class="text-[#8A00C4] text-sm hover:scale-105 transition-transform">See All</a>
+        </div>
+        <ul class="space-y-3 text-sm">
+          <li class="hover:scale-[1.01] transition">
+            <strong>Product Item 7</strong><br/>
+            <span class="text-gray-400">Remaining Quantity: 10 Packet</span> 
+            <span class="text-yellow-400 float-right">Low</span>
+          </li>
+          <li class="hover:scale-[1.01] transition">
+            <strong>Product Item 2</strong><br/>
+            <span class="text-gray-400">Remaining Quantity: 15 Packet</span> 
+            <span class="text-yellow-400 float-right">Low</span>
+          </li>
+          <li class="hover:scale-[1.01] transition">
+            <strong>Product Item 3</strong><br/>
+            <span class="text-gray-400">Remaining Quantity: 0 Packet</span> 
+            <span class="text-red-500 float-right">N/A</span>
+          </li>
+          <li class="hover:scale-[1.01] transition">
+            <strong>Product Item 4</strong><br/>
+            <span class="text-gray-400">Remaining Quantity: 0 Packet</span> 
+            <span class="text-red-500 float-right">N/A</span>
+          </li>
+        </ul>
+        <p class="text-sm text-gray-500 mt-4">+15 more items</p>
+      </section>
 </Layout>
