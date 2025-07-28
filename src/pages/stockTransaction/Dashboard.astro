@@ -10,35 +10,30 @@ import Button from '../../components/Button.astro';
 
 <!-- STOCK TRANSACTION DASHBOARD -->
 <Layout>
-	Stock Transaction
+	<div class="flex flex-col gap-1 w-full bg-primary p-4 rounded">
+		<Button class="text-btn-primary w-[20%]">See Transaction Logs</Button>
+	</div>
 
-	<!-- class = yung sa table | containerClass = yung sa container -->
-	<Table class="" containerClass="w-full">
-		<Thead class="">
-			<Cell>test</Cell>
-			<Cell>test</Cell>
-			<Cell>test</Cell>
-		</Thead>
-		<TableRow class="">
-			<Cell>test</Cell>
-			<Cell>test</Cell>
-			<Cell>test</Cell>
-		</TableRow>
-		<TableRow class="">
-			<Cell>test</Cell>
-			<Cell>test</Cell>
-			<Cell>test</Cell>
-		</TableRow>
-		<TableRow class="">
-			<Cell>test</Cell>
-			<Cell>test</Cell>
-			<Cell>test</Cell>
-		</TableRow>
-	</Table>
-
-	
-	<Button class="bg-red-500">TEST BUTTON</Button>
-	<!-- <Modal class="">
-		TEST MODAL
-	</Modal> -->
+	<div class="flex flex-col gap-1 w-full bg-primary p-4 mt-4">
+		<div class="w-full">
+			<h1 class="text-xl font-bold">Stock In Transactions</h1>
+			<Button href="#" class="text-btn-primary border-none w-fit">See All</Button>
+		</div>
+		<Table class="w-full" containerClass="w-full">
+			<Thead class="w-full">
+				<Cell>Reference No</Cell>
+				<Cell>Date</Cell>
+				<Cell>Supplier</Cell>
+				<Cell>Status</Cell>
+				<Cell>Action</Cell>
+			</Thead>
+			<TableRow>
+				<Cell>096776534</Cell>
+				<Cell>23/07/2023</Cell>
+				<Cell>Eco Foods Corp</Cell>
+				<Cell>Pending</Cell>
+				<Cell>Action</Cell>
+			</TableRow>
+		</Table>
+	</div>
 </Layout>

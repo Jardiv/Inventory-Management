@@ -13,6 +13,7 @@ import "/src/styles/global.css";
 		<link rel="icon" type="image/svg+xml" href="/favicon.svg" />
 		<meta name="generator" content={Astro.generator} />
 		<!-- <link rel="stylesheet" href="../src/styles/global.css"> -->
+		 <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
 		<title>Inventory Management Module</title>
 	</head>
 	
@@ -24,11 +25,11 @@ import "/src/styles/global.css";
 			<main class="pl-4 pr-4 pt-4 overflow-auto w-full" style="height: calc(100dvh - var(--height-header));">
 				<slot />
 			</main>
-			
+
 		</div>
 		<!-- <slot /> -->
 		 
-		<div class="neon bg-[#BF00FF] dark:bg-[#8A00C4] rounded-full w-[500px] h-[500px] absolute blur-[600px] bottom-[-250px] right-[-250px]"></div>
+		<div class="neon bg-[#BF00FF] dark:bg-[#8A00C4] rounded-full w-[500px] h-[500px] absolute blur-[600px] bottom-[-250px] right-[-250px] z-[-1]"></div>
 	</body>
 
 	<script>
@@ -50,7 +51,6 @@ import "/src/styles/global.css";
 			e.classList.add('active');
 		}
 
-		
 	</script>
 </html>
 

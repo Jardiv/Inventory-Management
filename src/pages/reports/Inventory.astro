@@ -1,0 +1,95 @@
+---
+import Layout from '../../layouts/Layout.astro';
+
+// Mock inventory data
+const inventoryData = [
+  { id: 1, code: 'Product 1', name: 'Product 1', current: 50, min: 20, max: 100, status: 'OK' },
+  { id: 2, code: 'Product 2', name: 'Product 2', current: 15, min: 20, max: 100, status: 'LOW' },
+  { id: 3, code: 'Product 3', name: 'Product 3', current: 0, min: 10, max: 200, status: 'OUT OF STOCK' },
+  { id: 4, code: 'Product 4', name: 'Product 4', current: 0, min: 10, max: 200, status: 'OUT OF STOCK' },
+  { id: 5, code: 'Product 5', name: 'Product 5', current: 15, min: 20, max: 100, status: 'LOW' },
+  { id: 6, code: 'Product 6', name: 'Product 6', current: 15, min: 20, max: 100, status: 'LOW' },
+  { id: 7, code: 'Product 7', name: 'Product 7', current: 15, min: 20, max: 100, status: 'LOW' },
+  { id: 8, code: 'Product 8', name: 'Product 8', current: 50, min: 20, max: 100, status: 'OK' },
+  { id: 9, code: 'Product 9', name: 'Product 9', current: 50, min: 20, max: 100, status: 'OK' },
+  { id: 10, code: 'Product 10', name: 'Product 10', current: 50, min: 20, max: 100, status: 'OK' },
+];
+
+// Function to get status styling
+function getStatusStyle(status) {
+  switch (status) {
+    case 'OK':
+      return 'text-green-400 bg-green-400/10';
+    case 'LOW':
+      return 'text-yellow-400 bg-yellow-400/10';
+    case 'OUT OF STOCK':
+      return 'text-red-400 bg-red-400/10';
+    default:
+      return 'text-gray-400 bg-gray-400/10';
+  }
+}
+---
+
+<!-- REPORT DASHBOARD -->
+<Layout>
+
+        <!-- Body -->
+        <div class="flex-1 overflow-hidden bg-primary rounded-lg p-6 mb-6">
+            <div class="flex justify-between items-center">
+                <h2 class="text-textColor-primary text-xl font-semibold">Inventory Stock</h2>
+            </div>
+            <div class="p-6 h-full overflow-y-auto">
+                <div>
+                    <table class="w-full text-sm">
+                        <thead>
+                            <tr class="text-textColor-primary border-b border-gray-700">
+                                <th class="text-left py-3 px-4 font-medium w-[15%]">Item Code</th>
+                                <th class="text-left py-3 px-4 font-medium w-[25%]">Item Name</th>
+                                <th class="text-left py-3 px-4 font-medium w-[15%]">Current</th>
+                                <th class="text-left py-3 px-4 font-medium w-[15%]">Min</th>
+                                <th class="text-left py-3 px-4 font-medium w-[15%]">Max</th>
+                                <th class="text-left py-3 px-4 font-medium w-[15%]">Status</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {inventoryData.map((item, index) => (
+                                <tr class={`border-b border-gray-800 hover:bg-gray-800/30 ${index === inventoryData.length - 1 ? 'border-b-0' : ''}`}>
+                                    <td class="py-4 px-4 text-textColor-primary">{item.code}</td>
+                                    <td class="py-4 px-4 text-textColor-primary">{item.name}</td>
+                                    <td class="py-4 px-4 text-textColor-primary">{item.current}</td>
+                                    <td class="py-4 px-4 text-textColor-primary">{item.min}</td>
+                                    <td class="py-4 px-4 text-textColor-primary">{item.max}</td>
+                                    <td class="py-4 px-4">
+                                        <span class={`text-xs font-semibold px-2 py-1 rounded ${getStatusStyle(item.status)}`}>
+                                            {item.status}
+                                        </span>
+                                    </td>
+                                </tr>
+                            ))}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        <div class="flex justify-between items-center flex-shrink-0">
+            <button class="bg-btn-primary hover:bg-gray-600 text-textColor-secondary px-4 py-2 rounded font-medium transition-colors text-sm">
+                Previous
+            </button>
+            <span class="text-textColor-primary text-sm">Page 1 of 10</span>
+            <button class="bg-btn-primary hover:bg-gray-600 text-textColor-secondary px-4 py-2 rounded font-medium transition-colors text-sm">
+                Next
+            </button>
+        </div>
+    </div>
+
+    <!-- Table -->
+
+
+            
+    <script>
+        function closeModal() {
+            // In a real application, this would close the modal
+            console.log('Modal closed');
+        }
+    </script>
+</body>
+</Layout>
