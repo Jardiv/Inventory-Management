@@ -1,0 +1,81 @@
+---
+import Layout from '../../layouts/Layout.astro';
+---
+
+<Layout>
+  <div class="w-full max-w-[1293px] bg-primary rounded-md mx-auto p-6 text-textColor-primary font-poppins">
+    <!-- Title -->
+    <div class="flex justify-between items-center mb-6">
+      <h2 class="text-2xl font-semibold">Shipments History</h2>
+      <!-- Receive Items Button -->
+      <button class="flex items-center gap-2 px-4 py-2 border border-border_color rounded hover:bg-btn-primary hover:text-textColor-secondary transition">
+        <span>Receive Items</span>
+        <div class="w-6 h-6 bg-textColor-primary rounded"></div> <!-- Replace with icon -->
+      </button>
+    </div>
+
+    <!-- Table -->
+    <div class="overflow-x-auto">
+      <table class="w-full text-left border-collapse">
+        <thead class="border-b border-border_color text-lg">
+          <tr>
+            <th class="py-3 px-4 text-center">Item Code</th>
+            <th class="py-3 px-4 text-center">Item Name</th>
+            <th class="py-3 px-4 text-center">Quantity</th>
+            <th class="py-3 px-4 text-center">Shipment ID</th>
+            <th class="py-3 px-4 text-center">Status</th>
+          </tr>
+        </thead>
+        <tbody class="text-base divide-y divide-border_color">
+          <!-- Row 1 -->
+          <tr>
+            <td class="py-3 px-4 text-center">A001</td>
+            <td class="py-3 px-4 text-center">Sardines</td>
+            <td class="py-3 px-4 text-center">100</td>
+            <td class="py-3 px-4 text-center">S1P00</td>
+            <td class="py-3 px-4 text-yellow-400 font-semibold text-center">DELIVERED</td>
+          </tr>
+          <!-- Row 2 -->
+          <tr>
+            <td class="py-3 px-4 text-center">A002</td>
+            <td class="py-3 px-4 text-center">Keyboard</td>
+            <td class="py-3 px-4 text-center">40</td>
+            <td class="py-3 px-4 text-center">S1P01</td>
+            <td class="py-3 px-4 text-yellow-400 font-semibold text-center">DELIVERED</td>
+          </tr>
+          <!-- Row 3 -->
+          <tr>
+            <td class="py-3 px-4 text-center">A003</td>
+            <td class="py-3 px-4 text-center">Cap</td>
+            <td class="py-3 px-4 text-center">20</td>
+            <td class="py-3 px-4 text-center">S1P02</td>
+            <td class="py-3 px-4 text-yellow-400 font-semibold text-center">DELIVERED</td>
+          </tr>
+          <!-- Row 4 -->
+          <tr>
+            <td class="py-3 px-4 text-center">A001</td>
+            <td class="py-3 px-4 text-center">Sardines</td>
+            <td class="py-3 px-4 text-center">100</td>
+            <td class="py-3 px-4 text-center">S1P00</td>
+            <td class="py-3 px-4 text-red-500 font-semibold text-center">PENDING</td>
+          </tr>
+          <!-- Row 5 -->
+          <tr>
+            <td class="py-3 px-4 text-center">A001</td>
+            <td class="py-3 px-4 text-center">Sardines</td>
+            <td class="py-3 px-4 text-center">100</td>
+            <td class="py-3 px-4 text-center">S1P00</td>
+            <td class="py-3 px-4 text-green-500 font-semibold text-center">RECEIVED</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Pagination -->
+    <div class="flex justify-between items-center mt-6">
+      <a href="/tracking/shipment-history"><button class="px-6 py-2 border border-border_color rounded hover:bg-btn-primary hover:text-textColor-secondary">Prev</button></a>
+      <span>Page 2 of 3</span>
+      <button class="px-6 py-2 border border-border_color rounded hover:bg-btn-primary hover:text-textColor-secondary">Next</button>
+    </div>
+  </div>
+</Layout>
