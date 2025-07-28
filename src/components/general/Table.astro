@@ -1,0 +1,9 @@
+---
+// Accept all incoming props
+const { class: className } = Astro.props;
+---
+
+
+<table class={`w-full ${className ?? ''}`}>
+	<slot />
+</table>
