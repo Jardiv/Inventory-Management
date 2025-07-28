@@ -142,51 +142,51 @@ function getStatusStyle(status: string) {
     </div>
 
     <!-- Purchase Order Detail Modal -->
-    <div id="editModal" class="fixed inset-0  bg-opacity-50 items-center justify-center z-50 hidden">
-        <div class="bg-gray-800 rounded-lg p-6 w-96 relative">
-            <div class="flex justify-between items-center mb-4">
-                <h2 class="text-white text-xl font-semibold">Purchase Order Detail</h2>
-                <button id="closeModalBtn" class="text-white hover:text-gray-300">
+    <div id="editModal" class="fixed inset-0 bg-black/60 items-center justify-center z-50 hidden">
+        <div class="bg-primary rounded-lg p-6 w-96 relative">
+            <div class="flex justify-between items-center">
+                <h2 class="text-textColor-primary text-xl font-semibold">Purchase Order Detail</h2>
+                <button id="closeModalBtn" class="text-textColor-primary hover:text-gray-300">
                     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6">
                         <path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12" />
                     </svg>
                 </button>
             </div>
             
-            <p class="text-gray-400 text-sm mb-6">Review and confirm reorder details for this item.</p>
+            <p class="text-textColor-tertiary text-sm mb-6">Review and confirm reorder details for this item.</p>
             
             <div class="space-y-4">
                 <div class="flex items-center gap-4">
-                    <label class="text-white font-medium w-32 text-right">Item Code:</label>
-                    <input id="modalItemCode" type="text" class="flex-1 px-3 py-2 bg-gray-700 text-gray-400 rounded border border-gray-600" disabled>
+                    <label class="text-textColor-tertiary font-medium w-32 text-right">Item Code:</label>
+                    <input id="modalItemCode" type="text" class="flex-1 px-3 py-2 bg-background text-textColor-tertiary  rounded border border-textColor-tertiary " disabled>
                 </div>
                 
                 <div class="flex items-center gap-4">
-                    <label class="text-white font-medium w-32 text-right">Item Name:</label>
-                    <input id="modalItemName" type="text" class="flex-1 px-3 py-2 bg-gray-700 text-gray-400 rounded border border-gray-600" disabled>
+                    <label class="text-textColor-primaryfont-medium w-32 text-right">Item Name:</label>
+                    <input id="modalItemName" type="text" class="flex-1 px-3 py-2 bg-background text-textColor-tertiary  rounded border border-textColor-tertiary " disabled>
                 </div>
                 
                 <div class="flex items-center gap-4">
-                    <label class="text-white font-medium w-32 text-right">Supplier:</label>
-                    <input type="text" value="ABC Suppliers Inc." class="flex-1 px-3 py-2 bg-gray-700 text-gray-400 rounded border border-gray-600" disabled>
+                    <label class="text-textColor-primaryfont-medium w-32 text-right">Supplier:</label>
+                    <input type="text" value="ABC Suppliers Inc." class="flex-1 px-3 py-2 bg-background text-textColor-tertiary  rounded border border-textColor-tertiary " disabled>
                 </div>
                 
                 <div class="flex items-center gap-4">
-                    <label class="text-white font-medium w-32 text-right">Current Quantity:</label>
-                    <input id="modalCurrentQty" type="text" class="flex-1 px-3 py-2 bg-gray-700 text-gray-400 rounded border border-gray-600" disabled>
+                    <label class="text-textColor-primaryfont-medium w-32 text-right">Current Quantity:</label>
+                    <input id="modalCurrentQty" type="text" class="flex-1 px-3 py-2 bg-background text-textColor-tertiary  rounded border border-textColor-tertiary " disabled>
                 </div>
                 
                 <div class="flex items-center gap-4">
-                    <label class="text-white font-medium w-32 text-right">Order Quantity:</label>
-                    <input id="modalOrderQty" type="number" class="flex-1 px-3 py-2 bg-gray-700 text-white rounded border border-gray-600 focus:border-blue-500 focus:outline-none">
+                    <label class="text-textColor-primaryfont-medium w-32 text-right">Order Quantity:</label>
+                    <input id="modalOrderQty" type="number" class="flex-1 px-3 py-2 bg-background text-textColor-primaryrounded border border-textColor-tertiary  focus:border-blue-500 focus:outline-none">
                 </div>
             </div>
             
             <div class="flex gap-3 mt-6">
-                <button id="saveOrderBtn" class="flex-1 bg-gray-700 hover:bg-gray-600 text-white px-4 py-2 rounded font-medium transition-colors">
-                    Save
+                <button id="cancelOrderBtn" class="flex-1 bg-background hover:bg-textColor-tertiary  text-textColor-primary px-4 py-2 rounded font-medium transition-colors">
+                    Cancel
                 </button>
-                <button id="confirmOrderBtn" class="flex-1 bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded font-medium transition-colors">
+                <button id="confirmOrderBtn" class="flex-1 bg-green hover:bg-green-700 text-textColor-primary px-4 py-2 rounded font-medium transition-colors">
                     Confirm
                 </button>
             </div>
