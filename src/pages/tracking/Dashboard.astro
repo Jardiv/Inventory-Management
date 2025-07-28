@@ -4,5 +4,142 @@ import Layout from '../../layouts/Layout.astro';
 
 <!-- TRACKING DASHBOARD -->
 <Layout>
-	Tracking
+  <div class="w-full max-w-[1325px] bg-primary rounded-md mx-auto p-6 text-textColor-primary font-poppins">
+    
+    <!-- Header Row -->
+    <div class="flex justify-between items-center mb-6">
+      <div class="flex items-center space-x-4">
+        <h2 class="text-2xl font-semibold">Recent Shipments</h2>
+
+        <!-- Receive Products Button -->
+        <a href="/tracking/shipment-history" class="flex items-center border border-border_color rounded-md px-4 py-2 hover:bg-btn-primary hover:text-textColor-secondary transition">
+			<!-- Icon -->
+			<div class="w-6 h-6 mr-2">
+				<div class="w-[21px] h-[4.5px] bg-textColor-primary mb-1"></div>
+				<div class="w-[17.83px] h-3 bg-textColor-primary"></div>
+			</div>
+			<span class="text-xl font-medium">Receive Products</span>
+		</a>
+
+      </div>
+
+      <a href="/tracking/shipment-history" class="text-btn-primary text-xl cursor-pointer hover:underline">See All</a>
+    </div>
+
+    <!-- Table -->
+    <div>
+      <!-- Table Header -->
+      <div class="grid grid-cols-4 text-xl font-semibold border-b border-border_color pb-2 mb-4">
+        <span>Shipment ID</span>
+        <span class="text-center">Name</span>
+        <span class="text-center">Quantity</span>
+        <span class="text-center">Status</span>
+      </div>
+
+      <!-- Table Rows -->
+      <div class="space-y-2 text-xl">
+        <div class="grid grid-cols-4 items-center border-b border-border_color py-2">
+          <span>A2B1</span>
+          <span class="text-center">Sardines</span>
+          <span class="text-center">120</span>
+          <span class="text-center text-green-500 font-semibold">RECEIVED</span>
+        </div>
+        <div class="grid grid-cols-4 items-center border-b border-border_color py-2">
+          <span>B4B1</span>
+          <span class="text-center">PS4</span>
+          <span class="text-center">30</span>
+          <span class="text-center text-orange-500 font-semibold">DELIVERED</span>
+        </div>
+        <div class="grid grid-cols-4 items-center border-b border-border_color py-2">
+          <span>C1A1</span>
+          <span class="text-center">Clothes</span>
+          <span class="text-center">1000</span>
+          <span class="text-center text-red-500 font-semibold">PENDING</span>
+        </div>
+        <div class="grid grid-cols-4 items-center border-b border-border_color py-2">
+          <span>A2B1</span>
+          <span class="text-center">Sardines</span>
+          <span class="text-center">120</span>
+          <span class="text-center text-green-500 font-semibold">RECEIVED</span>
+        </div>
+      </div>
+    </div>
+  </div>
+  
+  <!---RECENT TRANSFERS TABLE-->>
+  <div class="w-full max-w-[1326px] bg-primary rounded-md mx-auto p-6 text-textColor-primary font-poppins transition-colors">
+    
+    <!-- Header Row -->
+    <div class="flex justify-between items-center mb-6">
+      <div class="flex items-center space-x-4">
+        <h2 class="text-2xl font-semibold">Recent Transfers</h2>
+
+        <!-- Transfer Products Button -->
+        <button class="flex items-center border border-border_color rounded-md px-4 py-2 hover:bg-btn-primary hover:text-textColor-secondary transition">
+          <!-- Icon -->
+          <div class="w-6 h-6 mr-2 flex items-center justify-center">
+            <div class="w-5 h-1 bg-textColor-primary mb-1"></div>
+            <div class="w-4 h-3 bg-textColor-primary"></div>
+          </div>
+          <span class="text-xl font-medium">Transfer Products</span>
+        </button>
+      </div>
+
+      <a href="/shipment-history" class="text-btn-primary text-xl cursor-pointer hover:underline">See All</a>
+    </div>
+
+    <!-- Table -->
+    <div>
+      <!-- Table Header -->
+      <div class="grid grid-cols-5 text-xl font-semibold border-b border-border_color pb-2 mb-4">
+        <span>Transfer ID</span>
+        <span class="text-center">Name</span>
+        <span class="text-center">Transferred Qty.</span>
+        <span class="text-center">From</span>
+        <span class="text-center">To</span>
+      </div>
+
+      <!-- Table Rows -->
+      <div class="space-y-2 text-xl">
+        <!-- Row 1 -->
+        <div class="grid grid-cols-5 items-center border-b border-border_color py-2">
+          <span>T1</span>
+          <span class="text-center">Soap</span>
+          <span class="text-center">120</span>
+          <span class="text-center">W1</span>
+          <span class="text-center">W2</span>
+        </div>
+
+        <!-- Row 2 -->
+        <div class="grid grid-cols-5 items-center border-b border-border_color py-2">
+          <span>T2</span>
+          <span class="text-center">Juice</span>
+          <span class="text-center">80</span>
+          <span class="text-center">W2</span>
+          <span class="text-center">W3</span>
+        </div>
+
+        <!-- Row 3 -->
+        <div class="grid grid-cols-5 items-center border-b border-border_color py-2">
+          <span>T3</span>
+          <span class="text-center">Meat</span>
+          <span class="text-center">50</span>
+          <span class="text-center">W3</span>
+          <span class="text-center">W1</span>
+        </div>
+
+        <!-- Row 4 -->
+        <div class="grid grid-cols-5 items-center border-b border-border_color py-2">
+          <span>T4</span>
+          <span class="text-center">Meat</span>
+          <span class="text-center">50</span>
+          <span class="text-center">W3</span>
+          <span class="text-center">W1</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
 </Layout>
+
+

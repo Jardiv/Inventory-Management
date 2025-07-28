@@ -1,0 +1,162 @@
+---
+import Layout from '../../layouts/Layout.astro';
+---
+
+<Layout>
+  <div class="w-full max-w-[1293px] bg-primary rounded-md mx-auto p-6 text-textColor-primary font-poppins">
+    <!-- Title -->
+    <div class="flex justify-between items-center mb-6">
+      <h2 class="text-2xl font-semibold">Shipments History</h2>
+      <!-- Receive Items Button -->
+      <button id="open-modal" class="flex items-center gap-2 px-4 py-2 border border-border_color rounded hover:bg-btn-primary hover:text-textColor-secondary transition">
+        <span>Receive Items</span>
+        <div class="w-6 h-6 bg-textColor-primary rounded"></div> <!-- Replace with icon -->
+      </button>
+    </div>
+
+    <!-- Table -->
+    <div class="overflow-x-auto">
+      <table class="w-full text-left border-collapse">
+        <thead class="border-b border-border_color text-lg">
+          <tr>
+            <th class="py-3 px-4 text-center">Item Code</th>
+            <th class="py-3 px-4 text-center">Item Name</th>
+            <th class="py-3 px-4 text-center">Quantity</th>
+            <th class="py-3 px-4 text-center">Shipment ID</th>
+            <th class="py-3 px-4 text-center">Status</th>
+          </tr>
+        </thead>
+        <tbody class="text-base divide-y divide-border_color">
+          <!-- Row 1 -->
+          <tr>
+            <td class="py-3 px-4 text-center">A001</td>
+            <td class="py-3 px-4 text-center">Sardines</td>
+            <td class="py-3 px-4 text-center">100</td>
+            <td class="py-3 px-4 text-center">S1P00</td>
+            <td class="py-3 px-4 text-yellow-400 font-semibold text-center">DELIVERED</td>
+          </tr>
+          <!-- Row 2 -->
+          <tr>
+            <td class="py-3 px-4 text-center">A003</td>
+            <td class="py-3 px-4 text-center">Cap</td>
+            <td class="py-3 px-4 text-center">20</td>
+            <td class="py-3 px-4 text-center">S1P02</td>
+            <td class="py-3 px-4 text-yellow-400 font-semibold text-center">DELIVERED</td>
+          </tr>
+          <!-- Row 3 -->
+          <tr>
+            <td class="py-3 px-4 text-center">A002</td>
+            <td class="py-3 px-4 text-center">Keyboard</td>
+            <td class="py-3 px-4 text-center">40</td>
+            <td class="py-3 px-4 text-center">S1P01</td>
+            <td class="py-3 px-4 text-yellow-400 font-semibold text-center">DELIVERED</td>
+          </tr>
+          <!-- Row 4 -->
+          <tr>
+            <td class="py-3 px-4 text-center">A001</td>
+            <td class="py-3 px-4 text-center">Sardines</td>
+            <td class="py-3 px-4 text-center">100</td>
+            <td class="py-3 px-4 text-center">S1P00</td>
+            <td class="py-3 px-4 text-red-500 font-semibold text-center">PENDING</td>
+          </tr>
+          <!-- Row 5 -->
+          <tr>
+            <td class="py-3 px-4 text-center">A001</td>
+            <td class="py-3 px-4 text-center">Sardines</td>
+            <td class="py-3 px-4 text-center">100</td>
+            <td class="py-3 px-4 text-center">S1P00</td>
+            <td class="py-3 px-4 text-green-500 font-semibold text-center">RECEIVED</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Pagination -->
+    <div class="flex justify-between items-center mt-6">
+      <button class="px-6 py-2 border border-border_color rounded hover:bg-btn-primary hover:text-textColor-secondary">Prev</button>
+      <span>Page 1 of 3</span>
+      <a href="/tracking/page2"><button class="px-6 py-2 border border-border_color rounded hover:bg-btn-primary hover:text-textColor-secondary">Next</button></a>
+    </div>
+  </div>
+
+  <!-- ✅ Modal -->
+  <div id="modal" class="hidden fixed inset-0 bg-black/60 flex items-center justify-center z-50">
+    <div class="bg-primary border border-border_color rounded-lg shadow-lg w-[711px] max-h-[90vh] overflow-auto p-6 relative">
+      <!-- Modal Title -->
+      <h2 class="text-2xl font-semibold mb-6">Receive Items</h2>
+
+      <!-- Product -->
+      <div class="mb-6">
+        <label class="block text-lg mb-2">Product</label>
+        <select class="w-full bg-primary border  rounded px-4 py-3 text-lg">
+          <option>Product 1</option>
+          <option>Product 2</option>
+        </select>
+      </div>
+
+      <!-- Warehouse -->
+      <div class="mb-6">
+        <label class="block text-lg mb-2">Warehouse</label>
+        <select class="w-full bg-primary border rounded px-4 py-3 text-lg">
+          <option>Main Warehouse</option>
+          <option>Secondary Warehouse</option>
+        </select>
+      </div>
+
+      <!-- Quantity -->
+      <div class="mb-6">
+        <label class="block text-lg mb-2">Quantity</label>
+        <input type="number" class="w-full bg-primary border  rounded px-4 py-3 text-lg" value="0" />
+      </div>
+
+      <!-- Add Button -->
+      <div class="flex justify-end mb-6">
+        <button class="bg-green-600 text-white px-6 py-2 rounded hover:bg-green-700">Add</button>
+      </div>
+
+      <!-- Product List -->
+      <div class="bg-primary border rounded p-4">
+        <div class="flex justify-between mb-4 text-lg font-semibold">
+          <span>Product</span>
+          <span>Quantity</span>
+        </div>
+        <div class="divide-y divide-white text-lg">
+          <div class="flex justify-between py-2">
+            <span>Product 1</span>
+            <span>0</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Warehouse Capacity -->
+      <p class="text-center mt-6 text-lg">Warehouse Capacity: 0/100</p>
+
+      <!-- Footer Buttons -->
+      <div class="flex justify-end gap-4 mt-6">
+        <button id="close-modal" class="bg-red-600 text-white px-6 py-2 rounded hover:bg-red-700">Cancel</button>
+        <button class="bg-green-600 text-white px-6 py-2 rounded hover:bg-green-700">OK</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ✅ Modal Script -->
+  <script>
+    const modal = document.getElementById('modal');
+    const openBtn = document.getElementById('open-modal');
+    const closeBtn = document.getElementById('close-modal');
+
+    openBtn.addEventListener('click', () => {
+      modal.classList.remove('hidden');
+    });
+
+    closeBtn.addEventListener('click', () => {
+      modal.classList.add('hidden');
+    });
+
+    modal.addEventListener('click', (e) => {
+      if (e.target === modal) {
+        modal.classList.add('hidden');
+      }
+    });
+  </script>
+</Layout>
