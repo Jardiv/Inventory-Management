@@ -1,19 +1,43 @@
 ---
 import Layout from '../../layouts/Layout.astro';
-import Modal from '../../components/general/Modal.astro';
-import Table from '../../components/general/Table.astro';
+import Modal from '../../components/Modal.astro';
+import Table from '../../components/table/Table.astro';
+import Cell from '../../components/table/Cell.astro';
+import TableRow from '../../components/table/TableRow.astro';
+import Thead from '../../components/table/Thead.astro';
+import Button from '../../components/Button.astro';
 ---
 
 <!-- STOCK TRANSACTION DASHBOARD -->
 <Layout>
 	Stock Transaction
 
-	<Table>
-		<tr>
-			<td>ashdoi</td>
-			<td>asdj</td>
-		</tr>
+	<!-- class = yung sa table | containerClass = yung sa container -->
+	<Table class="" containerClass="w-full">
+		<Thead class="">
+			<Cell>test</Cell>
+			<Cell>test</Cell>
+			<Cell>test</Cell>
+		</Thead>
+		<TableRow class="">
+			<Cell>test</Cell>
+			<Cell>test</Cell>
+			<Cell>test</Cell>
+		</TableRow>
+		<TableRow class="">
+			<Cell>test</Cell>
+			<Cell>test</Cell>
+			<Cell>test</Cell>
+		</TableRow>
+		<TableRow class="">
+			<Cell>test</Cell>
+			<Cell>test</Cell>
+			<Cell>test</Cell>
+		</TableRow>
 	</Table>
+
+	
+	<Button class="bg-red-500">TEST BUTTON</Button>
 	<!-- <Modal class="">
 		TEST MODAL
 	</Modal> -->
