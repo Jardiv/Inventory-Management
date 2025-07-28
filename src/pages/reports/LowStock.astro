@@ -1,0 +1,310 @@
+---
+import Layout from '../../layouts/Layout.astro';
+
+// Mock low stock data
+const lowStockData = [
+  { 
+    id: 1, 
+    itemCode: 'ABC123', 
+    item: 'Product 2', 
+    current: 15, 
+    minimum: 20, 
+    toOrder: 50, 
+    status: 'Low' 
+  },
+  { 
+    id: 2, 
+    itemCode: 'ABC123', 
+    item: 'Product 3', 
+    current: 0, 
+    minimum: 20, 
+    toOrder: 50, 
+    status: 'Out of stock' 
+  },
+  { 
+    id: 3, 
+    itemCode: 'ABC123', 
+    item: 'Product 4', 
+    current: 0, 
+    minimum: 20, 
+    toOrder: 50, 
+    status: 'Out of stock' 
+  },
+  { 
+    id: 4, 
+    itemCode: 'ABC123', 
+    item: 'Product 5', 
+    current: 15, 
+    minimum: 20, 
+    toOrder: 50, 
+    status: 'Low' 
+  },
+  { 
+    id: 5, 
+    itemCode: 'ABC123', 
+    item: 'Product 6', 
+    current: 15, 
+    minimum: 20, 
+    toOrder: 50, 
+    status: 'Low' 
+  },
+  { 
+    id: 6, 
+    itemCode: 'ABC123', 
+    item: 'Product 7', 
+    current: 15, 
+    minimum: 20, 
+    toOrder: 50, 
+    status: 'Low' 
+  },
+];
+
+// Function to get status styling
+function getStatusStyle(status: string) {
+  switch (status) {
+    case 'Low':
+      return 'text-yellow-400';
+    case 'Out of stock':
+      return 'text-red-400';
+    default:
+      return 'text-gray-400';
+  }
+}
+---
+
+<Layout>
+    <!-- Body -->
+    <div class="flex-1 overflow-hidden bg-primary rounded-lg p-6 mb-6">
+        <div class="flex justify-between items-center mb-4">
+            <h2 class="text-textColor-primary text-xl font-semibold">Low Stock Items</h2>
+            <a href="/reports/Dashboard" class="p-2 text-textColor-primary hover:bg-gray-700 rounded">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12" />
+                </svg>
+            </a>
+        </div>
+        
+        <div class="p-6 h-full overflow-y-auto">
+            <!-- Low Stock Table -->
+            <div>
+                <table class="w-full text-sm">
+                    <thead>
+                        <tr class="text-textColor-primary border-b border-gray-700">
+                            <th class="text-left py-3 px-4 font-medium w-[5%]">
+                                <input type="checkbox" id="selectAllHeader" class="rounded bg-gray-700 border-gray-600 pointer-events-none" disabled>
+                            </th>
+                            <th class="text-left py-3 px-4 font-medium w-[15%]">Item Code</th>
+                            <th class="text-left py-3 px-4 font-medium w-[20%]">Item</th>
+                            <th class="text-left py-3 px-4 font-medium w-[12%]">Current</th>
+                            <th class="text-left py-3 px-4 font-medium w-[12%]">Minimum</th>
+                            <th class="text-left py-3 px-4 font-medium w-[12%]">To Order</th>
+                            <th class="text-left py-3 px-4 font-medium w-[12%]">Status</th>
+                            <th class="text-left py-3 px-4 font-medium w-[12%]">Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {lowStockData.map((item, index) => (
+                            <tr class={`border-b border-gray-800 hover:bg-gray-800/30 ${index === lowStockData.length - 1 ? 'border-b-0' : ''}`}>
+                                <td class="py-4 px-4">
+                                    <input type="checkbox" class="item-checkbox rounded bg-gray-700 border-gray-600">
+                                </td>
+                                <td class="py-4 px-4 text-textColor-primary">{item.itemCode}</td>
+                                <td class="py-4 px-4 text-textColor-primary">{item.item}</td>
+                                <td class="py-4 px-4 text-textColor-primary">{item.current}</td>
+                                <td class="py-4 px-4 text-textColor-primary">{item.minimum}</td>
+                                <td class="py-4 px-4 text-textColor-primary">{item.toOrder}</td>
+                                <td class="py-4 px-4">
+                                    <span class={`font-semibold ${getStatusStyle(item.status)}`}>
+                                        {item.status}
+                                    </span>
+                                </td>
+                                <td class="py-4 px-4">
+                                    <button data-item-code={item.itemCode} data-item-name={item.item} data-current-qty={item.current} data-order-qty={item.toOrder} class="edit-btn bg-green-600 hover:bg-green-700 text-white px-3 py-1 rounded text-xs font-medium transition-colors">
+                                        Edit
+                                    </button>
+                                </td>
+                            </tr>
+                        ))}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        
+        <div class="flex justify-between items-center p-6 border-t border-gray-700 flex-shrink-0">
+            <button id="selectAllButton" class="bg-gray-700 hover:bg-gray-600 text-white px-4 py-2 rounded font-medium text-sm transition-colors flex items-center gap-2">
+                <input type="checkbox" id="selectAllBottom" class="rounded bg-gray-700 border-gray-600 pointer-events-none">
+                Select All
+            </button>
+            <button class="bg-purple-600 hover:bg-purple-700 text-white px-6 py-2 rounded font-medium text-sm transition-colors">
+                Generate Purchase Order
+            </button>
+        </div>
+    </div>
+
+    <!-- Purchase Order Detail Modal -->
+    <div id="editModal" class="fixed inset-0  bg-opacity-50 items-center justify-center z-50 hidden">
+        <div class="bg-gray-800 rounded-lg p-6 w-96 relative">
+            <div class="flex justify-between items-center mb-4">
+                <h2 class="text-white text-xl font-semibold">Purchase Order Detail</h2>
+                <button id="closeModalBtn" class="text-white hover:text-gray-300">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12" />
+                    </svg>
+                </button>
+            </div>
+            
+            <p class="text-gray-400 text-sm mb-6">Review and confirm reorder details for this item.</p>
+            
+            <div class="space-y-4">
+                <div class="flex items-center gap-4">
+                    <label class="text-white font-medium w-32 text-right">Item Code:</label>
+                    <input id="modalItemCode" type="text" class="flex-1 px-3 py-2 bg-gray-700 text-gray-400 rounded border border-gray-600" disabled>
+                </div>
+                
+                <div class="flex items-center gap-4">
+                    <label class="text-white font-medium w-32 text-right">Item Name:</label>
+                    <input id="modalItemName" type="text" class="flex-1 px-3 py-2 bg-gray-700 text-gray-400 rounded border border-gray-600" disabled>
+                </div>
+                
+                <div class="flex items-center gap-4">
+                    <label class="text-white font-medium w-32 text-right">Supplier:</label>
+                    <input type="text" value="ABC Suppliers Inc." class="flex-1 px-3 py-2 bg-gray-700 text-gray-400 rounded border border-gray-600" disabled>
+                </div>
+                
+                <div class="flex items-center gap-4">
+                    <label class="text-white font-medium w-32 text-right">Current Quantity:</label>
+                    <input id="modalCurrentQty" type="text" class="flex-1 px-3 py-2 bg-gray-700 text-gray-400 rounded border border-gray-600" disabled>
+                </div>
+                
+                <div class="flex items-center gap-4">
+                    <label class="text-white font-medium w-32 text-right">Order Quantity:</label>
+                    <input id="modalOrderQty" type="number" class="flex-1 px-3 py-2 bg-gray-700 text-white rounded border border-gray-600 focus:border-blue-500 focus:outline-none">
+                </div>
+            </div>
+            
+            <div class="flex gap-3 mt-6">
+                <button id="saveOrderBtn" class="flex-1 bg-gray-700 hover:bg-gray-600 text-white px-4 py-2 rounded font-medium transition-colors">
+                    Save
+                </button>
+                <button id="confirmOrderBtn" class="flex-1 bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded font-medium transition-colors">
+                    Confirm
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Modal functions
+        function openEditModal(itemCode, itemName, currentQty, orderQty) {
+            document.getElementById('modalItemCode').value = itemCode;
+            document.getElementById('modalItemName').value = itemName;
+            document.getElementById('modalCurrentQty').value = currentQty;
+            document.getElementById('modalOrderQty').value = orderQty;
+            
+            const modal = document.getElementById('editModal');
+            modal.classList.remove('hidden');
+            modal.style.display = 'flex';
+        }
+
+        function closeEditModal() {
+            const modal = document.getElementById('editModal');
+            modal.classList.add('hidden');
+            modal.style.display = 'none';
+        }
+
+        function saveOrder() {
+            const orderQty = document.getElementById('modalOrderQty').value;
+            console.log('Order saved with quantity:', orderQty);
+            // You can add more logic here to save the data
+            closeEditModal();
+        }
+
+        function confirmOrder() {
+            const orderQty = document.getElementById('modalOrderQty').value;
+            console.log('Order confirmed with quantity:', orderQty);
+            // You can add more logic here to confirm the order
+            closeEditModal();
+        }
+
+        // Close modal when clicking outside
+        document.getElementById('editModal').addEventListener('click', function(e) {
+            if (e.target === this) {
+                closeEditModal();
+            }
+        });
+
+        // Add event listeners when DOM is loaded
+        document.addEventListener('DOMContentLoaded', function() {
+            // Edit button event listeners
+            const editButtons = document.querySelectorAll('.edit-btn');
+            editButtons.forEach(button => {
+                button.addEventListener('click', function() {
+                    const itemCode = this.getAttribute('data-item-code');
+                    const itemName = this.getAttribute('data-item-name');
+                    const currentQty = this.getAttribute('data-current-qty');
+                    const orderQty = this.getAttribute('data-order-qty');
+                    
+                    openEditModal(itemCode, itemName, currentQty, orderQty);
+                });
+            });
+
+            // Modal button event listeners
+            document.getElementById('closeModalBtn').addEventListener('click', closeEditModal);
+            document.getElementById('saveOrderBtn').addEventListener('click', saveOrder);
+            document.getElementById('confirmOrderBtn').addEventListener('click', confirmOrder);
+        });
+
+        // Get all checkboxes
+        const selectAllHeader = document.getElementById('selectAllHeader');
+        const selectAllBottom = document.getElementById('selectAllBottom');
+        const selectAllButton = document.getElementById('selectAllButton');
+        const itemCheckboxes = document.querySelectorAll('.item-checkbox');
+
+        // Function to update the state of all item checkboxes
+        function toggleAllCheckboxes(checked) {
+            itemCheckboxes.forEach(checkbox => {
+                checkbox.checked = checked;
+            });
+        }
+
+        // Function to update select all checkboxes based on item checkboxes
+        function updateSelectAllState() {
+            const checkedCount = document.querySelectorAll('.item-checkbox:checked').length;
+            const allChecked = checkedCount === itemCheckboxes.length;
+            const someChecked = checkedCount > 0;
+            
+            selectAllHeader.checked = allChecked;
+            selectAllBottom.checked = allChecked;
+            
+            // Set indeterminate state for partial selection
+            selectAllHeader.indeterminate = someChecked && !allChecked;
+            selectAllBottom.indeterminate = someChecked && !allChecked;
+        }
+
+        // Header select all checkbox event (disabled - for display only)
+        // selectAllHeader.addEventListener('change', function() {
+        //     const isChecked = this.checked;
+        //     toggleAllCheckboxes(isChecked);
+        //     selectAllBottom.checked = isChecked;
+        //     selectAllBottom.indeterminate = false;
+        // });
+
+        // Bottom select all button event (entire button is clickable)
+        selectAllButton.addEventListener('click', function() {
+            const isChecked = !selectAllBottom.checked;
+            toggleAllCheckboxes(isChecked);
+            selectAllHeader.checked = isChecked;
+            selectAllBottom.checked = isChecked;
+            selectAllHeader.indeterminate = false;
+            selectAllBottom.indeterminate = false;
+        });
+
+        // Individual checkbox events
+        itemCheckboxes.forEach(checkbox => {
+            checkbox.addEventListener('change', updateSelectAllState);
+        });
+
+        // Initialize the state
+        updateSelectAllState();
+    </script>
+</Layout>
