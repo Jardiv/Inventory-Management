@@ -14,12 +14,19 @@ import Layout from '../../layouts/Layout.astro';
         <!-- Receive Products Button -->
         <a href="/tracking/shipment-history" class="flex items-center border border-border_color rounded-md px-4 py-2 hover:bg-btn-primary hover:text-textColor-secondary transition">
 			<!-- Icon -->
-			<div class="w-6 h-6 mr-2">
-				<div class="w-[21px] h-[4.5px] bg-textColor-primary mb-1"></div>
-				<div class="w-[17.83px] h-3 bg-textColor-primary"></div>
-			</div>
-			<span class="text-xl font-medium">Receive Products</span>
-		</a>
+          <div class="flex items-center">
+            <svg xmlns="http://www.w3.org/2000/svg"
+                viewBox="0 0 24 24"
+                fill="currentColor"
+                class="size-6 mr-2">
+              <path d="M3.375 3C2.339 3 1.5 3.84 1.5 4.875v.75c0 1.036.84 1.875 1.875 1.875h17.25c1.035 0 1.875-.84 1.875-1.875v-.75C22.5 3.839 21.66 3 20.625 3H3.375Z" />
+              <path fill-rule="evenodd"
+                    d="m3.087 9 .54 9.176A3 3 0 0 0 6.62 21h10.757a3 3 0 0 0 2.995-2.824L20.913 9H3.087ZM12 10.5a.75.75 0 0 1 .75.75v4.94l1.72-1.72a.75.75 0 1 1 1.06 1.06l-3 3a.75.75 0 0 1-1.06 0l-3-3a.75.75 0 1 1 1.06-1.06l1.72 1.72v-4.94a.75.75 0 0 1 .75-.75Z"
+                    clip-rule="evenodd" />
+            </svg>
+            <span class="text-xl">Receive Product</span>
+          </div>
+		    </a>
 
       </div>
 
@@ -66,26 +73,24 @@ import Layout from '../../layouts/Layout.astro';
     </div>
   </div>
   
-  <!---RECENT TRANSFERS TABLE-->>
-  <div class="w-full max-w-[1326px] bg-primary rounded-md mx-auto p-6 text-textColor-primary font-poppins transition-colors">
+  <!---RECENT TRANSFERS TABLE-->
+  <div class="w-full max-w-[1326px] bg-primary rounded-md mx-auto p-6 text-textColor-primary font-poppins transition-colors mt-10">
     
     <!-- Header Row -->
     <div class="flex justify-between items-center mb-6">
       <div class="flex items-center space-x-4">
         <h2 class="text-2xl font-semibold">Recent Transfers</h2>
-
         <!-- Transfer Products Button -->
-        <button class="flex items-center border border-border_color rounded-md px-4 py-2 hover:bg-btn-primary hover:text-textColor-secondary transition">
+        <a href="/tracking/Transfer_product"class="flex items-center border border-border_color rounded-md px-4 py-2 hover:bg-btn-primary hover:text-textColor-secondary transition">
           <!-- Icon -->
-          <div class="w-6 h-6 mr-2 flex items-center justify-center">
-            <div class="w-5 h-1 bg-textColor-primary mb-1"></div>
-            <div class="w-4 h-3 bg-textColor-primary"></div>
-          </div>
+          <svg xmlns="http://www.w3.org/2000/svg"viewBox="0 0 24 24" fill="currentColor"class="size-6 mr-2">
+            <path fill-rule="evenodd" d="M15.97 2.47a.75.75 0 0 1 1.06 0l4.5 4.5a.75.75 0 0 1 0 1.06l-4.5 4.5a.75.75 0 1 1-1.06-1.06l3.22-3.22H7.5a.75.75 0 0 1 0-1.5h11.69l-3.22-3.22a.75.75 0 0 1 0-1.06Zm-7.94 9a.75.75 0 0 1 0 1.06l-3.22 3.22H16.5a.75.75 0 0 1 0 1.5H4.81l3.22 3.22a.75.75 0 1 1-1.06 1.06l-4.5-4.5a.75.75 0 0 1 0-1.06l4.5-4.5a.75.75 0 0 1 1.06 0Z"clip-rule="evenodd" />
+          </svg>
           <span class="text-xl font-medium">Transfer Products</span>
-        </button>
+        </a>
       </div>
 
-      <a href="/shipment-history" class="text-btn-primary text-xl cursor-pointer hover:underline">See All</a>
+      <a href="/tracking/Transfer_product" class="text-btn-primary text-xl cursor-pointer hover:underline">See All</a>
     </div>
 
     <!-- Table -->
