@@ -143,7 +143,7 @@ function getStatusStyle(status: string) {
 
     <!-- Purchase Order Detail Modal -->
     <div id="editModal" class="fixed inset-0 bg-black/60 items-center justify-center z-50 hidden">
-        <div class="bg-primary rounded-lg p-6 w-96 relative">
+        <div class="bg-primary rounded-lg p-6 w-[500px] relative">
             <div class="flex justify-between items-center">
                 <h2 class="text-textColor-primary text-xl font-semibold">Purchase Order Detail</h2>
                 <button id="closeModalBtn" class="text-textColor-primary hover:text-gray-300">
@@ -157,28 +157,28 @@ function getStatusStyle(status: string) {
             
             <div class="space-y-4">
                 <div class="flex items-center gap-4">
-                    <label class="text-textColor-tertiary font-medium w-32 text-right">Item Code:</label>
-                    <input id="modalItemCode" type="text" class="flex-1 px-3 py-2 bg-background text-textColor-tertiary  rounded border border-textColor-tertiary " disabled>
+                    <label class="text-textColor-primary font-medium w-36 text-right">Item Code:</label>
+                    <input id="modalItemCode" type="text" class="flex-1 px-3 py-2 bg-background text-textColor-tertiary rounded border border-textColor-tertiary" disabled>
                 </div>
                 
                 <div class="flex items-center gap-4">
-                    <label class="text-textColor-primaryfont-medium w-32 text-right">Item Name:</label>
-                    <input id="modalItemName" type="text" class="flex-1 px-3 py-2 bg-background text-textColor-tertiary  rounded border border-textColor-tertiary " disabled>
+                    <label class="text-textColor-primary font-medium w-36 text-right">Item Name:</label>
+                    <input id="modalItemName" type="text" class="flex-1 px-3 py-2 bg-background text-textColor-tertiary rounded border border-textColor-tertiary" disabled>
                 </div>
                 
                 <div class="flex items-center gap-4">
-                    <label class="text-textColor-primaryfont-medium w-32 text-right">Supplier:</label>
-                    <input type="text" value="ABC Suppliers Inc." class="flex-1 px-3 py-2 bg-background text-textColor-tertiary  rounded border border-textColor-tertiary " disabled>
+                    <label class="text-textColor-primary font-medium w-36 text-right">Supplier:</label>
+                    <input type="text" value="ABC Suppliers Inc." class="flex-1 px-3 py-2 bg-background text-textColor-tertiary rounded border border-textColor-tertiary" disabled>
                 </div>
                 
                 <div class="flex items-center gap-4">
-                    <label class="text-textColor-primaryfont-medium w-32 text-right">Current Quantity:</label>
-                    <input id="modalCurrentQty" type="text" class="flex-1 px-3 py-2 bg-background text-textColor-tertiary  rounded border border-textColor-tertiary " disabled>
+                    <label class="text-textColor-primary font-medium w-36 text-right">Current Quantity:</label>
+                    <input id="modalCurrentQty" type="text" class="flex-1 px-3 py-2 bg-background text-textColor-tertiary rounded border border-textColor-tertiary" disabled>
                 </div>
                 
                 <div class="flex items-center gap-4">
-                    <label class="text-textColor-primaryfont-medium w-32 text-right">Order Quantity:</label>
-                    <input id="modalOrderQty" type="number" class="flex-1 px-3 py-2 bg-background text-textColor-primaryrounded border border-textColor-tertiary  focus:border-blue-500 focus:outline-none">
+                    <label class="text-textColor-primary font-medium w-36 text-right">Order Quantity:</label>
+                    <input id="modalOrderQty" type="number" class="flex-1 px-3 py-2 bg-background text-textColor-primary rounded border border-textColor-tertiary focus:border-blue-500 focus:outline-none">
                 </div>
             </div>
             
@@ -230,47 +230,62 @@ function getStatusStyle(status: string) {
 
     <script>
         // Modal functions
-        function openEditModal(itemCode, itemName, currentQty, orderQty) {
-            document.getElementById('modalItemCode').value = itemCode;
-            document.getElementById('modalItemName').value = itemName;
-            document.getElementById('modalCurrentQty').value = currentQty;
-            document.getElementById('modalOrderQty').value = orderQty;
+        function openEditModal(itemCode: string, itemName: string, currentQty: string, orderQty: string): void {
+            const modalItemCode = document.getElementById('modalItemCode');
+            const modalItemName = document.getElementById('modalItemName');
+            const modalCurrentQty = document.getElementById('modalCurrentQty');
+            const modalOrderQty = document.getElementById('modalOrderQty');
+            
+            if (modalItemCode instanceof HTMLInputElement) modalItemCode.value = itemCode;
+            if (modalItemName instanceof HTMLInputElement) modalItemName.value = itemName;
+            if (modalCurrentQty instanceof HTMLInputElement) modalCurrentQty.value = currentQty;
+            if (modalOrderQty instanceof HTMLInputElement) modalOrderQty.value = orderQty;
             
             const modal = document.getElementById('editModal');
-            modal.classList.remove('hidden');
-            modal.style.display = 'flex';
+            if (modal) {
+                modal.classList.remove('hidden');
+                modal.style.display = 'flex';
+            }
         }
 
-        function closeEditModal() {
+        function closeEditModal(): void {
             const modal = document.getElementById('editModal');
-            modal.classList.add('hidden');
-            modal.style.display = 'none';
+            if (modal) {
+                modal.classList.add('hidden');
+                modal.style.display = 'none';
+            }
         }
 
-        function saveOrder() {
-            const orderQty = document.getElementById('modalOrderQty').value;
+        function saveOrder(): void {
+            const modalOrderQty = document.getElementById('modalOrderQty');
+            const orderQty = (modalOrderQty instanceof HTMLInputElement) ? modalOrderQty.value : '';
             console.log('Order saved with quantity:', orderQty);
             // You can add more logic here to save the data
             closeEditModal();
         }
 
-        function confirmOrder() {
-            const orderQty = document.getElementById('modalOrderQty').value;
+        function confirmOrder(): void {
+            const modalOrderQty = document.getElementById('modalOrderQty');
+            const orderQty = (modalOrderQty instanceof HTMLInputElement) ? modalOrderQty.value : '';
             console.log('Order confirmed with quantity:', orderQty);
             // You can add more logic here to confirm the order
             closeEditModal();
         }
 
-        function openSuccessModal() {
+        function openSuccessModal(): void {
             const modal = document.getElementById('successModal');
-            modal.classList.remove('hidden');
-            modal.style.display = 'flex';
+            if (modal) {
+                modal.classList.remove('hidden');
+                modal.style.display = 'flex';
+            }
         }
 
-        function closeSuccessModal() {
+        function closeSuccessModal(): void {
             const modal = document.getElementById('successModal');
-            modal.classList.add('hidden');
-            modal.style.display = 'none';
+            if (modal) {
+                modal.classList.add('hidden');
+                modal.style.display = 'none';
+            }
             
             // Clear all checkbox selections
             const itemCheckboxes = document.querySelectorAll('.item-checkbox');
@@ -295,7 +310,7 @@ function getStatusStyle(status: string) {
             }
         }
 
-        function generatePurchaseOrder() {
+        function generatePurchaseOrder(): void {
             const checkedItems = document.querySelectorAll('.item-checkbox:checked');
             if (checkedItems.length === 0) {
                 alert('Please select at least one item to generate a purchase order.');
@@ -308,50 +323,62 @@ function getStatusStyle(status: string) {
         }
 
         // Close modal when clicking outside
-        document.getElementById('editModal').addEventListener('click', function(e) {
-            if (e.target === this) {
-                closeEditModal();
-            }
-        });
+        const editModal = document.getElementById('editModal');
+        if (editModal) {
+            editModal.addEventListener('click', function(e: Event): void {
+                if (e.target === this) {
+                    closeEditModal();
+                }
+            });
+        }
 
         // Close success modal when clicking outside
-        document.getElementById('successModal').addEventListener('click', function(e) {
-            if (e.target === this) {
-                closeSuccessModal();
-            }
-        });
+        const successModal = document.getElementById('successModal');
+        if (successModal) {
+            successModal.addEventListener('click', function(e: Event): void {
+                if (e.target === this) {
+                    closeSuccessModal();
+                }
+            });
+        }
 
         // Add event listeners when DOM is loaded
-        document.addEventListener('DOMContentLoaded', function() {
+        document.addEventListener('DOMContentLoaded', function(): void {
             // Edit button event listeners
             const editButtons = document.querySelectorAll('.edit-btn');
             editButtons.forEach(button => {
-                button.addEventListener('click', function() {
-                    const itemCode = this.getAttribute('data-item-code');
-                    const itemName = this.getAttribute('data-item-name');
-                    const currentQty = this.getAttribute('data-current-qty');
-                    const orderQty = this.getAttribute('data-order-qty');
+                button.addEventListener('click', function(this: HTMLElement): void {
+                    const itemCode = this.getAttribute('data-item-code') || '';
+                    const itemName = this.getAttribute('data-item-name') || '';
+                    const currentQty = this.getAttribute('data-current-qty') || '';
+                    const orderQty = this.getAttribute('data-order-qty') || '';
                     
                     openEditModal(itemCode, itemName, currentQty, orderQty);
                 });
             });
 
             // Modal button event listeners
-            document.getElementById('closeModalBtn').addEventListener('click', closeEditModal);
-            document.getElementById('cancelOrderBtn').addEventListener('click', saveOrder);
-            document.getElementById('confirmOrderBtn').addEventListener('click', confirmOrder);
+            const closeModalBtn = document.getElementById('closeModalBtn');
+            const cancelOrderBtn = document.getElementById('cancelOrderBtn');
+            const confirmOrderBtn = document.getElementById('confirmOrderBtn');
+            const generatePurchaseOrderBtn = document.getElementById('generatePurchaseOrderBtn');
+            const closeSuccessModalBtn = document.getElementById('closeSuccessModalBtn');
+            const closeSuccessBtn = document.getElementById('closeSuccessBtn');
+            const viewTransactionBtn = document.getElementById('viewTransactionBtn');
             
-            // Generate Purchase Order button event listener
-            document.getElementById('generatePurchaseOrderBtn').addEventListener('click', generatePurchaseOrder);
-            
-            // Success modal event listeners
-            document.getElementById('closeSuccessModalBtn').addEventListener('click', closeSuccessModal);
-            document.getElementById('closeSuccessBtn').addEventListener('click', closeSuccessModal);
-            document.getElementById('viewTransactionBtn').addEventListener('click', function() {
-                console.log('View Transaction clicked');
-                // Add navigation to transaction view here
-                closeSuccessModal();
-            });
+            if (closeModalBtn) closeModalBtn.addEventListener('click', closeEditModal);
+            if (cancelOrderBtn) cancelOrderBtn.addEventListener('click', saveOrder);
+            if (confirmOrderBtn) confirmOrderBtn.addEventListener('click', confirmOrder);
+            if (generatePurchaseOrderBtn) generatePurchaseOrderBtn.addEventListener('click', generatePurchaseOrder);
+            if (closeSuccessModalBtn) closeSuccessModalBtn.addEventListener('click', closeSuccessModal);
+            if (closeSuccessBtn) closeSuccessBtn.addEventListener('click', closeSuccessModal);
+            if (viewTransactionBtn) {
+                viewTransactionBtn.addEventListener('click', function(): void {
+                    console.log('View Transaction clicked');
+                    // Navigate to PurchaseOrder page
+                    window.location.href = '/reports/PurchaseOrder';
+                });
+            }
         });
 
         // Get all checkboxes
@@ -361,24 +388,29 @@ function getStatusStyle(status: string) {
         const itemCheckboxes = document.querySelectorAll('.item-checkbox');
 
         // Function to update the state of all item checkboxes
-        function toggleAllCheckboxes(checked) {
+        function toggleAllCheckboxes(checked: boolean): void {
             itemCheckboxes.forEach(checkbox => {
-                checkbox.checked = checked;
+                if (checkbox instanceof HTMLInputElement) {
+                    checkbox.checked = checked;
+                }
             });
         }
 
         // Function to update select all checkboxes based on item checkboxes
-        function updateSelectAllState() {
+        function updateSelectAllState(): void {
             const checkedCount = document.querySelectorAll('.item-checkbox:checked').length;
             const allChecked = checkedCount === itemCheckboxes.length;
             const someChecked = checkedCount > 0;
             
-            selectAllHeader.checked = allChecked;
-            selectAllBottom.checked = allChecked;
+            if (selectAllHeader instanceof HTMLInputElement) {
+                selectAllHeader.checked = allChecked;
+                selectAllHeader.indeterminate = someChecked && !allChecked;
+            }
             
-            // Set indeterminate state for partial selection
-            selectAllHeader.indeterminate = someChecked && !allChecked;
-            selectAllBottom.indeterminate = someChecked && !allChecked;
+            if (selectAllBottom instanceof HTMLInputElement) {
+                selectAllBottom.checked = allChecked;
+                selectAllBottom.indeterminate = someChecked && !allChecked;
+            }
         }
 
         // Header select all checkbox event (disabled - for display only)
@@ -390,14 +422,20 @@ function getStatusStyle(status: string) {
         // });
 
         // Bottom select all button event (entire button is clickable)
-        selectAllButton.addEventListener('click', function() {
-            const isChecked = !selectAllBottom.checked;
-            toggleAllCheckboxes(isChecked);
-            selectAllHeader.checked = isChecked;
-            selectAllBottom.checked = isChecked;
-            selectAllHeader.indeterminate = false;
-            selectAllBottom.indeterminate = false;
-        });
+        if (selectAllButton && selectAllBottom instanceof HTMLInputElement) {
+            selectAllButton.addEventListener('click', function(): void {
+                const isChecked = !selectAllBottom.checked;
+                toggleAllCheckboxes(isChecked);
+                
+                if (selectAllHeader instanceof HTMLInputElement) {
+                    selectAllHeader.checked = isChecked;
+                    selectAllHeader.indeterminate = false;
+                }
+                
+                selectAllBottom.checked = isChecked;
+                selectAllBottom.indeterminate = false;
+            });
+        }
 
         // Individual checkbox events
         itemCheckboxes.forEach(checkbox => {
