@@ -96,7 +96,7 @@ import Layout from '../../layouts/Layout.astro';
 
       <!-- Add Items Button -->
       <div class="flex justify-end">
-        <button class="flex items-center gap-2 bg-green hover:bg-green/80 text-white px-4 py-2 rounded-md transition">
+        <button id="open-add-items-modal" class="flex items-center gap-2 bg-green hover:bg-green/80 text-white px-4 py-2 rounded-md transition">
           <svg class="w-4 h-4" fill="white" viewBox="0 0 24 24"><path d="M12 5v14m7-7H5"/></svg>
           Add items to transfer
         </button>
@@ -137,7 +137,71 @@ import Layout from '../../layouts/Layout.astro';
     </div>
   </div>
 </div>
+<!-- ✅ Second Modal: Add Items to Transfer -->
+<div id="addItemsModal" class="hidden fixed inset-0 z-[60] flex items-center justify-center bg-black/60">
+  <div class="w-[996px] max-w-[95%] bg-primary border border-border_color rounded-md p-6 text-textColor-primary font-[Poppins] shadow-xl space-y-6 overflow-y-auto max-h-[95vh] relative">
 
+    <!-- Modal Header -->
+    <div class="flex justify-between items-center">
+      <h2 class="text-3xl font-medium">Warehouse 1</h2>
+      <button id="close-add-items-modal" class="w-10 h-10 flex items-center justify-center rounded-full hover:bg-border_color/20 transition">
+        <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+        </svg>
+      </button>
+    </div>
+
+    <!-- Table Header -->
+    <div class="grid grid-cols-6 gap-2 font-semibold text-xl border-b border-border_color pb-2">
+      <div></div>
+      <div>Item ID</div>
+      <div>Item</div>
+      <div class="text-center">Available Qty</div>
+      <div class="text-center">Selected Qty</div>
+      <div></div>
+    </div>
+
+    <!-- Items -->
+    <div class="space-y-4">
+      <!-- Item Row -->
+      <div class="grid grid-cols-6 gap-2 items-center">
+        <div>
+          <input type="checkbox" class="form-checkbox w-5 h-5 accent-white border border-white bg-primary rounded-md" />
+        </div>
+        <div class="text-lg">1761</div>
+        <div class="text-lg">Product 1</div>
+        <div class="text-center text-lg">100</div>
+        <div>
+          <div class="flex items-center justify-between border border-white rounded-md px-3 py-1 w-20 mx-auto">
+            <span>0</span>
+            <button>
+              <svg class="w-4 h-4 text-white" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M7 14l5-5 5 5H7z" />
+              </svg>
+            </button>
+          </div>
+        </div>
+        <div>
+          <button>
+            <svg class="w-5 h-5 mx-auto text-white" fill="currentColor" viewBox="0 0 20 20">
+              <path d="M10 18a8 8 0 100-16 8 8 0 000 16zm2.121-11.121a1 1 0 10-1.414-1.414L10 8.586 8.293 6.879a1 1 0 10-1.414 1.414L8.586 10l-1.707 1.707a1 1 0 101.414 1.414L10 11.414l1.707 1.707a1 1 0 001.414-1.414L11.414 10l1.707-1.707z"/>
+            </svg>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Footer Actions -->
+    <div class="flex justify-between pt-4">
+      <button class="bg-red hover:bg-red/80 text-white font-medium text-lg px-6 py-2 rounded-md">
+        Clear All
+      </button>
+      <button class="bg-green hover:bg-green/80 text-white font-medium text-lg px-6 py-2 rounded-md">
+        Add
+      </button>
+    </div>
+  </div>
+</div>
 
 <!-- ✅ Modal Script -->
 <script>
@@ -156,6 +220,24 @@ import Layout from '../../layouts/Layout.astro';
   transferModal.addEventListener('click', (e) => {
     if (e.target === transferModal) {
       transferModal.classList.add('hidden');
+    }
+  });
+  
+  const addItemsModal = document.getElementById('addItemsModal');
+  const openAddItemsBtn = document.getElementById('open-add-items-modal');
+  const closeAddItemsBtn = document.getElementById('close-add-items-modal');
+
+  openAddItemsBtn?.addEventListener('click', () => {
+    addItemsModal.classList.remove('hidden');
+  });
+
+  closeAddItemsBtn?.addEventListener('click', () => {
+    addItemsModal.classList.add('hidden');
+  });
+
+  addItemsModal?.addEventListener('click', (e) => {
+    if (e.target === addItemsModal) {
+      addItemsModal.classList.add('hidden');
     }
   });
 </script>
