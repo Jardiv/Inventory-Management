@@ -135,7 +135,7 @@ function getStatusStyle(status: string) {
                 <input type="checkbox" id="selectAllBottom" class="rounded bg-gray-700 border-gray-600 pointer-events-none">
                 Select All
             </button>
-            <button class="bg-purple-600 hover:bg-purple-700 text-white px-6 py-2 rounded font-medium text-sm transition-colors">
+            <button id="generatePurchaseOrderBtn" class="bg-purple-600 hover:bg-purple-700 text-white px-6 py-2 rounded font-medium text-sm transition-colors">
                 Generate Purchase Order
             </button>
         </div>
@@ -193,6 +193,41 @@ function getStatusStyle(status: string) {
         </div>
     </div>
 
+    <!-- Purchase Order Success Modal -->
+    <div id="successModal" class="fixed inset-0 bg-black/60 items-center justify-center z-50 hidden">
+        <div class="bg-primary rounded-lg p-6 w-[400px] relative">
+            <div class="flex justify-between items-center mb-4">
+                <div></div>
+                <button id="closeSuccessModalBtn" class="text-textColor-primary hover:text-textColor-tertiary">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12" />
+                    </svg>
+                </button>
+            </div>
+            
+            <div class="text-center">
+                <!-- Green Checkmark Icon -->
+                <div class="mx-auto mb-4 w-16 h-16 bg-green-600 rounded-full flex items-center justify-center">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-8 h-8 text-white">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5" />
+                    </svg>
+                </div>
+                
+                <h2 class="text-textColor-primary text-xl font-semibold mb-2">Generated Purchase Order Successfully!</h2>
+                <p class="text-textColor-tertiary text-sm mb-6">You can now view or export the purchase order</p>
+            </div>
+            
+            <div class="flex gap-3">
+                <button id="closeSuccessBtn" class="flex-1 bg-btn-primary hover:btn-primary-600 text-textColor-secondary px-4 py-2 rounded font-medium transition-colors border border-gray-600">
+                    Close
+                </button>
+                <button id="viewTransactionBtn" class="flex-1 bg-btn-primary hover:btn-primary-600 text-textColor-secondary px-4 py-2 rounded font-medium transition-colors border border-gray-600">
+                    View Transaction
+                </button>
+            </div>
+        </div>
+    </div>
+
     <script>
         // Modal functions
         function openEditModal(itemCode, itemName, currentQty, orderQty) {
@@ -226,10 +261,63 @@ function getStatusStyle(status: string) {
             closeEditModal();
         }
 
+        function openSuccessModal() {
+            const modal = document.getElementById('successModal');
+            modal.classList.remove('hidden');
+            modal.style.display = 'flex';
+        }
+
+        function closeSuccessModal() {
+            const modal = document.getElementById('successModal');
+            modal.classList.add('hidden');
+            modal.style.display = 'none';
+            
+            // Clear all checkbox selections
+            const itemCheckboxes = document.querySelectorAll('.item-checkbox');
+            itemCheckboxes.forEach(checkbox => {
+                if (checkbox instanceof HTMLInputElement) {
+                    checkbox.checked = false;
+                }
+            });
+            
+            // Update select all checkboxes state
+            const selectAllHeader = document.getElementById('selectAllHeader');
+            const selectAllBottom = document.getElementById('selectAllBottom');
+            
+            if (selectAllHeader instanceof HTMLInputElement) {
+                selectAllHeader.checked = false;
+                selectAllHeader.indeterminate = false;
+            }
+            
+            if (selectAllBottom instanceof HTMLInputElement) {
+                selectAllBottom.checked = false;
+                selectAllBottom.indeterminate = false;
+            }
+        }
+
+        function generatePurchaseOrder() {
+            const checkedItems = document.querySelectorAll('.item-checkbox:checked');
+            if (checkedItems.length === 0) {
+                alert('Please select at least one item to generate a purchase order.');
+                return;
+            }
+            
+            console.log('Generating purchase order for', checkedItems.length, 'items');
+            // Show success modal instead of alert
+            openSuccessModal();
+        }
+
         // Close modal when clicking outside
         document.getElementById('editModal').addEventListener('click', function(e) {
             if (e.target === this) {
                 closeEditModal();
+            }
+        });
+
+        // Close success modal when clicking outside
+        document.getElementById('successModal').addEventListener('click', function(e) {
+            if (e.target === this) {
+                closeSuccessModal();
             }
         });
 
@@ -250,8 +338,20 @@ function getStatusStyle(status: string) {
 
             // Modal button event listeners
             document.getElementById('closeModalBtn').addEventListener('click', closeEditModal);
-            document.getElementById('saveOrderBtn').addEventListener('click', saveOrder);
+            document.getElementById('cancelOrderBtn').addEventListener('click', saveOrder);
             document.getElementById('confirmOrderBtn').addEventListener('click', confirmOrder);
+            
+            // Generate Purchase Order button event listener
+            document.getElementById('generatePurchaseOrderBtn').addEventListener('click', generatePurchaseOrder);
+            
+            // Success modal event listeners
+            document.getElementById('closeSuccessModalBtn').addEventListener('click', closeSuccessModal);
+            document.getElementById('closeSuccessBtn').addEventListener('click', closeSuccessModal);
+            document.getElementById('viewTransactionBtn').addEventListener('click', function() {
+                console.log('View Transaction clicked');
+                // Add navigation to transaction view here
+                closeSuccessModal();
+            });
         });
 
         // Get all checkboxes
