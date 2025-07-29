@@ -1,6 +1,5 @@
 ---
 import Layout from '../../layouts/Layout.astro';
-import Modal from '../../components/Modal.astro';
 import Button from '../../components/Button.astro';
 ---
 
@@ -9,7 +8,7 @@ import Button from '../../components/Button.astro';
     <div class="flex flex-col gap-1 w-full bg-primary p-4 rounded">
         <a href="/stockTransaction/Logs/" class="w-[20%]">
             <Button
-                class="text-btn-primary py-2 w-full hover:bg-btn-primary hover:text-textColor-secondary"
+                class="text-btn-primary py-2 w-full font hover:bg-btn-primary hover:text-textColor-secondary font-semibold"
                 >See Transaction Logs</Button
             >
         </a>
@@ -43,7 +42,9 @@ import Button from '../../components/Button.astro';
                         <td class="table-data">Ecco Food Corp</td>
                         <td class="table-data text-green">Pending</td>
                         <td class="table-data text-center">
-                            <Button class="table-view-btn">View</Button>
+                            <a href="/stockTransaction/StockDetails/">
+                                <Button class="table-view-btn">View</Button>
+                            </a>
                         </td>
                     </tr>
                     <tr class="table-row">
