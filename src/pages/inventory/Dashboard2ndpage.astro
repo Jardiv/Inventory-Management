@@ -1,153 +1,14 @@
 ---
 import Layout from '../../layouts/Layout.astro';
 ---
-
 <Layout>
-      <!-- INVENTORY OVERVIEW -->
-    <section id="overviewSection">
-      <!-- Inventory Summary -->
-      <div class="bg-primary p-6 rounded-lg mb-6 ">
-        <h2 class="text-xl font-semibold mb-4">Quick Overview</h2>
-        <div class="grid grid-cols-4 gap-6 text-center">
-          <div><p class="text-textColor-primary text-sm">Total Products</p><p class="text-lg font-bold">$1,666,669.69</p></div>
-          <div><p class="text-textColor-primary text-sm">Categories</p><p class="text-lg font-bold">250</p></div>
-          <div><p class="text-textColor-primary text-sm">Low Stock Products</p><p class="text-lg font-bold">47</p></div>
-          <div><p class="text-textColor-primary text-sm">Out of Stock Products</p><p class="text-lg font-bold">17</p></div>
-        </div>
-      </div>
-
-      <!-- Product Table Preview -->
-      <div class="bg-primary p-6 rounded-lg">
-        <div class="flex justify-between mb-4">
-          <div class="flex gap-2 items-center">
-            <h2 class="text-xl font-semibold mb-4">Inventory</h2>
-            <select id="filterCategory" onchange="filterTable()" class="bg-[#2b2b2b] text-white px-3 py-2 rounded">
-              <option value="">All Category</option>
-              <option value="Grains">Grains</option>
-              <option value="Condiments">Condiments</option>
-              <option value="Carbs">Carbs</option>
-            </select>
-          </div>
-          <div class="flex gap-2">
-            <button onclick="alert('Add Product Clicked')" class="bg-[#9b2cfa] px-4 py-2 rounded text-white">Add Products</button>
-            <a href="/inventory/Dashboard2ndpage/"><button class="bg-btn-primary px-4 py-2 rounded text-white">View all</button></a>
-          </div>
-        </div>
-
-        <table id="productTable" class="w-full text-left text-sm">
-          <thead>
-            <tr class="text-gray-400 border-b border-gray-700">
-              <th class="py-2">Item Code</th>
-              <th>Item Name</th>
-              <th>Category</th>
-              <th>Unit</th>
-              <th>Actions</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr class="border-b border-gray-800 hover:bg-[#2a2a2a]">
-              <td>1001</td><td>Product 1</td><td>Grains</td><td>10kg</td>
-              <td>
-                <div class="flex gap-2">
-                  <button onclick="alert('Edit Rice')" class="bg-green-500 px-3 py-1 rounded text-white">Edit</button>
-                  <button onclick="alert('Delete Rice')" class="bg-red-600 px-3 py-1 rounded text-white">Delete</button>
-                </div>
-              </td>
-            </tr>
-            <tr class="hover:bg-[#2a2a2a]">
-              <td>1002</td><td>Product 2</td><td>Condiments</td><td>Liter</td>
-              <td>
-                <div class="flex gap-2">
-                  <button onclick="alert('Edit Soy Sauce')" class="bg-green-500 px-3 py-1 rounded text-white">Edit</button>
-                  <button onclick="alert('Delete Soy Sauce')" class="bg-red-600 px-3 py-1 rounded text-white">Delete</button>
-                </div>  
-              </td>
-            </tr>
-            <tr class="hover:bg-[#2a2a2a]">
-              <td>1003</td><td>Product 3</td><td>Carbs</td><td>Liter</td>
-              <td>
-                <div class="flex gap-2">
-                  <button onclick="alert('Edit Soy Sauce')" class="bg-green-500 px-3 py-1 rounded text-white">Edit</button>
-                  <button onclick="alert('Delete Soy Sauce')" class="bg-red-600 px-3 py-1 rounded text-white">Delete</button>
-                </div>
-              </td>
-            </tr>
-            <tr class="hover:bg-[#2a2a2a]">
-              <td>1004</td><td>Product 4</td><td>Kilograms</td><td>Liter</td>
-              <td>
-                <div class="flex gap-2">
-                  <button onclick="alert('Edit Soy Sauce')" class="bg-green-500 px-3 py-1 rounded text-white">Edit</button>
-                  <button onclick="alert('Delete Soy Sauce')" class="bg-red-600 px-3 py-1 rounded text-white">Delete</button>
-                </div>
-              </td>
-            </tr>
-            <tr class="hover:bg-[#2a2a2a]">
-              <td>1005</td><td>Product 5</td><td>Kilograms</td><td>Liter</td>
-              <td>
-                <div class="flex gap-2">
-                  <button onclick="alert('Edit Soy Sauce')" class="bg-green-500 px-3 py-1 rounded text-white">Edit</button>
-                  <button onclick="alert('Delete Soy Sauce')" class="bg-red-600 px-3 py-1 rounded text-white">Delete</button>
-                </div>
-              </td>
-            </tr>
-            <tr class="hover:bg-[#2a2a2a]">
-              <td>1006</td><td>Product 6</td><td>Condiments</td><td>Liter</td>
-              <td>
-                <div class="flex gap-2">
-                  <button onclick="alert('Edit Soy Sauce')" class="bg-green-500 px-3 py-1 rounded text-white">Edit</button>
-                  <button onclick="alert('Delete Soy Sauce')" class="bg-red-600 px-3 py-1 rounded text-white">Delete</button>
-                </div>
-              </td>
-            </tr>
-            <tr class="hover:bg-[#2a2a2a]">
-              <td>1007</td><td>Product 7</td><td>Condiments</td><td>Liter</td>
-              <td>
-                <div class="flex gap-2">
-                  <button onclick="alert('Edit Soy Sauce')" class="bg-green-500 px-3 py-1 rounded text-white">Edit</button>
-                  <button onclick="alert('Delete Soy Sauce')" class="bg-red-600 px-3 py-1 rounded text-white">Delete</button>
-                </div>
-              </td>
-            </tr>
-            <tr class="hover:bg-[#2a2a2a]">
-              <td>1008</td><td>Product 8</td><td>Condiments</td><td>Liter</td>
-              <td>
-                <div class="flex gap-2">
-                  <button onclick="alert('Edit Soy Sauce')" class="bg-green-500 px-3 py-1 rounded text-white">Edit</button>
-                  <button onclick="alert('Delete Soy Sauce')" class="bg-red-600 px-3 py-1 rounded text-white">Delete</button>
-                </div>
-              </td>
-            </tr>
-            <tr class="hover:bg-[#2a2a2a]">
-              <td>1009</td><td>Product 9</td><td>Condiments</td><td>Liter</td>
-              <td>
-                <div class="flex gap-2">
-                  <button onclick="alert('Edit Soy Sauce')" class="bg-green-500 px-3 py-1 rounded text-white">Edit</button>
-                  <button onclick="alert('Delete Soy Sauce')" class="bg-red-600 px-3 py-1 rounded text-white">Delete</button>
-                </div>
-              </td>
-            </tr>
-            <tr class="hover:bg-[#2a2a2a]">
-              <td>1010</td><td>Product 10</td><td>Condiments</td><td>Liter</td>
-              <td>
-                <div class="flex gap-2">
-                  <button onclick="alert('Edit Soy Sauce')" class="bg-green-500 px-3 py-1 rounded text-white">Edit</button>
-                  <button onclick="alert('Delete Soy Sauce')" class="bg-red-600 px-3 py-1 rounded text-white">Delete</button>
-                </div>
-              </td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
-    </section>
-
-    <!-- VIEW ALL -->
-    <section id="viewAllSection" class="hidden">
+	
+<section id="viewAllSection">
       <div class="bg-primary p-6 rounded-lg">
         <div class="flex justify-between mb-4">
           <div class="flex gap-2">
             <button onclick="alert('Add Product Clicked')" class="bg-[#9b2cfa] px-4 py-2 rounded text-white">Add Product</button>
-            <button onclick="showOverview()" class="bg-[#2b2b2b] px-4 py-2 rounded text-white">Go back</button>
-          </div>
+            <a href="/inventory/Dashboard/"><button class="bg-btn-primary px-4 py-2 rounded text-white">Go Back</button></a></div>
         </div>
 
         <table class="w-full text-left text-sm">
@@ -314,14 +175,5 @@ import Layout from '../../layouts/Layout.astro';
         </div>
       </div>
     </section>
-  </main>
-</div>
-<script client>
-  function showViewAll() {
-    console.log("nagana ba");
-    
-    document.getElementById('overviewSection').classList.add('hidden');
-    document.getElementById('viewAllSection').classList.remove('hidden');
-  }
-</script>
+	
 </Layout>

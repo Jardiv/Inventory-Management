@@ -6,100 +6,120 @@ import Button from '../../components/Button.astro';
 
 <!-- STOCK TRANSACTION DASHBOARD -->
 <Layout>
-	<div class="flex flex-col gap-1 w-full bg-primary p-4 rounded">
-		<a  href="/stockTransaction/Logs/">
-			<Button class="text-btn-primary py-2 w-[20%] hover:text-btn-primary">See Transaction Logs</Button>
-		</a>
-	</div>
+    <div class="flex flex-col gap-1 w-full bg-primary p-4 rounded">
+        <a href="/stockTransaction/Logs/" class="w-[20%]">
+            <Button
+                class="text-btn-primary py-2 w-full hover:bg-btn-primary hover:text-textColor-secondary"
+                >See Transaction Logs</Button
+            >
+        </a>
+    </div>
 
-	<div class="flex flex-col gap-1 w-full bg-primary p-4 mt-4">
-		<div class="w-full flex justify-between">
-			<h1 class="text-xl font-bold">Stock In Transactions</h1>
-			<a href="/stockTransaction/StockInTransactions/">
-				<Button class="text-btn-primary border-none w-fit hover:text-btn-primary">See All</Button>
-			</a>
-		</div>
-		<div class="p-2">
-			<table class="w-full text-left">
-				<thead>
-					<tr>
-						<th class="table-header">Reference no</th>
-						<th class="table-header">Date</th>
-						<th class="table-header">Supplier</th>
-						<th class="table-header">Status</th>
-						<th class="table-header text-center">Action</th>
-					</tr>
-				</thead>
-				<tbody>
-					<tr class="table-row">
-						<td class="table-data">4353923345</td>
-						<td class="table-data">20/12/2025</td>
-						<td class="table-data">Ecco Food Corp</td>
-						<td class="table-data text-green">Pending</td>
-						<td class="table-data text-center"><Button class="table-view-btn">View</Button></td>
-					</tr>
-					<tr class="table-row">
-						<td class="table-data">4353923345</td>
-						<td class="table-data">20/12/2025</td>
-						<td class="table-data">Ecco Food Corp</td>
-						<td class="table-data text-green">Pending</td>
-						<td class="table-data text-center"><Button class="table-view-btn">View</Button></td>
-					</tr>
-					<tr class="table-row">
-						<td class="table-data">4353923345</td>
-						<td class="table-data">20/12/2025</td>
-						<td class="table-data">Ecco Food Corp</td>
-						<td class="table-data text-green">Pending</td>
-						<td class="table-data text-center"><Button class="table-view-btn">View</Button></td>
-					</tr>
-				</tbody>
-			</table>
-		</div>
-	</div>
+    <div class="flex flex-col gap-1 w-full bg-primary p-4 mt-4">
+        <div class="w-full flex justify-between">
+            <h1 class="text-xl font-bold">Stock In Transactions</h1>
+            <a href="/stockTransaction/StockInTransactions/" class="w-fit">
+                <Button
+                    class="text-btn-primary border-none w-fit hover:text-textColor-tertiary"
+                    >See All</Button
+                >
+            </a>
+        </div>
+        <div class="p-2">
+            <table class="w-full text-left">
+                <thead>
+                    <tr>
+                        <th class="table-header">Reference no</th>
+                        <th class="table-header">Date</th>
+                        <th class="table-header">Supplier</th>
+                        <th class="table-header">Status</th>
+                        <th class="table-header text-center">Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr class="table-row">
+                        <td class="table-data">4353923345</td>
+                        <td class="table-data">20/12/2025</td>
+                        <td class="table-data">Ecco Food Corp</td>
+                        <td class="table-data text-green">Pending</td>
+                        <td class="table-data text-center">
+                            <Button class="table-view-btn">View</Button>
+                        </td>
+                    </tr>
+                    <tr class="table-row">
+                        <td class="table-data">4353923345</td>
+                        <td class="table-data">20/12/2025</td>
+                        <td class="table-data">Ecco Food Corp</td>
+                        <td class="table-data text-green">Pending</td>
+                        <td class="table-data text-center">
+                            <Button class="table-view-btn">View</Button>
+                        </td>
+                    </tr>
+                    <tr class="table-row">
+                        <td class="table-data">4353923345</td>
+                        <td class="table-data">20/12/2025</td>
+                        <td class="table-data">Ecco Food Corp</td>
+                        <td class="table-data text-green">Pending</td>
+                        <td class="table-data text-center">
+                            <Button class="table-view-btn">View</Button>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
 
-	<div class="flex flex-col gap-1 w-full bg-primary p-4 mt-4">
-		<div class="w-full flex justify-between">
-			<h1 class="text-xl font-bold">Stock Out Transactions</h1>
-			<a href="/stockTransaction/StockOutTransactions/">
-				<Button class="text-btn-primary border-none w-fit hover:text-btn-primary">See All</Button>
-			</a>
-		</div>
-		<div class="p-2">
-			<table class="w-full text-left">
-				<thead>
-					<tr>
-						<th class="table-header">Reference no</th>
-						<th class="table-header">Date</th>
-						<th class="table-header">Supplier</th>
-						<th class="table-header">Status</th>
-						<th class="table-header text-center">Action</th>
-					</tr>
-				</thead>
-				<tbody>
-					<tr class="table-row">
-						<td class="table-data">4353923345</td>
-						<td class="table-data">20/12/2025</td>
-						<td class="table-data">Ecco Food Corp</td>
-						<td class="table-data text-green">Pending</td>
-						<td class="table-data text-center"><Button class="table-view-btn">View</Button></td>
-					</tr>
-					<tr class="table-row">
-						<td class="table-data">4353923345</td>
-						<td class="table-data">20/12/2025</td>
-						<td class="table-data">Ecco Food Corp</td>
-						<td class="table-data text-green">Pending</td>
-						<td class="table-data text-center"><Button class="table-view-btn">View</Button></td>
-					</tr>
-					<tr class="table-row">
-						<td class="table-data">4353923345</td>
-						<td class="table-data">20/12/2025</td>
-						<td class="table-data">Ecco Food Corp</td>
-						<td class="table-data text-green">Pending</td>
-						<td class="table-data text-center"><Button class="table-view-btn">View</Button></td>
-					</tr>
-				</tbody>
-			</table>
-		</div>
-	</div>
-
+    <div class="flex flex-col gap-1 w-full bg-primary p-4 mt-4">
+        <div class="w-full flex justify-between">
+            <h1 class="text-xl font-bold">Stock Out Transactions</h1>
+            <a href="/stockTransaction/StockOutTransactions/">
+                <Button
+                    class="text-btn-primary border-none w-fit hover:text-textColor-tertiary"
+                    >See All</Button
+                >
+            </a>
+        </div>
+        <div class="p-2">
+            <table class="w-full text-left">
+                <thead>
+                    <tr>
+                        <th class="table-header">Reference no</th>
+                        <th class="table-header">Date</th>
+                        <th class="table-header">Supplier</th>
+                        <th class="table-header">Status</th>
+                        <th class="table-header text-center">Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr class="table-row">
+                        <td class="table-data">4353923345</td>
+                        <td class="table-data">20/12/2025</td>
+                        <td class="table-data">Ecco Food Corp</td>
+                        <td class="table-data text-green">Pending</td>
+                        <td class="table-data text-center">
+                            <Button class="table-view-btn">View</Button>
+                        </td>
+                    </tr>
+                    <tr class="table-row">
+                        <td class="table-data">4353923345</td>
+                        <td class="table-data">20/12/2025</td>
+                        <td class="table-data">Ecco Food Corp</td>
+                        <td class="table-data text-green">Pending</td>
+                        <td class="table-data text-center">
+                            <Button class="table-view-btn">View</Button>
+                        </td>
+                    </tr>
+                    <tr class="table-row">
+                        <td class="table-data">4353923345</td>
+                        <td class="table-data">20/12/2025</td>
+                        <td class="table-data">Ecco Food Corp</td>
+                        <td class="table-data text-green">Pending</td>
+                        <td class="table-data text-center">
+                            <Button class="table-view-btn">View</Button>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
 </Layout>
