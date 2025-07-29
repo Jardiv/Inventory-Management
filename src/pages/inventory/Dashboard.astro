@@ -7,12 +7,12 @@ import Layout from '../../layouts/Layout.astro';
     <section id="overviewSection">
       <!-- Inventory Summary -->
       <div class="bg-primary p-6 rounded-lg mb-6 ">
-        <h2 class="text-xl font-semibold mb-4">Quick Overview</h2>
+        <h2 class="text-xl font-semibold mb-4">Quick Summary</h2>
         <div class="grid grid-cols-4 gap-6 text-center">
-          <div><p class="text-textColor-primary text-sm">Total Products</p><p class="text-lg font-bold">$1,666,669.69</p></div>
-          <div><p class="text-textColor-primary text-sm">Categories</p><p class="text-lg font-bold">250</p></div>
-          <div><p class="text-textColor-primary text-sm">Low Stock Products</p><p class="text-lg font-bold">47</p></div>
-          <div><p class="text-textColor-primary text-sm">Out of Stock Products</p><p class="text-lg font-bold">17</p></div>
+          <div><p class="text-textColor-primary text-sm">Total Products</p><p class="text-lg font-bold">100</p></div>
+          <div><p class="text-textColor-primary text-sm">Categories</p><p class="text-lg font-bold">5</p></div>
+          <div><p class="text-textColor-primary text-sm">Low Stock Products</p><p class="text-lg font-bold">23</p></div>
+          <div><p class="text-textColor-primary text-sm">Out of Stock Products</p><p class="text-lg font-bold">6</p></div>
         </div>
       </div>
 
@@ -20,308 +20,110 @@ import Layout from '../../layouts/Layout.astro';
       <div class="bg-primary p-6 rounded-lg">
         <div class="flex justify-between mb-4">
           <div class="flex gap-2 items-center">
-            <h2 class="text-xl font-semibold mb-4">Inventory</h2>
-            <select id="filterCategory" onchange="filterTable()" class="bg-[#2b2b2b] text-white px-3 py-2 rounded">
+            <h2 class="text-xl font-semibold mb-4">Product Inventory</h2>
+            <!-- <select id="filterCategory" onchange="filterTable()" class="bg-[#2b2b2b] text-white px-3 py-2 rounded">
               <option value="">All Category</option>
               <option value="Grains">Grains</option>
               <option value="Condiments">Condiments</option>
               <option value="Carbs">Carbs</option>
-            </select>
+            </select> -->
           </div>
           <div class="flex gap-2">
-            <button onclick="alert('Add Product Clicked')" class="bg-[#9b2cfa] px-4 py-2 rounded text-white">Add Products</button>
-            <a href="/inventory/Dashboard2ndpage/"><button class="bg-btn-primary px-4 py-2 rounded text-white">View all</button></a>
+            <a href="/inventory/Additem/"><button class="flex items-center border border-border_color rounded-md px-4 py-2 hover:bg-btn-primary hover:text-textColor-secondary transition">Add Products</button>
+            <a href="/inventory/Dashboard2ndpage/"><button class="flex items-center border border-border_color rounded-md px-6 py-2 hover:bg-btn-primary hover:text-textColor-secondary transition">View all</button></a>
           </div>
         </div>
+        
+       
+          
+          
+        
+          <!-- Table -->
+    <div>
+      <!-- Table Header -->
+      <div class="grid grid-cols-5 text-xl font-semibold border-b border-border_color pb-2 mb-4">
+        <span>Item Code</span>
+        <span class="text-center">Item Name</span>
+        <span class="text-center">Category</span>
+        <span class="text-center">Unit</span>
+        <span class="text-center">Auto Re-order Status</span> 
+        
+      </div>
 
-        <table id="productTable" class="w-full text-left text-sm">
-          <thead>
-            <tr class="text-gray-400 border-b border-gray-700">
-              <th class="py-2">Item Code</th>
-              <th>Item Name</th>
-              <th>Category</th>
-              <th>Unit</th>
-              <th>Actions</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr class="border-b border-gray-800 hover:bg-[#2a2a2a]">
-              <td>1001</td><td>Product 1</td><td>Grains</td><td>10kg</td>
-              <td>
-                <div class="flex gap-2">
-                  <button onclick="alert('Edit Rice')" class="bg-green-500 px-3 py-1 rounded text-white">Edit</button>
-                  <button onclick="alert('Delete Rice')" class="bg-red-600 px-3 py-1 rounded text-white">Delete</button>
-                </div>
-              </td>
-            </tr>
-            <tr class="hover:bg-[#2a2a2a]">
-              <td>1002</td><td>Product 2</td><td>Condiments</td><td>Liter</td>
-              <td>
-                <div class="flex gap-2">
-                  <button onclick="alert('Edit Soy Sauce')" class="bg-green-500 px-3 py-1 rounded text-white">Edit</button>
-                  <button onclick="alert('Delete Soy Sauce')" class="bg-red-600 px-3 py-1 rounded text-white">Delete</button>
-                </div>  
-              </td>
-            </tr>
-            <tr class="hover:bg-[#2a2a2a]">
-              <td>1003</td><td>Product 3</td><td>Carbs</td><td>Liter</td>
-              <td>
-                <div class="flex gap-2">
-                  <button onclick="alert('Edit Soy Sauce')" class="bg-green-500 px-3 py-1 rounded text-white">Edit</button>
-                  <button onclick="alert('Delete Soy Sauce')" class="bg-red-600 px-3 py-1 rounded text-white">Delete</button>
-                </div>
-              </td>
-            </tr>
-            <tr class="hover:bg-[#2a2a2a]">
-              <td>1004</td><td>Product 4</td><td>Kilograms</td><td>Liter</td>
-              <td>
-                <div class="flex gap-2">
-                  <button onclick="alert('Edit Soy Sauce')" class="bg-green-500 px-3 py-1 rounded text-white">Edit</button>
-                  <button onclick="alert('Delete Soy Sauce')" class="bg-red-600 px-3 py-1 rounded text-white">Delete</button>
-                </div>
-              </td>
-            </tr>
-            <tr class="hover:bg-[#2a2a2a]">
-              <td>1005</td><td>Product 5</td><td>Kilograms</td><td>Liter</td>
-              <td>
-                <div class="flex gap-2">
-                  <button onclick="alert('Edit Soy Sauce')" class="bg-green-500 px-3 py-1 rounded text-white">Edit</button>
-                  <button onclick="alert('Delete Soy Sauce')" class="bg-red-600 px-3 py-1 rounded text-white">Delete</button>
-                </div>
-              </td>
-            </tr>
-            <tr class="hover:bg-[#2a2a2a]">
-              <td>1006</td><td>Product 6</td><td>Condiments</td><td>Liter</td>
-              <td>
-                <div class="flex gap-2">
-                  <button onclick="alert('Edit Soy Sauce')" class="bg-green-500 px-3 py-1 rounded text-white">Edit</button>
-                  <button onclick="alert('Delete Soy Sauce')" class="bg-red-600 px-3 py-1 rounded text-white">Delete</button>
-                </div>
-              </td>
-            </tr>
-            <tr class="hover:bg-[#2a2a2a]">
-              <td>1007</td><td>Product 7</td><td>Condiments</td><td>Liter</td>
-              <td>
-                <div class="flex gap-2">
-                  <button onclick="alert('Edit Soy Sauce')" class="bg-green-500 px-3 py-1 rounded text-white">Edit</button>
-                  <button onclick="alert('Delete Soy Sauce')" class="bg-red-600 px-3 py-1 rounded text-white">Delete</button>
-                </div>
-              </td>
-            </tr>
-            <tr class="hover:bg-[#2a2a2a]">
-              <td>1008</td><td>Product 8</td><td>Condiments</td><td>Liter</td>
-              <td>
-                <div class="flex gap-2">
-                  <button onclick="alert('Edit Soy Sauce')" class="bg-green-500 px-3 py-1 rounded text-white">Edit</button>
-                  <button onclick="alert('Delete Soy Sauce')" class="bg-red-600 px-3 py-1 rounded text-white">Delete</button>
-                </div>
-              </td>
-            </tr>
-            <tr class="hover:bg-[#2a2a2a]">
-              <td>1009</td><td>Product 9</td><td>Condiments</td><td>Liter</td>
-              <td>
-                <div class="flex gap-2">
-                  <button onclick="alert('Edit Soy Sauce')" class="bg-green-500 px-3 py-1 rounded text-white">Edit</button>
-                  <button onclick="alert('Delete Soy Sauce')" class="bg-red-600 px-3 py-1 rounded text-white">Delete</button>
-                </div>
-              </td>
-            </tr>
-            <tr class="hover:bg-[#2a2a2a]">
-              <td>1010</td><td>Product 10</td><td>Condiments</td><td>Liter</td>
-              <td>
-                <div class="flex gap-2">
-                  <button onclick="alert('Edit Soy Sauce')" class="bg-green-500 px-3 py-1 rounded text-white">Edit</button>
-                  <button onclick="alert('Delete Soy Sauce')" class="bg-red-600 px-3 py-1 rounded text-white">Delete</button>
-                </div>
-              </td>
-            </tr>
-          </tbody>
+      <!-- Table Rows -->
+      <div class="space-y-2 text-xl">
+        <div class="grid grid-cols-5 items-center border-b border-border_color py-2">
+          <span>1001</span>
+          <span class="text-center">Product 1</span>
+          <span class="text-center">Grains</span>
+          <span class="text-center">10Kg</span>
+          <span class="text-center text-green-500">Yes</span>
+          
+        </div>
+        <div class="grid grid-cols-5 items-center border-b border-border_color py-2">
+          <span>1002</span>
+          <span class="text-center">Product 2</span>
+          <span class="text-center">Condiments</span>
+          <span class="text-center">Liter</span>
+          <span class="text-center text-green-500">Yes</span>
+        </div>
+        <div class="grid grid-cols-5 items-center border-b border-border_color py-2">
+          <span>1003</span>
+          <span class="text-center">Product 3</span>
+          <span class="text-center">Carbs</span>
+          <span class="text-center">N/A</span>
+          <span class="text-center text-green-500">Yes</span>
+        </div>
+        <div class="grid grid-cols-5 items-center border-b border-border_color py-2">
+          <span>1004</span>
+          <span class="text-center">Product 4</span>
+          <span class="text-center">Condiments</span>
+          <span class="text-center">Liter</span>
+          <span class="text-center text-red-500 ">No</span>
+        </div>
+        <div class="grid grid-cols-5 items-center border-b border-border_color py-2">
+          <span>1005</span>
+          <span class="text-center">Product 5</span>
+          <span class="text-center">Condiments</span>
+          <span class="text-center">Liter</span>
+          <span class="text-center text-green-500">Yes</span>
+        </div>
+        <div class="grid grid-cols-5 items-center border-b border-border_color py-2">
+          <span>1006</span>
+          <span class="text-center">Product 6</span>
+          <span class="text-center">Carbs</span>
+          <span class="text-center">Grams</span>
+          <span class="text-center text-green-500">Yes</span>
+        </div>
+        <div class="grid grid-cols-5 items-center border-b border-border_color py-2">
+          <span>1007</span>
+          <span class="text-center">Product 7</span>
+          <span class="text-center">Condiments</span>
+          <span class="text-center">Liter</span>
+          <span class="text-center text-red-500 ">No</span>
+        </div>
+        <div class="grid grid-cols-5 items-center border-b border-border_color py-2">
+          <span>1008</span>
+          <span class="text-center">Product 8</span>
+          <span class="text-center">Condiments</span>
+          <span class="text-center">Liter</span>
+          <span class="text-center text-red-500 ">No</span>
+        </div>
+        <div class="grid grid-cols-5 items-center border-b border-border_color py-2">
+          <span>1009</span>
+          <span class="text-center">Product 9</span>
+          <span class="text-center">Condiments</span>
+          <span class="text-center">Liter</span>
+          <span class="text-center text-red-500 ">No</span>
+        </div>
+          
+        
+          
         </table>
       </div>
     </section>
 
-    <!-- VIEW ALL -->
-    <section id="viewAllSection" class="hidden">
-      <div class="bg-primary p-6 rounded-lg">
-        <div class="flex justify-between mb-4">
-          <div class="flex gap-2">
-            <button onclick="alert('Add Product Clicked')" class="bg-[#9b2cfa] px-4 py-2 rounded text-white">Add Product</button>
-            <button onclick="showOverview()" class="bg-[#2b2b2b] px-4 py-2 rounded text-white">Go back</button>
-          </div>
-        </div>
-
-        <table class="w-full text-left text-sm">
-          <thead>
-            <tr class="text-gray-400 border-b border-gray-700">
-              <th class="py-2">Item Code</th>
-              <th>Item Name</th>
-              <th>Category</th>
-              <th>Unit</th>
-              <th>Actions</th>
-            </tr>
-          </thead>
-          <tbody>
-            <!-- Sample Rows -->
-            <tr class="border-b border-gray-800 hover:bg-[#2a2a2a]">
-              <td>1001</td><td>Product 1</td><td>Grains</td><td>10kg</td>
-              <td>
-                <div class="flex gap-2">
-                  <button onclick="alert('Edit Rice')" class="bg-green-500 px-3 py-1 rounded text-white">Edit</button>
-                  <button onclick="alert('Delete Rice')" class="bg-red-600 px-3 py-1 rounded text-white">Delete</button>
-                </div>
-              </td>
-            </tr>
-            <tr class="hover:bg-[#2a2a2a]">
-              <td>1002</td><td>Product 2</td><td>Condiments</td><td>Liter</td>
-              <td>
-                <div class="flex gap-2">
-                  <button onclick="alert('Edit Soy Sauce')" class="bg-green-500 px-3 py-1 rounded text-white">Edit</button>
-                  <button onclick="alert('Delete Soy Sauce')" class="bg-red-600 px-3 py-1 rounded text-white">Delete</button>
-                </div>  
-              </td>
-            </tr>
-            <tr class="hover:bg-[#2a2a2a]">
-              <td>1003</td><td>Product 3</td><td>Carbs</td><td>Liter</td>
-              <td>
-                <div class="flex gap-2">
-                  <button onclick="alert('Edit Soy Sauce')" class="bg-green-500 px-3 py-1 rounded text-white">Edit</button>
-                  <button onclick="alert('Delete Soy Sauce')" class="bg-red-600 px-3 py-1 rounded text-white">Delete</button>
-                </div>
-              </td>
-            </tr>
-            <tr class="hover:bg-[#2a2a2a]">
-              <td>1004</td><td>Product 4</td><td>Kilograms</td><td>Liter</td>
-              <td>
-                <div class="flex gap-2">
-                  <button onclick="alert('Edit Soy Sauce')" class="bg-green-500 px-3 py-1 rounded text-white">Edit</button>
-                  <button onclick="alert('Delete Soy Sauce')" class="bg-red-600 px-3 py-1 rounded text-white">Delete</button>
-                </div>
-              </td>
-            </tr>
-            <tr class="hover:bg-[#2a2a2a]">
-              <td>1005</td><td>Product 5</td><td>Kilograms</td><td>Liter</td>
-              <td>
-                <div class="flex gap-2">
-                  <button onclick="alert('Edit Soy Sauce')" class="bg-green-500 px-3 py-1 rounded text-white">Edit</button>
-                  <button onclick="alert('Delete Soy Sauce')" class="bg-red-600 px-3 py-1 rounded text-white">Delete</button>
-                </div>
-              </td>
-            </tr>
-            <tr class="hover:bg-[#2a2a2a]">
-              <td>1006</td><td>Product 6</td><td>Condiments</td><td>Liter</td>
-              <td>
-                <div class="flex gap-2">
-                  <button onclick="alert('Edit Soy Sauce')" class="bg-green-500 px-3 py-1 rounded text-white">Edit</button>
-                  <button onclick="alert('Delete Soy Sauce')" class="bg-red-600 px-3 py-1 rounded text-white">Delete</button>
-                </div>
-              </td>
-            </tr>
-            <tr class="hover:bg-[#2a2a2a]">
-              <td>1007</td><td>Product 7</td><td>Condiments</td><td>Liter</td>
-              <td>
-                <div class="flex gap-2">
-                  <button onclick="alert('Edit Soy Sauce')" class="bg-green-500 px-3 py-1 rounded text-white">Edit</button>
-                  <button onclick="alert('Delete Soy Sauce')" class="bg-red-600 px-3 py-1 rounded text-white">Delete</button>
-                </div>
-              </td>
-            </tr>
-            <tr class="hover:bg-[#2a2a2a]">
-              <td>1008</td><td>Product 8</td><td>Condiments</td><td>Liter</td>
-              <td>
-                <div class="flex gap-2">
-                  <button onclick="alert('Edit Soy Sauce')" class="bg-green-500 px-3 py-1 rounded text-white">Edit</button>
-                  <button onclick="alert('Delete Soy Sauce')" class="bg-red-600 px-3 py-1 rounded text-white">Delete</button>
-                </div>
-              </td>
-            </tr>
-            <tr class="hover:bg-[#2a2a2a]">
-              <td>1009</td><td>Product 9</td><td>Condiments</td><td>Liter</td>
-              <td>
-                <div class="flex gap-2">
-                  <button onclick="alert('Edit Soy Sauce')" class="bg-green-500 px-3 py-1 rounded text-white">Edit</button>
-                  <button onclick="alert('Delete Soy Sauce')" class="bg-red-600 px-3 py-1 rounded text-white">Delete</button>
-                </div>
-              </td>
-            </tr>
-            <tr class="hover:bg-[#2a2a2a]">
-              <td>1010</td><td>Product 10</td><td>Condiments</td><td>Liter</td>
-              <td>
-                <div class="flex gap-2">
-                  <button onclick="alert('Edit Soy Sauce')" class="bg-green-500 px-3 py-1 rounded text-white">Edit</button>
-                  <button onclick="alert('Delete Soy Sauce')" class="bg-red-600 px-3 py-1 rounded text-white">Delete</button>
-                </div>
-              </td>
-            </tr>
-            <tr class="hover:bg-[#2a2a2a]">
-              <td>1011</td><td>Product 11</td><td>Grains</td><td>Liter</td>
-              <td>
-                <div class="flex gap-2">
-                  <button onclick="alert('Edit Soy Sauce')" class="bg-green-500 px-3 py-1 rounded text-white">Edit</button>
-                  <button onclick="alert('Delete Soy Sauce')" class="bg-red-600 px-3 py-1 rounded text-white">Delete</button>
-                </div>
-              </td>
-            </tr>
-            <tr class="hover:bg-[#2a2a2a]">
-              <td>1012</td><td>Product 12</td><td>Grains</td><td>Liter</td>
-              <td>
-                <div class="flex gap-2">
-                  <button onclick="alert('Edit Soy Sauce')" class="bg-green-500 px-3 py-1 rounded text-white">Edit</button>
-                  <button onclick="alert('Delete Soy Sauce')" class="bg-red-600 px-3 py-1 rounded text-white">Delete</button>
-                </div>
-              </td>
-            </tr>
-            <tr class="hover:bg-[#2a2a2a]">
-              <td>1013</td><td>Product 13</td><td>Condiments</td><td>Liter</td>
-              <td>
-                <div class="flex gap-2">
-                  <button onclick="alert('Edit Soy Sauce')" class="bg-green-500 px-3 py-1 rounded text-white">Edit</button>
-                  <button onclick="alert('Delete Soy Sauce')" class="bg-red-600 px-3 py-1 rounded text-white">Delete</button>
-                </div>
-              </td>
-            </tr>
-            <tr class="hover:bg-[#2a2a2a]">
-              <td>1014</td><td>Product 14</td><td>Grains</td><td>Liter</td>
-              <td>
-                <div class="flex gap-2">
-                  <button onclick="alert('Edit Soy Sauce')" class="bg-green-500 px-3 py-1 rounded text-white">Edit</button>
-                  <button onclick="alert('Delete Soy Sauce')" class="bg-red-600 px-3 py-1 rounded text-white">Delete</button>
-                </div>
-              </td>
-            </tr>
-            <tr class="hover:bg-[#2a2a2a]">
-              <td>1015</td><td>Product 15</td><td>Condiments</td><td>Liter</td>
-              <td>
-                <div class="flex gap-2">
-                  <button onclick="alert('Edit Soy Sauce')" class="bg-green-500 px-3 py-1 rounded text-white">Edit</button>
-                  <button onclick="alert('Delete Soy Sauce')" class="bg-red-600 px-3 py-1 rounded text-white">Delete</button>
-                </div>
-              </td>
-            </tr>
-            <tr class="hover:bg-[#2a2a2a]">
-              <td>1016</td><td>Product 16</td><td>Condiments</td><td>Liter</td>
-              <td>
-                <div class="flex gap-2">
-                  <button onclick="alert('Edit Soy Sauce')" class="bg-green-500 px-3 py-1 rounded text-white">Edit</button>
-                  <button onclick="alert('Delete Soy Sauce')" class="bg-red-600 px-3 py-1 rounded text-white">Delete</button>
-                </div>
-              </td>
-            </tr>
-
-        <div class="flex justify-between items-center mt-6 text-sm">
-          <button class="px-4 py-1 border border-white rounded">Previous</button>
-          <p class="text-gray-400">Page 1 of 10</p>
-          <button class="px-4 py-1 border border-white rounded">Next</button>
-        </div>
-      </div>
-    </section>
   </main>
 </div>
-<script client>
-  function showViewAll() {
-    console.log("nagana ba");
-    
-    document.getElementById('overviewSection').classList.add('hidden');
-    document.getElementById('viewAllSection').classList.remove('hidden');
-  }
-</script>
+
 </Layout>
