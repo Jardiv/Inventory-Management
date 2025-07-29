@@ -1,8 +1,5 @@
-# Astro Starter Kit: Basics
+# Inventory Management Module
 
-```sh
-npm create astro@latest -- --template basics
-```
 
 > 🧑‍🚀 **Seasoned astronaut?** Delete this file. Have fun!
 
@@ -41,13 +38,32 @@ All commands are run from the root of the project, from a terminal:
 | `npm run astro ...`       | Run CLI commands like `astro add`, `astro check` |
 | `npm run astro -- --help` | Get help using the Astro CLI                     |
 
-## 👀 Want to learn more?
+## Database Setup
 
-Feel free to check [our documentation](https://docs.astro.build) or jump into our [Discord server](https://astro.build/chat).
+1. XAMPP
+	Download and install XAMPP. This will install MySQL and phpMyAdmin for easy database management.
+
+2. Start MySQL Server
+	Open the XAMPP Control Panel.
+	Start the MySQL service.
+	(Optional) Start Apache to access phpMyAdmin at http://localhost/phpmyadmin.
+
+3. Create Database and Table
+	Navigate to http://localhost/phpmyadmin.
+	Create a new database (e.g., astro_db).
+	Create necessary tables and insert data manually or via SQL import.
+
+4. Database Configuration
+	Create a ".env" file in your Astro project root and add your database connection:
+
+	.env content:
+		DB_HOST=localhost
+		DB_USER=root
+		DB_PASSWORD=
+		DB_NAME=inventory_management
+
+	(when error is about env do -> "npm install" on terminal or bash)
 
 
-
-# COMPONENTS
-<Modal>
-	<!-- CONTENTS -->
-<Modal>
+note: 'users.ts' is sample on how to use database
+##	> di pa sure kung ganon gagawin  

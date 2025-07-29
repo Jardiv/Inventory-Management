@@ -83,7 +83,7 @@ const currentPath = Astro.url.pathname;
 				Settings
 			</a>
 
-			<button class="btn-theme flex gap-2 items-center p-2 rounded cursor-pointer relative" onClick="toggleTheme()">
+			<button class="btn-theme flex gap-2 items-center p-2 rounded cursor-pointer relative" onclick="toggleTheme()">
 				<svg
 					xmlns="http://www.w3.org/2000/svg"
 					fill="none"
@@ -107,29 +107,4 @@ const currentPath = Astro.url.pathname;
 
 	</nav>
 
-	
-<script is:inline>
-
-	function toggleTheme(){
-		console.log("Toggle Theme");
-		const btn_theme = document.querySelector(".btn-theme");
-		const light_icon = document.querySelector(".light-icon");
-		const dark_icon = document.querySelector(".dark-icon");
-		
-		
-		// Remove active class and animation
-		btn_theme.classList.remove("active");
-
-		// Force reflow to restart animation
-		void btn_theme.offsetWidth;
-
-		// Toggle theme and add active class to trigger animation
-		btn_theme.classList.add("active");
-
-		light_icon.classList.toggle("active");
-		dark_icon.classList.toggle("active");
-
-		document.documentElement.classList.toggle('dark');
-	}
-</script>
 </aside>
