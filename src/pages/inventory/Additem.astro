@@ -1,0 +1,59 @@
+---
+import Layout from '../../layouts/Layout.astro';
+---
+<Layout>
+    <div class="bg-neutral-900 text-white rounded-lg w-[384px] p-6 space-y-4">
+        <div class="flex justify-between items-center mb-4">
+        <h2 class="text-lg font-semibold">Add Product</h2>
+        <button class="text-white text-xl font-bold">&times;</button>
+        </div>
+    
+        <p class="text-sm text-gray-400 mb-2">Add new product.</p>
+    
+        <!-- Item Name -->
+        <div>
+        <label class="block text-sm mb-1">Item Name:</label>
+        <input type="text" value="ABC" class="w-full bg-neutral-800 text-white border border-neutral-700 rounded px-3 py-2 focus:outline-none focus:ring-1 focus:ring-green-500" />
+        </div>
+    
+        <!-- Category -->
+        <div>
+        <label class="block text-sm mb-1">Category:</label>
+        <input type="text" value="Category 1" class="w-full bg-neutral-800 text-white border border-neutral-700 rounded px-3 py-2 focus:outline-none focus:ring-1 focus:ring-green-500" />
+        </div>
+    
+        <!-- Description -->
+        <div>
+        <label class="block text-sm mb-1">Description: <span class="text-gray-500">(Optional)</span></label>
+        <textarea placeholder="Say anything..." class="w-full bg-neutral-800 text-white border border-neutral-700 rounded px-3 py-2 resize-none focus:outline-none focus:ring-1 focus:ring-green-500"></textarea>
+        </div>
+    
+        <!-- Quantity Inputs -->
+        <div class="flex space-x-4">
+        <div class="flex-1">
+            <label class="block text-sm mb-1">Minimum Quantity:</label>
+            <input type="number" value="10" class="w-full bg-neutral-800 text-white border border-neutral-700 rounded px-3 py-2 focus:outline-none focus:ring-1 focus:ring-green-500" />
+        </div>
+        <div class="flex-1">
+            <label class="block text-sm mb-1">Maximum Quantity:</label>
+            <input type="number" value="100" class="w-full bg-neutral-800 text-white border border-neutral-700 rounded px-3 py-2 focus:outline-none focus:ring-1 focus:ring-green-500" />
+        </div>
+        </div>
+    
+        <!-- Auto Re-order Switch -->
+        <div class="flex items-center mt-2">
+        <label class="text-sm mr-4">Auto Re-order:</label>
+        <label class="relative inline-flex items-center cursor-pointer">
+            <input type="checkbox" checked class="sr-only peer">
+            <div class="w-11 h-6 bg-gray-700 rounded-full peer peer-checked:bg-green-500 peer-focus:ring-2 peer-focus:ring-green-500 transition-all"></div>
+            <div class="absolute left-0.5 top-0.5 w-5 h-5 bg-white rounded-full transition-all peer-checked:translate-x-full"></div>
+        </label>
+        </div>
+    
+        <!-- Buttons -->
+        <div class="flex justify-end space-x-4 pt-4">
+        <button class="bg-red-600 text-white px-4 py-2 rounded hover:bg-red-700 transition">Cancel</button>
+        <button class="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700 transition">Confirm</button>
+        </div>
+    </div>
+</Layout>
