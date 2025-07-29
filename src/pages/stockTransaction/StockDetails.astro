@@ -1,6 +1,12 @@
 ---
 import Layout from '../../layouts/Layout.astro';
 import Button from '../../components/Button.astro';
+
+import { URL } from 'node:url';
+
+const url = new URL(Astro.request.url);
+const isShow = url.searchParams.get("showSupplier");
+const showSupplierDetails = isShow !== 'false';
 ---
 
 <Layout>
@@ -111,24 +117,27 @@ import Button from '../../components/Button.astro';
                     </table>
                 </div>
 
-                <div class="w-[40%] flex flex-col">
-                    <h2 class="text-lg font-semibold mb-2">Supplier Details</h2>
-                    <hr class="mb-4">
-                    <table class="w-full space-y-2">
-                        <tr class="py-2">
-                            <td class="text-right px-4 py-2">Supplier</td>
-                            <td class="py-2">Ecco Foods Corp</td>
-                        </tr>
-                        <tr class="py-2">
-                            <td class="text-right px-4 py-2">Contact No</td>
-                            <td class="py-2">09483729464</td>
-                        </tr>
-                        <tr class="py-2">
-                            <td class="text-right px-4 py-2">Location</td>
-                            <td class="py-2">Address 123</td>
-                        </tr>
-                    </table>
-                </div>
+               {showSupplierDetails ? (
+    <div class="w-[40%] flex flex-col">
+        <h2 class="text-lg font-semibold mb-2">Supplier Details</h2>
+        <hr class="mb-4">
+        <table class="w-full space-y-2">
+            <tr class="py-2">
+                <td class="text-right px-4 py-2">Supplier</td>
+                <td class="py-2">Ecco Foods Corp</td>
+            </tr>
+            <tr class="py-2">
+                <td class="text-right px-4 py-2">Contact No</td>
+                <td class="py-2">09483729464</td>
+            </tr>
+            <tr class="py-2">
+                <td class="text-right px-4 py-2">Location</td>
+                <td class="py-2">Address 123</td>
+            </tr>
+        </table>
+    </div>
+    ) : null}
+
 
             </div>
 
