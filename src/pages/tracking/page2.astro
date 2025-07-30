@@ -3,7 +3,7 @@ import Layout from '../../layouts/Layout.astro';
 ---
 
 <Layout>
-  <div class="w-full max-w-[1293px] bg-primary rounded-md mx-auto p-6 text-textColor-primary font-poppins">
+  <div class="w-full max-w-[100%] bg-primary rounded-md mx-auto p-6 text-textColor-primary font-poppins">
     <!-- Title -->
     <div class="flex justify-between items-center mb-6">
       <h2 class="text-2xl font-semibold">Shipments History</h2>
@@ -18,12 +18,22 @@ import Layout from '../../layouts/Layout.astro';
         </button>
 
         <!-- Filter Button -->
-        <button class="flex items-center gap-2 px-4 py-2 border border-border_color rounded hover:bg-btn-primary hover:text-textColor-secondary transition">
-          <svg xmlns="http://www.w3.org/2000/svg" fill="none" class="w-6 h-6" viewBox="0 0 24 24" stroke="currentColor">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-              d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2a1 1 0 01-.293.707L15 13.414V20a1 1 0 01-1.447.894l-4-2A1 1 0 019 18v-4.586L3.293 6.707A1 1 0 013 6V4z" />
-          </svg>
-        </button>
+        <div class="relative">
+          <select class="appearance-none w-full flex items-center gap-2 px-4 py-2 border border-border_color rounded hover:bg-btn-primary hover:text-textColor-secondary transition pr-10 text-base cursor-pointer bg-primary text-textColor-primary">
+            <option value="" disabled selected>Filter By</option>
+            <option value="received">Received</option>
+            <option value="delivered">Delivered</option>
+            <option value="pending">Pending</option>
+          </select>
+
+          <!-- Icon (absolute inside select container) -->
+          <div class="pointer-events-none absolute top-1/2 right-3 transform -translate-y-1/2 text-textColor-primary">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" class="w-5 h-5" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2a1 1 0 01-.293.707L15 13.414V20a1 1 0 01-1.447.894l-4-2A1 1 0 019 18v-4.586L3.293 6.707A1 1 0 013 6V4z" />
+            </svg>
+          </div>
+        </div>
       </div>
     </div>
 
