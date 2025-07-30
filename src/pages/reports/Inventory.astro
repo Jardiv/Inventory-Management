@@ -1,19 +1,60 @@
 ---
 import Layout from '../../layouts/Layout.astro';
 
-// Mock inventory data
-const inventoryData = [
-  { id: 1, code: 'Product 1', name: 'Product 1', current: 50, min: 20, max: 100, status: 'OK' },
-  { id: 2, code: 'Product 2', name: 'Product 2', current: 15, min: 20, max: 100, status: 'LOW' },
-  { id: 3, code: 'Product 3', name: 'Product 3', current: 0, min: 10, max: 200, status: 'OUT OF STOCK' },
-  { id: 4, code: 'Product 4', name: 'Product 4', current: 0, min: 10, max: 200, status: 'OUT OF STOCK' },
-  { id: 5, code: 'Product 5', name: 'Product 5', current: 15, min: 20, max: 100, status: 'LOW' },
-  { id: 6, code: 'Product 6', name: 'Product 6', current: 15, min: 20, max: 100, status: 'LOW' },
-  { id: 7, code: 'Product 7', name: 'Product 7', current: 15, min: 20, max: 100, status: 'LOW' },
-  { id: 8, code: 'Product 8', name: 'Product 8', current: 50, min: 20, max: 100, status: 'OK' },
-  { id: 9, code: 'Product 9', name: 'Product 9', current: 50, min: 20, max: 100, status: 'OK' },
-  { id: 10, code: 'Product 10', name: 'Product 10', current: 50, min: 20, max: 100, status: 'OK' },
+// Mock inventory data - expanded for pagination
+const allInventoryData = [
+  { id: 1, code: 'PRD001', name: 'Product 1', current: 50, min: 20, max: 100, status: 'OK' },
+  { id: 2, code: 'PRD002', name: 'Product 2', current: 15, min: 20, max: 100, status: 'LOW' },
+  { id: 3, code: 'PRD003', name: 'Product 3', current: 0, min: 10, max: 200, status: 'OUT OF STOCK' },
+  { id: 4, code: 'PRD004', name: 'Product 4', current: 0, min: 10, max: 200, status: 'OUT OF STOCK' },
+  { id: 5, code: 'PRD005', name: 'Product 5', current: 15, min: 20, max: 100, status: 'LOW' },
+  { id: 6, code: 'PRD006', name: 'Product 6', current: 15, min: 20, max: 100, status: 'LOW' },
+  { id: 7, code: 'PRD007', name: 'Product 7', current: 15, min: 20, max: 100, status: 'LOW' },
+  { id: 8, code: 'PRD008', name: 'Product 8', current: 50, min: 20, max: 100, status: 'OK' },
+  { id: 9, code: 'PRD009', name: 'Product 9', current: 50, min: 20, max: 100, status: 'OK' },
+  { id: 10, code: 'PRD010', name: 'Product 10', current: 50, min: 20, max: 100, status: 'OK' },
+  { id: 11, code: 'PRD011', name: 'Product 11', current: 75, min: 30, max: 150, status: 'OK' },
+  { id: 12, code: 'PRD012', name: 'Product 12', current: 25, min: 30, max: 120, status: 'LOW' },
+  { id: 13, code: 'PRD013', name: 'Product 13', current: 90, min: 25, max: 200, status: 'OK' },
+  { id: 14, code: 'PRD014', name: 'Product 14', current: 5, min: 15, max: 80, status: 'LOW' },
+  { id: 15, code: 'PRD015', name: 'Product 15', current: 0, min: 20, max: 100, status: 'OUT OF STOCK' },
+  { id: 16, code: 'PRD016', name: 'Product 16', current: 45, min: 25, max: 90, status: 'OK' },
+  { id: 17, code: 'PRD017', name: 'Product 17', current: 12, min: 15, max: 75, status: 'LOW' },
+  { id: 18, code: 'PRD018', name: 'Product 18', current: 65, min: 30, max: 120, status: 'OK' },
+  { id: 19, code: 'PRD019', name: 'Product 19', current: 0, min: 10, max: 50, status: 'OUT OF STOCK' },
+  { id: 20, code: 'PRD020', name: 'Product 20', current: 35, min: 20, max: 80, status: 'OK' },
+  { id: 21, code: 'PRD021', name: 'Product 21', current: 8, min: 12, max: 60, status: 'LOW' },
+  { id: 22, code: 'PRD022', name: 'Product 22', current: 42, min: 25, max: 95, status: 'OK' },
 ];
+
+// Pagination logic
+const itemsPerPage = 10;
+const currentPage = parseInt(Astro.url.searchParams.get('page') || '1');
+const totalPages = Math.ceil(allInventoryData.length / itemsPerPage);
+const startIndex = (currentPage - 1) * itemsPerPage;
+const endIndex = startIndex + itemsPerPage;
+
+// Get current page data
+const currentPageData = allInventoryData.slice(startIndex, endIndex);
+
+// Create exactly 10 rows (fill with empty invisible rows if needed)
+const tableRows = [];
+for (let i = 0; i < itemsPerPage; i++) {
+  if (i < currentPageData.length) {
+    tableRows.push({ ...currentPageData[i], isVisible: true });
+  } else {
+    tableRows.push({ 
+      id: null, 
+      code: '', 
+      name: '', 
+      current: 0, 
+      min: 0, 
+      max: 0, 
+      status: '', 
+      isVisible: false 
+    });
+  }
+}
 
 // Function to get status styling
 function getStatusStyle(status: string) {
@@ -32,10 +73,10 @@ function getStatusStyle(status: string) {
 
 <!-- REPORT DASHBOARD -->
 <Layout>
-
-        <!-- Body -->
-        <div class="flex-1 overflow-hidden bg-primary rounded-lg p-6 mb-6">
-            <div class="flex justify-between items-center mb-4">
+    <!-- Body -->
+    <div class="w-full h-screen flex flex-col p-4">
+        <div class="bg-primary flex-1 rounded-lg p-6 flex flex-col min-h-0">
+            <div class="flex justify-between items-center mb-6">
                 <h2 class="text-textColor-primary text-xl font-semibold">Inventory Stock</h2>
                 <div class="flex gap-2">
                     <button class="p-2 text-textColor-primary hover:bg-btn-hover hover:text-white rounded">
@@ -50,10 +91,11 @@ function getStatusStyle(status: string) {
                     </a>
                 </div>
             </div>
-            <div class="p-6 h-full overflow-y-auto">
-                <div>
+            
+            <div class="flex-1 overflow-hidden flex flex-col">
+                <div class="flex-1 overflow-auto">
                     <table class="w-full text-sm">
-                        <thead>
+                        <thead class="sticky top-0 bg-primary">
                             <tr class="text-textColor-primary border-b border-gray-700">
                                 <th class="text-left py-3 px-4 font-medium w-[15%]">Item Code</th>
                                 <th class="text-left py-3 px-4 font-medium w-[25%]">Item Name</th>
@@ -64,17 +106,19 @@ function getStatusStyle(status: string) {
                             </tr>
                         </thead>
                         <tbody>
-                            {inventoryData.map((item, index) => (
-                                <tr class={`border-b border-gray-800 hover:bg-gray-800/30 ${index === inventoryData.length - 1 ? 'border-b-0' : ''}`}>
+                            {tableRows.map((item, index) => (
+                                <tr class={`border-b border-gray-800 hover:bg-gray-800/30 ${item.isVisible ? '' : 'invisible'} ${index === 9 ? 'border-b-0' : ''}`}>
                                     <td class="py-4 px-4 text-textColor-primary">{item.code}</td>
                                     <td class="py-4 px-4 text-textColor-primary">{item.name}</td>
-                                    <td class="py-4 px-4 text-textColor-primary">{item.current}</td>
-                                    <td class="py-4 px-4 text-textColor-primary">{item.min}</td>
-                                    <td class="py-4 px-4 text-textColor-primary">{item.max}</td>
+                                    <td class="py-4 px-4 text-textColor-primary">{item.isVisible ? item.current : ''}</td>
+                                    <td class="py-4 px-4 text-textColor-primary">{item.isVisible ? item.min : ''}</td>
+                                    <td class="py-4 px-4 text-textColor-primary">{item.isVisible ? item.max : ''}</td>
                                     <td class="py-4 px-4">
-                                        <span class={`text-xs font-semibold px-2 py-1 rounded ${getStatusStyle(item.status)}`}>
-                                            {item.status}
-                                        </span>
+                                        {item.isVisible && (
+                                            <span class={`text-xs font-semibold px-2 py-1 rounded ${getStatusStyle(item.status)}`}>
+                                                {item.status}
+                                            </span>
+                                        )}
                                     </td>
                                 </tr>
                             ))}
@@ -82,26 +126,33 @@ function getStatusStyle(status: string) {
                     </table>
                 </div>
             </div>
-        <div class="flex justify-between items-center p-6 border-t border-gray-700 flex-shrink-0">
-            <button class="bg-btn-primary hover:bg-gray-600 text-textColor-secondary px-4 py-2 rounded font-medium transition-colors text-sm">
-                Previous
-            </button>
-            <span class="text-textColor-primary text-sm">Page 1 of 10</span>
-            <button class="bg-btn-primary hover:bg-gray-600 text-textColor-secondary px-4 py-2 rounded font-medium transition-colors text-sm">
-                Next
-            </button>
+            
+            <div class="flex justify-between items-centerflex-shrink-0 mb-2">
+                <a 
+                    href={currentPage > 1 ? `?page=${currentPage - 1}` : '#'} 
+                    class={`px-4 py-2 rounded font-medium text-sm ${
+                        currentPage > 1 
+                            ? 'bg-btn-primary hover:bg-gray-600 text-textColor-secondary' 
+                            : 'bg-gray-700 text-gray-500 cursor-not-allowed'
+                    }`}
+                >
+                    Previous
+                </a>
+                <span class="text-textColor-primary text-sm">
+                    Page {currentPage} of {totalPages} • Showing {Math.min(startIndex + 1, allInventoryData.length)}-{Math.min(endIndex, allInventoryData.length)} of {allInventoryData.length} products
+                </span>
+                <a 
+                    href={currentPage < totalPages ? `?page=${currentPage + 1}` : '#'} 
+                    class={`px-4 py-2 rounded font-medium text-sm ${
+                        currentPage < totalPages 
+                            ? 'bg-btn-primary hover:bg-gray-600 text-textColor-secondary' 
+                            : 'bg-gray-700 text-gray-500 cursor-not-allowed'
+                    }`}
+                >
+                    Next
+                </a>
+            </div>
         </div>
     </div>
-
-    <!-- Table -->
-
-
-            
-    <script>
-        function closeModal() {
-            // In a real application, this would close the modal
-            console.log('Modal closed');
-        }
-    </script>
-</body>
+</Layout>
 </Layout>

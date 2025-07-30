@@ -6,30 +6,27 @@ import "/src/styles/global.css";
 ---
 
 <!DOCTYPE html>
-<html lang="en" class="">
-    <head>
-        <meta charset="UTF-8" />
-        <meta name="viewport" content="width=device-width" />
-        <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-        <meta name="generator" content="{Astro.generator}" />
-        <!-- <link rel="stylesheet" href="../src/styles/global.css"> -->
-        <link
-            href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap"
-            rel="stylesheet"
-        />
-        <title>Inventory Management Module</title>
-
-        <!-- Theme initialization script - runs immediately to prevent flash -->
-        <script is:inline>
-            // Immediate theme initialization to prevent flash
-            (function () {
-                const savedTheme = localStorage.getItem("theme") || "light";
-                if (savedTheme === "dark") {
-                    document.documentElement.classList.add("dark");
-                }
-            })();
-        </script>
-    </head>
+<html lang="en" class="dark">
+	<head>
+		<meta charset="UTF-8" />
+		<meta name="viewport" content="width=device-width" />
+		<link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+		<meta name="generator" content={Astro.generator} />
+		<!-- <link rel="stylesheet" href="../src/styles/global.css"> -->
+		<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+		<title>Inventory Management Module</title>
+		
+		<!-- Theme initialization script - runs immediately to prevent flash -->
+		<script is:inline>
+			// Immediate theme initialization to prevent flash
+			(function() {
+				const savedTheme = localStorage.getItem('theme') || 'light';
+				if (savedTheme === 'dark') {
+					document.documentElement.classList.add('dark');
+				}
+			})();
+		</script>
+	</head>
 
     <body
         class="h-[100dvh] bg-background flex text-textColor-primary overflow-hidden"
