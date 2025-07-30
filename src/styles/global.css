@@ -18,9 +18,10 @@
 	--color-textColor-primary: #000000;
 	--color-textColor-secondary: #ffffff;
 	--color-textColor-tertiary: #616161;
-	--color-orange: #EAA221;
+	--color-orange: #EF8C00;
 	--color-red: #9B111E;
 	--color-green: #0BDA51;
+	--color-blue: #4166F5;
 
 	--color-check: red; 
 	/* hsl(from var(--color-primary) h calc(s + 200) calc(l + 40)); */
@@ -37,9 +38,10 @@
 	--color-textColor-primary: #f9fafb;
 	--color-textColor-secondary: #f9fafb;
 	--color-textColor-tertiary: #616161;
-	--color-orange: #EAA221;
-	--color-red: #9B111E;
+	--color-orange: #FF991C;
+	--color-red: #ff243a;
 	--color-green: #029F37;
+	--color-blue: #82C8E5;
 
 	--color-check: hsl(from var(--color-primary) h calc(s + 20) calc(l + 40));
 
@@ -58,6 +60,7 @@
 	--color-orange: var(--color-orange);
 	--color-red: var(--color-red);
 	--color-green: var(--color-green);
+	--color-blue: var(--color-blue);
 
 	--color-check: hsl(from var(--color-primary) h calc(s + 20) calc(l + 40));
 	--font-family-sans: "Poppins", sans-serif;
@@ -71,7 +74,7 @@
 		@apply transition-colors duration-300 ease-in-out;
 	}
 	.nav_item {
-		@apply text-textColor-primary hover:text-textColor-secondary sm:text-sm lg:text-base py-2.5 px-4 border-2 border-transparent hover:border-btn-primary rounded text-left cursor-pointer flex items-center gap-5;
+		@apply text-textColor-primary hover:text-textColor-primary sm:text-sm lg:text-base py-2.5 px-4 border-2 border-transparent hover:border-btn-primary rounded text-left cursor-pointer flex items-center gap-5;
 	}
 	.nav_item.active {
 		@apply bg-btn-primary text-textColor-secondary;
