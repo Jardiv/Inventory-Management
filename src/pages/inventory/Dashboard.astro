@@ -3,127 +3,343 @@ import Layout from '../../layouts/Layout.astro';
 ---
 
 <Layout>
-      <!-- INVENTORY OVERVIEW -->
-    <section id="overviewSection">
-      <!-- Inventory Summary -->
-      <div class="bg-primary p-6 rounded-lg mb-6 ">
-        <h2 class="text-xl font-semibold mb-4">Quick Summary</h2>
-        <div class="grid grid-cols-4 gap-6 text-center">
-          <div><p class="text-textColor-primary text-sm">Total Products</p><p class="text-lg font-bold">100</p></div>
-          <div><p class="text-textColor-primary text-sm">Categories</p><p class="text-lg font-bold">5</p></div>
-          <div><p class="text-textColor-primary text-sm">Low Stock Products</p><p class="text-lg font-bold">23</p></div>
-          <div><p class="text-textColor-primary text-sm">Out of Stock Products</p><p class="text-lg font-bold">6</p></div>
+  <!-- INVENTORY OVERVIEW -->
+  <section id="overviewSection">
+    <!-- Inventory Summary -->
+    <div class="bg-primary p-6 rounded-lg mb-6 ">
+      <h2 class="text-xl font-semibold mb-4">Quick Summary</h2>
+      <div class="grid grid-cols-4 gap-6 text-center">
+        <div>
+          <p class="text-textColor-primary text-sm">Total Products</p>
+          <p class="text-lg font-bold">100</p>
+        </div>
+        <div>
+          <p class="text-textColor-primary text-sm">Categories</p>
+          <p class="text-lg font-bold">5</p>
+        </div>
+        <div>
+          <p class="text-textColor-primary text-sm">Low Stock Products</p>
+          <p class="text-lg font-bold">23</p>
+        </div>
+        <div>
+          <p class="text-textColor-primary text-sm">Out of Stock Products</p>
+          <p class="text-lg font-bold">6</p>
         </div>
       </div>
+    </div>
 
-      <!-- Product Table Preview -->
-      <div class="bg-primary p-6 rounded-lg">
-        <div class="flex justify-between mb-4">
-          <div class="flex gap-2 items-center">
-            <h2 class="text-xl font-semibold mb-4">Product Inventory</h2>
-            <!-- <select id="filterCategory" onchange="filterTable()" class="bg-[#2b2b2b] text-white px-3 py-2 rounded">
+    <!-- Product Table Preview -->
+    <div class="bg-primary p-6 rounded-lg">
+      <div class="flex justify-between mb-4">
+        <div class="flex gap-2 items-center">
+          <h2 class="text-xl font-semibold mb-4">Product Inventory</h2>
+          <!-- <select id="filterCategory" onchange="filterTable()" class="bg-[#2b2b2b] text-white px-3 py-2 rounded">
               <option value="">All Category</option>
               <option value="Grains">Grains</option>
               <option value="Condiments">Condiments</option>
               <option value="Carbs">Carbs</option>
             </select> -->
-          </div>
-          <div class="flex gap-2">
-            <a href="/inventory/Additem/"><button class="flex items-center border border-border_color rounded-md px-4 py-2 hover:bg-btn-primary hover:text-textColor-secondary transition">Add Products</button>
-            <a href="/inventory/Dashboard2ndpage/"><button class="flex items-center border border-border_color rounded-md px-6 py-2 hover:bg-btn-primary hover:text-textColor-secondary transition">View all</button></a>
-          </div>
         </div>
-        
-       
-          
-          
-        
-          <!-- Table -->
-    <div>
-      <!-- Table Header -->
-      <div class="grid grid-cols-5 text-xl font-semibold border-b border-border_color pb-2 mb-4">
-        <span>Item Code</span>
-        <span class="text-center">Item Name</span>
-        <span class="text-center">Category</span>
-        <span class="text-center">Unit</span>
-        <span class="text-center">Auto Re-order Status</span> 
-        
+
       </div>
 
-      <!-- Table Rows -->
-      <div class="space-y-2 text-xl">
-        <div class="grid grid-cols-5 items-center border-b border-border_color py-2">
-          <span>1001</span>
-          <span class="text-center">Product 1</span>
-          <span class="text-center">Grains</span>
-          <span class="text-center">10Kg</span>
-          <span class="text-center text-green-500">Yes</span>
-          
+      <!-- Action Buttons with Floating Filter -->
+<div class="flex justify-end mb-6 relative z-10">
+  <div class="flex items-center gap-2">
+    <!-- Add Products Button -->
+    <button id="open-transfer-modal"
+      class="flex items-center border border-border_color rounded px-4 py-2 hover:bg-btn-primary hover:text-textColor-secondary transition text-base">
+      <span>Add Products</span>
+    </button>
+
+    <!-- Filters Button -->
+    <button id="toggle-filters"
+  class="flex items-center border border-border_color rounded px-4 py-2 hover:bg-btn-primary hover:text-textColor-secondary transition text-base active-filter">
+  <span>Filters</span>
+</button>
+
+    <!-- View All Button -->
+    <a href="/inventory/Dashboard2ndpage/">
+      <button
+        class="flex items-center border border-border_color rounded px-4 py-2 hover:bg-btn-primary hover:text-textColor-secondary transition text-base">
+        <span>View All</span>
+      </button>
+    </a>
+  </div>
+
+  <!-- Floating Filter Panel -->
+  <div id="filter-panel"
+    class="absolute top-14 right-0 w-72 bg-neutral-900 text-white rounded-lg p-4 border border-border_color shadow-lg hidden">
+    <h3 class="text-base font-semibold mb-2">Availability:</h3>
+    <div class="flex flex-col gap-1 mb-4">
+      <label><input type="checkbox" name="availability" value="in_stock" class="availability-option mr-2">In Stock</label>
+      <label><input type="checkbox" name="availability" value="low_stock" class="availability-option mr-2">Low Stock</label>
+      <label><input type="checkbox" name="availability" value="out_of_stock" class="availability-option mr-2">Out of Stock</label>
+    </div>
+
+    <hr class="border-border_color mb-4">
+
+    <h3 class="text-base font-semibold mb-2">Category:</h3>
+    <select class="w-full bg-neutral-800 text-white border border-neutral-700 rounded px-3 py-2 mb-4">
+      <option>Grains</option>
+      <option>Condiments</option>
+      <option>Carbs</option>
+      <option>Etc.</option>
+    </select>
+
+    <hr class="border-border_color mb-4">
+
+    <h3 class="text-base font-semibold mb-2">Price Range:</h3>
+    <div class="flex justify-between gap-2">
+      <input type="number" placeholder="Min:" class="w-1/2 bg-neutral-800 text-white px-3 py-2 rounded border border-neutral-700" />
+      <input type="number" placeholder="Max:" class="w-1/2 bg-neutral-800 text-white px-3 py-2 rounded border border-neutral-700" />
+    </div>
+  </div>
+</div>
+
+
+
+
+      <!-- Table -->
+      <div>
+        <!-- Table Header -->
+        <div class="grid grid-cols-5 text-xl font-semibold border-b border-border_color pb-2 mb-4">
+          <span>Item Code</span>
+          <span class="text-center">Item Name</span>
+          <span class="text-center">Category</span>
+          <span class="text-center">Unit</span>
+          <span class="text-center">Auto Re-order Status</span>
+
         </div>
-        <div class="grid grid-cols-5 items-center border-b border-border_color py-2">
-          <span>1002</span>
-          <span class="text-center">Product 2</span>
-          <span class="text-center">Condiments</span>
-          <span class="text-center">Liter</span>
-          <span class="text-center text-green-500">Yes</span>
+
+        <!-- Table Rows -->
+        <div class="space-y-2 text-xl">
+          <div class="grid grid-cols-5 items-center border-b border-border_color py-2">
+            <span>1001</span>
+            <span class="text-center">Product 1</span>
+            <span class="text-center">Grains</span>
+            <span class="text-center">10Kg</span>
+            <span class="text-center text-green-500">Yes</span>
+
+          </div>
+          <div class="grid grid-cols-5 items-center border-b border-border_color py-2">
+            <span>1002</span>
+            <span class="text-center">Product 2</span>
+            <span class="text-center">Condiments</span>
+            <span class="text-center">Liter</span>
+            <span class="text-center text-green-500">Yes</span>
+          </div>
+          <div class="grid grid-cols-5 items-center border-b border-border_color py-2">
+            <span>1003</span>
+            <span class="text-center">Product 3</span>
+            <span class="text-center">Carbs</span>
+            <span class="text-center">N/A</span>
+            <span class="text-center text-green-500">Yes</span>
+          </div>
+          <div class="grid grid-cols-5 items-center border-b border-border_color py-2">
+            <span>1004</span>
+            <span class="text-center">Product 4</span>
+            <span class="text-center">Condiments</span>
+            <span class="text-center">Liter</span>
+            <span class="text-center text-red-500 ">No</span>
+          </div>
+          <div class="grid grid-cols-5 items-center border-b border-border_color py-2">
+            <span>1005</span>
+            <span class="text-center">Product 5</span>
+            <span class="text-center">Condiments</span>
+            <span class="text-center">Liter</span>
+            <span class="text-center text-green-500">Yes</span>
+          </div>
+          <div class="grid grid-cols-5 items-center border-b border-border_color py-2">
+            <span>1006</span>
+            <span class="text-center">Product 6</span>
+            <span class="text-center">Carbs</span>
+            <span class="text-center">Grams</span>
+            <span class="text-center text-green-500">Yes</span>
+          </div>
+          <div class="grid grid-cols-5 items-center border-b border-border_color py-2">
+            <span>1007</span>
+            <span class="text-center">Product 7</span>
+            <span class="text-center">Condiments</span>
+            <span class="text-center">Liter</span>
+            <span class="text-center text-red-500 ">No</span>
+          </div>
+          <div class="grid grid-cols-5 items-center border-b border-border_color py-2">
+            <span>1008</span>
+            <span class="text-center">Product 8</span>
+            <span class="text-center">Condiments</span>
+            <span class="text-center">Liter</span>
+            <span class="text-center text-red-500 ">No</span>
+          </div>
+          <div class="grid grid-cols-5 items-center border-b border-border_color py-2">
+            <span>1009</span>
+            <span class="text-center">Product 9</span>
+            <span class="text-center">Condiments</span>
+            <span class="text-center">Liter</span>
+            <span class="text-center text-red-500 ">No</span>
+          </div>
+
+          <!-- ✅ Modal -->
+          <div id="transferModal" class="hidden fixed inset-0 bg-black/60 flex items-center justify-center z-50">
+            <div class="bg-neutral-900 text-white rounded-lg w-[460px] p-6 space-y-5 relative">
+              <!-- Header -->
+              <div class="flex justify-between items-center mb-1">
+                <h2 class="text-xl font-bold">Add Product</h2>
+                <button id="close-transfer-modal" class="text-white text-2xl font-bold">&times;</button>
+              </div>
+
+              <p class="text-sm text-gray-400">Add new product.</p>
+
+              <!-- Item Name -->
+              <div class="flex items-center space-x-3">
+                <label for="itemName" class="w-40 text-base font-semibold">Item Name:</label>
+                <input type="text" id="itemName" placeholder="ABC"
+                  class="flex-1 bg-neutral-800 text-white text-sm border border-neutral-700 rounded px-3 py-2 focus:outline-none focus:ring-1 focus:ring-green-500" />
+              </div>
+
+              <!-- Category -->
+              <div class="flex items-center space-x-3">
+                <label for="category" class="w-40 text-base font-semibold">Category:</label>
+                <select id="category"
+                  class="flex-1 bg-neutral-800 text-white text-sm border border-neutral-700 rounded px-3 py-2 focus:outline-none focus:ring-1 focus:ring-green-500">
+                  <option value="category1">Category 1</option>
+                  <option value="category2">Category 2</option>
+                  <option value="category3">Category 3</option>
+                  <option value="category4">Category 4</option>
+                </select>
+              </div>
+
+              <!-- Description -->
+              <div class="flex items-start space-x-3">
+                <label for="description" class="w-40 text-base font-semibold pt-2">
+                  Description: <br>
+                  <span class="text-sm font-normal text-gray-500">(Optional)</span>
+                </label>
+                <textarea id="description" rows="2" placeholder="Say anything..."
+                  class="flex-1 bg-neutral-800 text-white text-sm border border-neutral-700 rounded px-3 py-2 resize-none focus:outline-none focus:ring-1 focus:ring-green-500"></textarea>
+              </div>
+
+              <!-- Min Quantity -->
+              <div class="flex items-center space-x-3">
+                <label for="minQty" class="w-40 text-base font-semibold">Minimum Quantity:</label>
+                <input type="number" id="minQty" placeholder="10"
+                  class="flex-1 bg-neutral-800 text-white text-sm border border-neutral-700 rounded px-3 py-2 focus:outline-none focus:ring-1 focus:ring-green-500" />
+              </div>
+
+              <!-- Max Quantity -->
+              <div class="flex items-center space-x-3">
+                <label for="maxQty" class="w-40 text-base font-semibold">Maximum Quantity:</label>
+                <input type="number" id="maxQty" placeholder="100"
+                  class="flex-1 bg-neutral-800 text-white text-sm border border-neutral-700 rounded px-3 py-2 focus:outline-none focus:ring-1 focus:ring-green-500" />
+              </div>
+
+              <!-- Auto Re-order Switch -->
+              <div class="flex items-center space-x-3">
+                <label for="autoReorder" class="w-40 text-base font-semibold">Auto Re-order:</label>
+                <label class="relative inline-flex items-center cursor-pointer">
+                  <input type="checkbox" id="autoReorder" class="sr-only peer" checked>
+                  <div
+                    class="w-11 h-6 bg-gray-700 rounded-full peer peer-checked:bg-green-500 peer-focus:ring-2 peer-focus:ring-green-500 transition-all">
+                  </div>
+                  <div
+                    class="absolute left-0.5 top-0.5 w-5 h-5 bg-white rounded-full transition-all peer-checked:translate-x-full">
+                  </div>
+                </label>
+              </div>
+
+              <!-- Buttons -->
+              <div class="flex justify-end space-x-3 pt-4">
+                <button id="cancelBtn"
+                  class="bg-red-600 text-white text-sm px-5 py-2 rounded hover:bg-red-700 transition">Cancel</button>
+                <button id="confirmBtn"
+                  class="bg-green-600 text-white text-sm px-5 py-2 rounded hover:bg-green-700 transition">Confirm</button>
+              </div>
+            </div>
+          </div>
+
+
+
+
+
+
+          </table>
         </div>
-        <div class="grid grid-cols-5 items-center border-b border-border_color py-2">
-          <span>1003</span>
-          <span class="text-center">Product 3</span>
-          <span class="text-center">Carbs</span>
-          <span class="text-center">N/A</span>
-          <span class="text-center text-green-500">Yes</span>
-        </div>
-        <div class="grid grid-cols-5 items-center border-b border-border_color py-2">
-          <span>1004</span>
-          <span class="text-center">Product 4</span>
-          <span class="text-center">Condiments</span>
-          <span class="text-center">Liter</span>
-          <span class="text-center text-red-500 ">No</span>
-        </div>
-        <div class="grid grid-cols-5 items-center border-b border-border_color py-2">
-          <span>1005</span>
-          <span class="text-center">Product 5</span>
-          <span class="text-center">Condiments</span>
-          <span class="text-center">Liter</span>
-          <span class="text-center text-green-500">Yes</span>
-        </div>
-        <div class="grid grid-cols-5 items-center border-b border-border_color py-2">
-          <span>1006</span>
-          <span class="text-center">Product 6</span>
-          <span class="text-center">Carbs</span>
-          <span class="text-center">Grams</span>
-          <span class="text-center text-green-500">Yes</span>
-        </div>
-        <div class="grid grid-cols-5 items-center border-b border-border_color py-2">
-          <span>1007</span>
-          <span class="text-center">Product 7</span>
-          <span class="text-center">Condiments</span>
-          <span class="text-center">Liter</span>
-          <span class="text-center text-red-500 ">No</span>
-        </div>
-        <div class="grid grid-cols-5 items-center border-b border-border_color py-2">
-          <span>1008</span>
-          <span class="text-center">Product 8</span>
-          <span class="text-center">Condiments</span>
-          <span class="text-center">Liter</span>
-          <span class="text-center text-red-500 ">No</span>
-        </div>
-        <div class="grid grid-cols-5 items-center border-b border-border_color py-2">
-          <span>1009</span>
-          <span class="text-center">Product 9</span>
-          <span class="text-center">Condiments</span>
-          <span class="text-center">Liter</span>
-          <span class="text-center text-red-500 ">No</span>
-        </div>
-          
-        
-          
-        </table>
-      </div>
-    </section>
+  </section>
 
   </main>
-</div>
+  </div>
+  <!-- ✅ Modal Script -->
+  <script>
+    const transferModal = document.getElementById('transferModal');
+    const openTransferBtn = document.getElementById('open-transfer-modal');
+    const closeTransferBtn = document.getElementById('close-transfer-modal');
+    const cancelBtn = document.getElementById('cancelBtn');
+    const confirmBtn = document.getElementById('confirmBtn');
+
+    // Open modal
+    openTransferBtn.addEventListener('click', () => {
+      transferModal.classList.remove('hidden');
+    });
+
+    // Close modal on cancel or X
+    [closeTransferBtn, cancelBtn].forEach(btn => {
+      btn.addEventListener('click', () => {
+        transferModal.classList.add('hidden');
+      });
+    });
+
+    // Close on outside click
+    transferModal.addEventListener('click', (e) => {
+      if (e.target === transferModal) {
+        transferModal.classList.add('hidden');
+      }
+    });
+
+    // Confirm action
+    confirmBtn.addEventListener('click', () => {
+      const itemName = document.getElementById('itemName').value;
+      const category = document.getElementById('category').value;
+      const description = document.getElementById('description').value;
+      const minQty = document.getElementById('minQty').value;
+      const maxQty = document.getElementById('maxQty').value;
+      const autoReorder = document.getElementById('autoReorder').checked;
+
+      console.log('New Product:', {
+        itemName,
+        category,
+        description,
+        minQty,
+        maxQty,
+        autoReorder
+      });
+
+      // Close modal after confirm
+      transferModal.classList.add('hidden');
+
+      // You can add code here to actually insert the data into your table or backend
+    });
+
+
+
+
+const toggleBtn = document.getElementById('toggle-filters');
+  const filterPanel = document.getElementById('filter-panel');
+
+  toggleBtn.addEventListener('click', () => {
+    filterPanel.classList.toggle('hidden');
+    toggleBtn.classList.toggle('active-filter');
+  });
+
+  // Allow only one checkbox in availability section
+  const checkboxes = document.querySelectorAll('.availability-option');
+  checkboxes.forEach(cb => {
+    cb.addEventListener('change', () => {
+      checkboxes.forEach(other => {
+        if (other !== cb) other.checked = false;
+      });
+    });
+  });
+
+  </script>
 
 </Layout>
