@@ -2,11 +2,11 @@
 import Sidebar from '../layouts/Sidebar.astro';
 import Header from '../layouts/Header.astro';
 
-import "/src/styles/global.css"; 
+import "/src/styles/global.css";
 ---
 
-<!doctype html>
-<html lang="en" class="">
+<!DOCTYPE html>
+<html lang="en" class="dark">
 	<head>
 		<meta charset="UTF-8" />
 		<meta name="viewport" content="width=device-width" />
@@ -37,31 +37,61 @@ import "/src/styles/global.css";
 				<slot />
 			</main>
 
-		</div>
-		<!-- <slot /> -->
-		 
-		<div class="neon bg-[#BF00FF] dark:bg-[#8A00C4] rounded-full w-[500px] h-[500px] absolute blur-[600px] bottom-[-250px] right-[-250px] z-[-1]"></div>
+        <!-- Theme initialization script - runs immediately to prevent flash -->
+        <script is:inline>
+            // Immediate theme initialization to prevent flash
+            (function () {
+                const savedTheme = localStorage.getItem("theme") || "light";
+                if (savedTheme === "dark") {
+                    document.documentElement.classList.add("dark");
+                }
+            })();
+        </script>
+    </head>
 
-		<!-- Include the theme management script -->
-		<script src="../../public/scripts/script.js" is:inline></script>
+    <body
+        class="h-[100dvh] bg-background flex text-textColor-primary overflow-hidden"
+    >
+        <Sidebar />
+        <div class="flex flex-col w-full">
+            <Header />
 
-		<script is:inline>
-			function toggleMenu() {
-				const burger_menu = document.querySelector('.burger-menu');
-				const sidebar = document.querySelector('aside');
-				console.log("TOGGLED");
-				
-				sidebar.classList.toggle('hidden');
-				burger_menu.classList.contains("active") ? burger_menu.classList.remove("active") : burger_menu.classList.add("active");
-			}
+            <main
+                class="p-6 overflow-auto w-full"
+                style="height: calc(100dvh - var(--height-header))"
+            >
+                <slot />
+            </main>
+        </div>
+        <!-- <slot /> -->
 
-			function changeActive(e) {
-				const nav_items = document.querySelectorAll('.nav_item');
-				nav_items.forEach(item => {
-					item.classList.remove('active');
-				});
-				e.classList.add('active');
-			}
-		</script>
-	</body>
+        <!-- NEON -->
+        <div
+            class="neon bg-[#BF00FF] dark:bg-[#8A00C4] rounded-full w-[500px] h-[500px] absolute blur-[600px] bottom-[-250px] right-[-250px] z-[-1]"
+        ></div>
+
+        <!-- Include the theme management script -->
+        <script src="/scripts/script.js" is:inline></script>
+
+        <script is:inline>
+            function toggleMenu() {
+                const burger_menu = document.querySelector(".burger-menu");
+                const sidebar = document.querySelector("aside");
+                console.log("TOGGLED");
+
+                sidebar.classList.toggle("hidden");
+                burger_menu.classList.contains("active")
+                    ? burger_menu.classList.remove("active")
+                    : burger_menu.classList.add("active");
+            }
+
+            function changeActive(e) {
+                const nav_items = document.querySelectorAll(".nav_item");
+                nav_items.forEach((item) => {
+                    item.classList.remove("active");
+                });
+                e.classList.add("active");
+            }
+        </script>
+    </body>
 </html>

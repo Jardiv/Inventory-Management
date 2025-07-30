@@ -2,7 +2,7 @@
 import Layout from '../../layouts/Layout.astro';
 
 // Mock warehouse data
-const warehouseData = [
+const allWarehouseData = [
   { 
     id: 1, 
     name: 'Main Warehouse', 
@@ -39,7 +39,108 @@ const warehouseData = [
     utilization: 100, 
     status: 'Full' 
   },
+  { 
+    id: 5, 
+    name: 'Warehouse D', 
+    used: 1500, 
+    max: 2500, 
+    available: 1000, 
+    utilization: 60, 
+    status: 'Normal' 
+  },
+  { 
+    id: 6, 
+    name: 'Warehouse E', 
+    used: 2200, 
+    max: 2500, 
+    available: 300, 
+    utilization: 88, 
+    status: 'Almost Full' 
+  },
+  { 
+    id: 7, 
+    name: 'Warehouse F', 
+    used: 800, 
+    max: 1500, 
+    available: 700, 
+    utilization: 53.33, 
+    status: 'Normal' 
+  },
+  { 
+    id: 8, 
+    name: 'Warehouse G', 
+    used: 3000, 
+    max: 3000, 
+    available: 0, 
+    utilization: 100, 
+    status: 'Full' 
+  },
+  { 
+    id: 9, 
+    name: 'Warehouse H', 
+    used: 1800, 
+    max: 2000, 
+    available: 200, 
+    utilization: 90, 
+    status: 'Almost Full' 
+  },
+  { 
+    id: 10, 
+    name: 'Warehouse I', 
+    used: 1200, 
+    max: 2000, 
+    available: 800, 
+    utilization: 60, 
+    status: 'Normal' 
+  },
+    { 
+        id: 11, 
+        name: 'Warehouse J', 
+        used: 500, 
+        max: 1000, 
+        available: 500, 
+        utilization: 50, 
+        status: 'Normal' 
+    },
+    { 
+        id: 12, 
+        name: 'Warehouse K', 
+        used: 700, 
+        max: 1500, 
+        available: 800, 
+        utilization: 46.66, 
+        status: 'Normal' 
+    },
 ];
+
+// Pagination logic
+const itemsPerPage = 10;
+const currentPage = parseInt(Astro.url.searchParams.get('page') || '1');
+const totalPages = Math.ceil(allWarehouseData.length / itemsPerPage);
+const startIndex = (currentPage - 1) * itemsPerPage;
+const endIndex = startIndex + itemsPerPage;
+
+// Get current page data
+const currentPageData = allWarehouseData.slice(startIndex, endIndex);
+
+// Create exactly 10 rows (fill with empty invisible rows if needed)
+const tableRows = [];
+for (let i = 0; i < itemsPerPage; i++) {
+  if (i < currentPageData.length) {
+    tableRows.push({ ...currentPageData[i], isVisible: true });
+  } else {
+    tableRows.push({ 
+      id: null, 
+      name: '', 
+      used: 0, 
+      max: 0, 
+      available: 0, 
+      utilization: 0, 
+      status: '', 
+      isVisible: false 
+    });
+  }
+}
 
 // Function to get status styling
 function getStatusStyle(status: string) {
@@ -60,27 +161,29 @@ function getStatusStyle(status: string) {
 <Layout>
     <!-- Body -->
 
-    <div class="w-full h-full grid grid-cols-5 grid-rows-5 gap-4 p-4">
-        <div class="bg-primary col-span-5 row-span-5 rounded-lg p-6 ">
-            <div class="flex justify-between items-center mb-4">
+    <div class="w-full h-screen flex flex-col p-4">
+        <div class="bg-primary flex-1 rounded-lg p-6 flex flex-col min-h-0">
+            <div class="flex justify-between items-center mb-6">
                 <h2 class="text-textColor-primary text-xl font-semibold">Warehouse Capacity Status</h2>
                 <div class="flex gap-2">
-                    <button class="p-2 text-textColor-primary hover:bg-gray-700 rounded">
+                    <button class=" p-2 text-textColor-primary hover:bg-btn-hover hover:text-white rounded">
                         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5">
                             <path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5M16.5 12 12 16.5m0 0L7.5 12m4.5 4.5V3" />
                         </svg>
                     </button>
-                    <a href="/reports/Dashboard" class="p-2 text-textColor-primary hover:bg-gray-700 rounded">
+                    <a href="/reports/Dashboard" class="p-2 text-textColor-primary hover:bg-btn-hover hover:text-white rounded">
                         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5">
                             <path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12" />
                         </svg>
                     </a>
                 </div>
             </div>
+            
             <!-- Warehouse Table -->
-            <div>
-                <table class="w-full text-sm p-6">
-                    <thead>
+            <div class="flex-1 overflow-hidden flex flex-col">
+                <div class="flex-1 overflow-auto">
+                    <table class="w-full text-sm">
+                    <thead class="sticky top-0 bg-primary">
                         <tr class="text-textColor-primary border-b border-gray-700">
                             <th class="text-left py-3 px-4 font-medium w-[20%]">Warehouse</th>
                             <th class="text-left py-3 px-4 font-medium w-[15%]">Used</th>
@@ -91,17 +194,19 @@ function getStatusStyle(status: string) {
                         </tr>
                     </thead>
                     <tbody>
-                        {warehouseData.map((warehouse, index) => (
-                            <tr class={`border-b border-gray-800 hover:bg-gray-800/30 ${index === warehouseData.length - 1 ? 'border-b-0' : ''}`}>
+                        {tableRows.map((warehouse, index) => (
+                            <tr class={`border-b border-gray-800 hover:bg-gray-800/30 ${warehouse.isVisible ? '' : 'invisible'} ${index === 9 ? 'border-b-0' : ''}`}>
                                 <td class="py-4 px-4 text-textColor-primary font-medium">{warehouse.name}</td>
-                                <td class="py-4 px-4 text-textColor-primary">{warehouse.used.toLocaleString()}</td>
-                                <td class="py-4 px-4 text-textColor-primary">{warehouse.max.toLocaleString()}</td>
-                                <td class="py-4 px-4 text-textColor-primary">{warehouse.available.toLocaleString()}</td>
-                                <td class="py-4 px-4 text-textColor-primary">{warehouse.utilization}%</td>
+                                <td class="py-4 px-4 text-textColor-primary">{warehouse.isVisible ? warehouse.used.toLocaleString() : ''}</td>
+                                <td class="py-4 px-4 text-textColor-primary">{warehouse.isVisible ? warehouse.max.toLocaleString() : ''}</td>
+                                <td class="py-4 px-4 text-textColor-primary">{warehouse.isVisible ? warehouse.available.toLocaleString() : ''}</td>
+                                <td class="py-4 px-4 text-textColor-primary">{warehouse.isVisible ? `${warehouse.utilization}%` : ''}</td>
                                 <td class="py-4 px-4">
-                                    <span class={`font-semibold ${getStatusStyle(warehouse.status)}`}>
-                                        {warehouse.status}
-                                    </span>
+                                    {warehouse.isVisible && (
+                                        <span class={`font-semibold ${getStatusStyle(warehouse.status)}`}>
+                                            {warehouse.status}
+                                        </span>
+                                    )}
                                 </td>
                             </tr>
                         ))}
@@ -109,14 +214,30 @@ function getStatusStyle(status: string) {
                 </table>
             </div>
             
-            <div class="flex justify-between items-center p-6 flex-shrink-0">
-                <button class="bg-gray-700 text-gray-500 px-4 py-2 rounded font-medium text-sm cursor-not-allowed">
+            <div class="flex justify-between items-center pt-4 mt-4 border-t border-gray-700 flex-shrink-0">
+                <a 
+                    href={currentPage > 1 ? `?page=${currentPage - 1}` : '#'} 
+                    class={`px-4 py-2 rounded font-medium text-sm ${
+                        currentPage > 1 
+                            ? 'bg-gray-600 text-textColor-primary hover:bg-gray-500' 
+                            : 'bg-gray-700 text-gray-500 cursor-not-allowed'
+                    }`}
+                >
                     Previous
-                </button>
-                <span class="text-textColor-primary text-sm">Page 1 of 1</span>
-                <button class="bg-gray-700 text-gray-500 px-4 py-2 rounded font-medium text-sm cursor-not-allowed">
+                </a>
+                <span class="text-textColor-primary text-sm">
+                    Page {currentPage} of {totalPages} • Showing {Math.min(startIndex + 1, allWarehouseData.length)}-{Math.min(endIndex, allWarehouseData.length)} of {allWarehouseData.length} warehouses
+                </span>
+                <a 
+                    href={currentPage < totalPages ? `?page=${currentPage + 1}` : '#'} 
+                    class={`px-4 py-2 rounded font-medium text-sm ${
+                        currentPage < totalPages 
+                            ? 'bg-btn-primary text-textColor-primary hover:bg-btn-hover' 
+                            : 'bg-gray-700 text-gray-500 cursor-not-allowed'
+                    }`}
+                >
                     Next
-                </button>
+                </a>
             </div>
         </div>
     </div>

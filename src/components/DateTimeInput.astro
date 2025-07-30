@@ -1,0 +1,33 @@
+<div class="flex gap-8 w-full bg-primary p-4 rounded">
+    <label class="flex gap-2 items-center">
+        from
+        <div class="relative focus-within:outline-none focus-within:border-b">
+            <input
+                id="fromDateInput"
+                type="datetime-local"
+                class="w-full border-none outline-none focus:outline-none focus:ring-0 focus:border-none [&::-webkit-calendar-picker-indicator]:hidden [&::-webkit-inner-spin-button]:hidden [&::-webkit-outer-spin-button]:hidden"
+            />
+            <span
+                onclick="document.getElementById('fromDateInput').showPicker()"
+                class="absolute right-2.5 top-1/2 -translate-y-1/2 text-blue-500 cursor-pointer"
+                >📅</span
+            >
+        </div>
+    </label>
+
+    <label class="flex gap-2 items-center">
+        to
+        <div class="relative focus-within:outline-none focus-within:border-b">
+            <input
+                id="toDateInput"
+                type="datetime-local"
+                class="w-full border-none outline-none focus:outline-none focus:ring-0 focus:border-none [&::-webkit-calendar-picker-indicator]:hidden [&::-webkit-inner-spin-button]:hidden [&::-webkit-outer-spin-button]:hidden"
+            />
+            <span
+                onclick="document.getElementById('toDateInput').showPicker()"
+                class="absolute right-2.5 top-1/2 -translate-y-1/2 text-blue-500 cursor-pointer"
+                >📅</span
+            >
+        </div>
+    </label>
+</div>
