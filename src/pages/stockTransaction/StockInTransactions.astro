@@ -2,9 +2,6 @@
 import Layout from '../../layouts/Layout.astro';
 import Button from '../../components/Button.astro';
 import DateTimeInput from '../../components/DateTimeInput.astro';
-
-
-console.log(transactions ? transactions : 'No transactions found');
 ---
 
 <Layout>
@@ -28,32 +25,52 @@ console.log(transactions ? transactions : 'No transactions found');
 						<th class="table-header text-center">Action</th>
 					</tr>
 				</thead>
-				<tbody>
-					{transactions?.map((log) => (
-					<tr class="table-row">
-						<td class="table-data">{log.ref_no}</td>
-						<td class="table-data">{log.transaction_datetime}</td>
-						<td class="table-data">{log.supplier_id}</td>
-						<td class={`table-data ${log.statusClass}`}>{log.status}</td>
-						<td class="table-data text-center">
-							<Button class="table-view-btn">View</Button>
-						</td>
-					</tr>
-					))}
-				</tbody>
+				<tbody id="transactions-body"></tbody>
 			</table>
 
 			<div class="flex justify-between items-center flex-shrink-0">
 				<button
-					class="bg-btn-primary hover:bg-gray-600 text-textColor-secondary px-4 py-2 rounded font-medium transition-colors text-sm">
-					Previous
-				</button>
+					class="bg-btn-primary hover:bg-gray-600 text-textColor-secondary px-4 py-2 rounded font-medium transition-colors text-sm">Previous</button>
 				<span class="text-textColor-primary text-sm">Page 1 of 1</span>
 				<button
-					class="bg-btn-primary hover:bg-gray-600 text-textColor-secondary px-4 py-2 rounded font-medium transition-colors text-sm">
-					Next
-				</button>
+					class="bg-btn-primary hover:bg-gray-600 text-textColor-secondary px-4 py-2 rounded font-medium transition-colors text-sm">Next</button>
 			</div>
 		</div>
 	</div>
+
+	<!-- ✅ JavaScript for dynamic row rendering -->
+	<script type="module" client:load>
+		async function fetchTransactions() {
+			try {
+				const res = await fetch('/api/transactions/stockintransactions');
+				if (!res.ok) throw new Error("Failed to fetch transactions");
+				const data = await res.json();
+				renderTable(data);
+			} catch (err) {
+				console.error('Error loading transactions:', err);
+			}
+		}
+
+		function renderTable(transactions) {
+			const tbody = document.querySelector('#transactions-body');
+			tbody.innerHTML = ''; // clear existing
+
+			transactions.forEach(log => {
+				const tr = document.createElement('tr');
+				tr.className = 'table-row';
+				tr.innerHTML = `
+					<td class="table-data">${log.ref_no}</td>
+					<td class="table-data">${log.transaction_datetime}</td>
+					<td class="table-data">${log.supplier_id}</td>
+					<td class="table-data">${log.status}</td>
+					<td class="table-data text-center">
+						<button class="table-view-btn">View</button>
+					</td>
+				`;
+				tbody.appendChild(tr);
+			});
+		}
+
+		fetchTransactions();
+	</script>
 </Layout>

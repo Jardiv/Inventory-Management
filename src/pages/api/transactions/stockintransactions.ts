@@ -1,5 +1,5 @@
-import { supabase } from "../utils/supabaseClient.ts";
-
+import { supabase } from "../../../utils/supabaseClient.ts";
+// for STOCK IN TRANSACTIONS
 export async function GET() {
     const { data, error } = await supabase.from("transactions").select("*");
 
