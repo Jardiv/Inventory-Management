@@ -33,20 +33,19 @@ const lowStockItemsData = [
 
 // Quick Summary Data
 const quickSummaryData = [
-    { label: "Total Items", value: "1,234" },
-    { label: "Low Stock", value: "23" },
-    { label: "Out of Stock", value: "8" },
-    { label: "Warehouses", value: "5" }
+    { label: "Total Items", value: "1,234", color: "text-blue" },
+    { label: "Low Stock", value: "23", color: "text-yellow" },
+    { label: "Out of Stock", value: "8", color: "text-red" },
+    { label: "Warehouses", value: "5", color: "text-green" }
 ];
 
-// Icons and colors for Quick Summary (defined in component, not in data)
+// Icons for Quick Summary (defined in component, not in data)
 const summaryIcons = ["📦", "⚠️", "❌", "🏭"];
-const summaryColors = ["text-blue", "text-orange", "text-red", "text-green"];
 ---
 
 <!-- REPORT DASHBOARD -->
 <Layout>
-    <div class="w-full grid grid-cols-5 grid-rows-1 gap-4 p-4">
+    <div class="w-full grid grid-cols-5 grid-rows-1 gap-4 ">
         <!-- Quick Summary Section -->
         <div class="bg-primary col-span-5 row-span-1 p-6 rounded-lg">
             <div class="flex justify-between items-center mb-4">
@@ -56,14 +55,14 @@ const summaryColors = ["text-blue", "text-orange", "text-red", "text-green"];
                 {quickSummaryData.map((item, index) => (
                     <div class="bg-background rounded-lg p-4 text-center">
                         <div class="text-2xl mb-2">{summaryIcons[index]}</div>
-                        <div class={`text-xl font-bold ${summaryColors[index]} mb-1`}>{item.value}</div>
+                        <div class={`text-xl font-bold ${item.color} mb-1`}>{item.value}</div>
                         <div class="text-textColor-primary text-sm">{item.label}</div>
                     </div>
                 ))}
             </div>
         </div>
     </div>
-    <div class="w-full min-h-screen grid grid-cols-4 grid-rows-2 gap-4 p-4">
+    <div class="w-full min-h-screen grid grid-cols-4 grid-rows-2 gap-4 pt-4">
 
         <!-- Inventory Stock Section -->
         <div class="bg-primary col-span-2 row-span-1 rounded-lg flex flex-col">
