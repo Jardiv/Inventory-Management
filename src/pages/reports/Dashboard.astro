@@ -1,5 +1,32 @@
 ---
 import Layout from '../../layouts/Layout.astro';
+
+// Inventory Stock Data
+const inventoryStockData = [
+    { itemName: "Product 0", current: 11, minimum: 10, status: "Normal", statusColor: "text-green-400" },
+    { itemName: "Product 0", current: 12, minimum: 10, status: "Normal", statusColor: "text-green-400" },
+    { itemName: "Product 0", current: 0, minimum: 10, status: "Out of Stock", statusColor: "text-red-400" },
+    { itemName: "Product 0", current: 0, minimum: 10, status: "Out of Stock", statusColor: "text-red-400" },
+    { itemName: "Product 0", current: 0, minimum: 10, status: "Out of Stock", statusColor: "text-red-400" }
+];
+
+// Warehouse Capacity Data
+const warehouseCapacityData = [
+    { warehouseName: "Main Warehouse", used: 1243, available: 3757, status: "Normal", statusColor: "text-green-400" },
+    { warehouseName: "Warehouse A", used: 2900, available: 100, status: "Almost Full", statusColor: "text-yellow-400" },
+    { warehouseName: "Warehouse B", used: 2900, available: 100, status: "Almost Full", statusColor: "text-yellow-400" },
+    { warehouseName: "Warehouse C", used: 2900, available: 100, status: "Almost Full", statusColor: "text-yellow-400" },
+    { warehouseName: "Warehouse D", used: 2900, available: 100, status: "Almost Full", statusColor: "text-yellow-400" }
+];
+
+// Low Stock Items Data
+const lowStockItemsData = [
+    { itemCode: "ABC", itemName: "Product 0", current: 1, toOrder: 50, status: "Low", statusColor: "text-yellow-400" },
+    { itemCode: "ABC", itemName: "Product 0", current: 0, toOrder: 50, status: "Out of Stock", statusColor: "text-red-400" },
+    { itemCode: "ABC", itemName: "Product 0", current: 0, toOrder: 50, status: "Out of Stock", statusColor: "text-red-400" },
+    { itemCode: "ABC", itemName: "Product 0", current: 0, toOrder: 50, status: "Out of Stock", statusColor: "text-red-400" },
+    { itemCode: "ABC", itemName: "Product 0", current: 0, toOrder: 50, status: "Out of Stock", statusColor: "text-red-400" }
+];
 ---
 
 <!-- REPORT DASHBOARD -->
@@ -32,46 +59,16 @@ import Layout from '../../layouts/Layout.astro';
                             </tr>
                         </thead>
                         <tbody>
-                            <tr class="border-b border-gray-800">
-                                <td class="py-2 px-2 text-textColor-primary text-xs sm:text-sm">Product 0</td>
-                                <td class="py-2 px-2 text-textColor-primary text-xs sm:text-sm">11</td>
-                                <td class="py-2 px-2 text-textColor-primary text-xs sm:text-sm">10</td>
-                                <td class="py-2 px-2">
-                                    <span class="text-green-400 text-xs sm:text-sm">Normal</span>
-                                </td>
-                            </tr>
-                            <tr class="border-b border-gray-800">
-                                <td class="py-2 px-2 text-textColor-primary text-xs sm:text-sm">Product 0</td>
-                                <td class="py-2 px-2 text-textColor-primary text-xs sm:text-sm">12</td>
-                                <td class="py-2 px-2 text-textColor-primary text-xs sm:text-sm">10</td>
-                                <td class="py-2 px-2">
-                                    <span class="text-green-400 text-xs sm:text-sm">Normal</span>
-                                </td>
-                            </tr>
-                            <tr class="border-b border-gray-800">
-                                <td class="py-2 px-2 text-textColor-primary text-xs sm:text-sm">Product 0</td>
-                                <td class="py-2 px-2 text-textColor-primary text-xs sm:text-sm">0</td>
-                                <td class="py-2 px-2 text-textColor-primary text-xs sm:text-sm">10</td>
-                                <td class="py-2 px-2">
-                                    <span class="text-red-400 text-xs sm:text-sm">Out of Stock</span>
-                                </td>
-                            </tr>
-                            <tr class="border-b border-gray-800">
-                                <td class="py-2 px-2 text-textColor-primary text-xs sm:text-sm">Product 0</td>
-                                <td class="py-2 px-2 text-textColor-primary text-xs sm:text-sm">0</td>
-                                <td class="py-2 px-2 text-textColor-primary text-xs sm:text-sm">10</td>
-                                <td class="py-2 px-2">
-                                    <span class="text-red-400 text-xs sm:text-sm">Out of Stock</span>
-                                </td>
-                            </tr>
-                            <tr>
-                                <td class="py-2 px-2 text-textColor-primary text-xs sm:text-sm">Product 0</td>
-                                <td class="py-2 px-2 text-textColor-primary text-xs sm:text-sm">0</td>
-                                <td class="py-2 px-2 text-textColor-primary text-xs sm:text-sm">10</td>
-                                <td class="py-2 px-2">
-                                    <span class="text-red-400 text-xs sm:text-sm">Out of Stock</span>
-                                </td>
-                            </tr>
+                            {inventoryStockData.map((item) => (
+                                <tr class="border-b border-gray-800">
+                                    <td class="py-2 px-2 text-textColor-primary text-xs sm:text-sm">{item.itemName}</td>
+                                    <td class="py-2 px-2 text-textColor-primary text-xs sm:text-sm">{item.current}</td>
+                                    <td class="py-2 px-2 text-textColor-primary text-xs sm:text-sm">{item.minimum}</td>
+                                    <td class="py-2 px-2">
+                                        <span class={`${item.statusColor} text-xs sm:text-sm`}>{item.status}</span>
+                                    </td>
+                                </tr>
+                            ))}
                         </tbody>
                     </table>
                 </div>
@@ -97,47 +94,16 @@ import Layout from '../../layouts/Layout.astro';
                             </tr>
                         </thead>
                         <tbody>
-                            <tr class="border-b border-gray-800">
-                                <td class="py-2 px-2 text-textColor-primary text-xs sm:text-sm">Main Warehouse</td>
-                                <td class="py-2 px-2 text-textColor-primary text-xs sm:text-sm">1243</td>
-                                <td class="py-2 px-2 text-textColor-primary text-xs sm:text-sm">3757</td>
-                                <td class="py-2 px-2">
-                                    <span class="text-green-400 text-xs sm:text-sm">Normal</span>
-                                </td>
-                            </tr>
-                            <tr class="border-b border-gray-800">
-                                <td class="py-2 px-2 text-textColor-primary text-xs sm:text-sm">Warehouse A</td>
-                                <td class="py-2 px-2 text-textColor-primary text-xs sm:text-sm">2,900</td>
-                                <td class="py-2 px-2 text-textColor-primary text-xs sm:text-sm">100</td>
-                                <td class="py-2 px-2">
-                                    <span class="text-yellow-400 text-xs sm:text-sm">Almost Full</span>
-                                </td>
-                            </tr>
-                            <tr class="border-b border-gray-800">
-                                <td class="py-2 px-2 text-textColor-primary text-xs sm:text-sm">Warehouse B</td>
-                                <td class="py-2 px-2 text-textColor-primary text-xs sm:text-sm">2,900</td>
-                                <td class="py-2 px-2 text-textColor-primary text-xs sm:text-sm">100</td>
-                                <td class="py-2 px-2">
-                                    <span class="text-yellow-400 text-xs sm:text-sm">Almost Full</span>
-                                </td>
-                            </tr>
-                            <tr class="border-b border-gray-800">
-                                <td class="py-2 px-2 text-textColor-primary text-xs sm:text-sm">Warehouse C</td>
-                                <td class="py-2 px-2 text-textColor-primary text-xs sm:text-sm">2,900</td>
-                                <td class="py-2 px-2 text-textColor-primary text-xs sm:text-sm">100</td>
-                                <td class="py-2 px-2">
-                                    <span class="text-yellow-400 text-xs sm:text-sm">Almost Full</span>
-                                </td>
-                            </tr>
-                            <tr>
-                                <td class="py-2 px-2 text-textColor-primary text-xs sm:text-sm">Warehouse D</td>
-                                <td class="py-2 px-2 text-textColor-primary text-xs sm:text-sm">2,900</td>
-                                <td class="py-2 px-2 text-textColor-primary text-xs sm:text-sm">100</td>
-                                <td class="py-2 px-2">
-                                    <span class="text-yellow-400 text-xs sm:text-sm">Almost Full</span>
-                                </td>
-                            </tr>
-
+                            {warehouseCapacityData.map((warehouse) => (
+                                <tr class="border-b border-gray-800">
+                                    <td class="py-2 px-2 text-textColor-primary text-xs sm:text-sm">{warehouse.warehouseName}</td>
+                                    <td class="py-2 px-2 text-textColor-primary text-xs sm:text-sm">{warehouse.used.toLocaleString()}</td>
+                                    <td class="py-2 px-2 text-textColor-primary text-xs sm:text-sm">{warehouse.available.toLocaleString()}</td>
+                                    <td class="py-2 px-2">
+                                        <span class={`${warehouse.statusColor} text-xs sm:text-sm`}>{warehouse.status}</span>
+                                    </td>
+                                </tr>
+                            ))}
                         </tbody>
                     </table>
                 </div>
@@ -162,51 +128,17 @@ import Layout from '../../layouts/Layout.astro';
                         </tr>
                     </thead>
                     <tbody>
-                        <tr class="border-b border-gray-800">
-                            <td class="py-2 px-2 text-textColor-primary text-xs sm:text-sm">ABC</td>
-                            <td class="py-2 px-2 text-textColor-primary text-xs sm:text-sm">Product 0</td>
-                            <td class="py-2 px-2 text-textColor-primary text-xs sm:text-sm">1</td>
-                            <td class="py-2 px-2 text-textColor-primary text-xs sm:text-sm">50</td>
-                            <td class="py-2 px-2">
-                                <span class="text-yellow-400 text-xs sm:text-sm">Low</span>
-                            </td>
-                        </tr>
-                        <tr class="border-b border-gray-800">
-                            <td class="py-2 px-2 text-textColor-primary text-xs sm:text-sm">ABC</td>
-                            <td class="py-2 px-2 text-textColor-primary text-xs sm:text-sm">Product 0</td>
-                            <td class="py-2 px-2 text-textColor-primary text-xs sm:text-sm">0</td>
-                            <td class="py-2 px-2 text-textColor-primary text-xs sm:text-sm">50</td>
-                            <td class="py-2 px-2">
-                                <span class="text-red-400 text-xs sm:text-sm">Out of Stock</span>
-                            </td>
-                        </tr>
-                        <tr class="border-b border-gray-800">
-                            <td class="py-2 px-2 text-textColor-primary text-xs sm:text-sm">ABC</td>
-                            <td class="py-2 px-2 text-textColor-primary text-xs sm:text-sm">Product 0</td>
-                            <td class="py-2 px-2 text-textColor-primary text-xs sm:text-sm">0</td>
-                            <td class="py-2 px-2 text-textColor-primary text-xs sm:text-sm">50</td>
-                            <td class="py-2 px-2">
-                                <span class="text-red-400 text-xs sm:text-sm">Out of Stock</span>
-                            </td>
-                        </tr>
-                        <tr class="border-b border-gray-800">
-                            <td class="py-2 px-2 text-textColor-primary text-xs sm:text-sm">ABC</td>
-                            <td class="py-2 px-2 text-textColor-primary text-xs sm:text-sm">Product 0</td>
-                            <td class="py-2 px-2 text-textColor-primary text-xs sm:text-sm">0</td>
-                            <td class="py-2 px-2 text-textColor-primary text-xs sm:text-sm">50</td>
-                            <td class="py-2 px-2">
-                                <span class="text-red-400 text-xs sm:text-sm">Out of Stock</span>
-                            </td>
-                        </tr>
-                        <tr>
-                            <td class="py-2 px-2 text-textColor-primary text-xs sm:text-sm">ABC</td>
-                            <td class="py-2 px-2 text-textColor-primary text-xs sm:text-sm">Product 0</td>
-                            <td class="py-2 px-2 text-textColor-primary text-xs sm:text-sm">0</td>
-                            <td class="py-2 px-2 text-textColor-primary text-xs sm:text-sm">50</td>
-                            <td class="py-2 px-2">
-                                <span class="text-red-400 text-xs sm:text-sm">Out of Stock</span>
-                            </td>
-                        </tr>
+                        {lowStockItemsData.map((item) => (
+                            <tr class="border-b border-gray-800">
+                                <td class="py-2 px-2 text-textColor-primary text-xs sm:text-sm">{item.itemCode}</td>
+                                <td class="py-2 px-2 text-textColor-primary text-xs sm:text-sm">{item.itemName}</td>
+                                <td class="py-2 px-2 text-textColor-primary text-xs sm:text-sm">{item.current}</td>
+                                <td class="py-2 px-2 text-textColor-primary text-xs sm:text-sm">{item.toOrder}</td>
+                                <td class="py-2 px-2">
+                                    <span class={`${item.statusColor} text-xs sm:text-sm`}>{item.status}</span>
+                                </td>
+                            </tr>
+                        ))}
                     </tbody>
                 </table>
             </div>

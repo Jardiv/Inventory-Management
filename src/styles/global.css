@@ -29,7 +29,7 @@
 }
 
 .dark {
-	--color-background: #1e1e1e;
+	--color-background: #212121;
 	--color-primary: #121212;
 	--color-btn-primary: #8A00C4;
 	--color-btn-hover: #7206a0;
@@ -71,7 +71,7 @@
 		@apply transition-colors duration-300 ease-in-out;
 	}
 	.nav_item {
-		@apply text-textColor-primary hover:text-textColor-secondary sm:text-sm lg:text-base py-2.5 px-4 hover:bg-btn-primary rounded text-left cursor-pointer flex items-center gap-5;
+		@apply text-textColor-primary hover:text-textColor-secondary sm:text-sm lg:text-base py-2.5 px-4 border-2 border-transparent hover:border-btn-primary rounded text-left cursor-pointer flex items-center gap-5;
 	}
 	.nav_item.active {
 		@apply bg-btn-primary text-textColor-secondary;
