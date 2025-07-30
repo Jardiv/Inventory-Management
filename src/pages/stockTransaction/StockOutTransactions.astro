@@ -2,14 +2,12 @@
 import Layout from '../../layouts/Layout.astro';
 import Modal from '../../components/Modal.astro';
 import Button from '../../components/Button.astro';
+import DateTimeInput from '../../components/DateTimeInput.astro';
 ---
 
 <Layout>
 
-	<div class="flex gap-5 w-full bg-primary p-4 rounded">
-		<label>from <input class="border-2 border-border_color px-2 py-1" type="date" name="" id=""></label>
-		<label>to <input class="border-2 border-border_color px-2 py-1" type="date" name="" id=""></label>
-	</div>
+	<DateTimeInput />
 
 	<div class="flex flex-col gap-1 w-full bg-primary p-4 mt-4">
 		<div class="w-full flex justify-between">
@@ -74,11 +72,13 @@ import Button from '../../components/Button.astro';
 				</tbody>
 			</table>
 			<div class="flex justify-between items-center flex-shrink-0">
-				<button class="bg-btn-primary hover:bg-gray-600 text-textColor-secondary px-4 py-2 rounded font-medium transition-colors text-sm">
+				<button
+					class="bg-btn-primary hover:bg-gray-600 text-textColor-secondary px-4 py-2 rounded font-medium transition-colors text-sm">
 					Previous
 				</button>
 				<span class="text-textColor-primary text-sm">Page 1 of 1</span>
-				<button class="bg-btn-primary hover:bg-gray-600 text-textColor-secondary px-4 py-2 rounded font-medium transition-colors text-sm">
+				<button
+					class="bg-btn-primary hover:bg-gray-600 text-textColor-secondary px-4 py-2 rounded font-medium transition-colors text-sm">
 					Next
 				</button>
 			</div>
