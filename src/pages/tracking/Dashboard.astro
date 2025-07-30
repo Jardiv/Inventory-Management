@@ -4,6 +4,48 @@ import Layout from '../../layouts/Layout.astro';
 
 <!-- TRACKING DASHBOARD -->
 <Layout>
+  <div class="w-full max-w-[100%] h-[245px] bg-primary rounded-lg relative p-6 mb-6">
+    <!-- Header -->
+    <div class="text-textColor-primary text-2xl font-semibold mb-6">Quick Summary</div>
+
+    <!-- Summary Card -->
+    <div class="w-full h-[115px] bg-primary border border-border_color rounded-lg flex justify-between items-center px-6">
+      
+      <!-- Block 1 -->
+      <div class="flex flex-col text-left">
+        <span class="text-textColor-tertiary text-lg font-medium">Warehouses</span>
+        <span class="text-textColor-primary text-2xl font-medium">8</span>
+      </div>
+
+      <!-- Divider -->
+      <div class="w-px h-14 bg-border_color"></div>
+
+      <!-- Block 2 -->
+      <div class="flex flex-col text-left">
+        <span class="text-textColor-tertiary text-lg font-medium">Items in Transit</span>
+        <span class="text-textColor-primary text-2xl font-medium">5</span>
+      </div>
+
+      <!-- Divider -->
+      <div class="w-px h-14 bg-border_color"></div>
+
+      <!-- Block 3 -->
+      <div class="flex flex-col text-left">
+        <span class="text-textColor-tertiary text-lg font-medium">Successfully Received</span>
+        <span class="text-textColor-primary text-2xl font-medium">23</span>
+      </div>
+
+      <!-- Divider -->
+      <div class="w-px h-14 bg-border_color"></div>
+
+      <!-- Block 4 -->
+      <div class="flex flex-col text-left">
+        <span class="text-textColor-tertiary text-lg font-medium">Pending</span>
+        <span class="text-textColor-primary text-2xl font-medium">6</span>
+      </div>
+
+    </div>
+  </div>
   <div class="w-full max-w-[100%] bg-primary rounded-md mx-auto p-6 text-textColor-primary font-poppins">
     
     <!-- Header Row -->
@@ -12,7 +54,7 @@ import Layout from '../../layouts/Layout.astro';
         <h2 class="text-2xl font-semibold">Recent Shipments</h2>
 
         <!-- Receive Products Button -->
-        <a href="/tracking/shipment-history" class="flex items-center border border-border_color rounded-md px-4 py-2 hover:bg-btn-primary hover:text-textColor-secondary transition">
+        <a href="/tracking/shipment-history" class="flex items-center border border-border_color rounded-md px-4 py-2 hover:bg-btn-hover hover:text-textColor-secondary transition">
 			<!-- Icon -->
           <div class="flex items-center">
             <svg xmlns="http://www.w3.org/2000/svg"
@@ -81,7 +123,7 @@ import Layout from '../../layouts/Layout.astro';
       <div class="flex items-center space-x-4">
         <h2 class="text-2xl font-semibold">Recent Transfers</h2>
         <!-- Transfer Products Button -->
-        <a href="/tracking/Transfer_product"class="flex items-center border border-border_color rounded-md px-4 py-2 hover:bg-btn-primary hover:text-textColor-secondary transition">
+        <a href="/tracking/Transfer_product"class="flex items-center border border-border_color rounded-md px-4 py-2 hover:bg-btn-hover hover:text-textColor-secondary transition">
           <!-- Icon -->
           <svg xmlns="http://www.w3.org/2000/svg"viewBox="0 0 24 24" fill="currentColor"class="size-6 mr-2">
             <path fill-rule="evenodd" d="M15.97 2.47a.75.75 0 0 1 1.06 0l4.5 4.5a.75.75 0 0 1 0 1.06l-4.5 4.5a.75.75 0 1 1-1.06-1.06l3.22-3.22H7.5a.75.75 0 0 1 0-1.5h11.69l-3.22-3.22a.75.75 0 0 1 0-1.06Zm-7.94 9a.75.75 0 0 1 0 1.06l-3.22 3.22H16.5a.75.75 0 0 1 0 1.5H4.81l3.22 3.22a.75.75 0 1 1-1.06 1.06l-4.5-4.5a.75.75 0 0 1 0-1.06l4.5-4.5a.75.75 0 0 1 1.06 0Z"clip-rule="evenodd" />
