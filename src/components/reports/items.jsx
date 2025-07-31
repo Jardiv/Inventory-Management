@@ -27,7 +27,7 @@ const InventoryTable = ({ currentPage = 1, itemsPerPage = 10 }) => {
         setError(null);
         
         try {
-            const apiUrl = `/api/inventory/items?limit=${itemsPerPage}&page=${currentPage}`;
+            const apiUrl = `/api/reports/items?limit=${itemsPerPage}&page=${currentPage}`;
             const response = await fetch(apiUrl);
             
             if (!response.ok) {
