@@ -1,8 +1,15 @@
 ---
 import Layout from '../../layouts/Layout.astro';
+import Addmodal from '../../components/inventory/Addmodal.astro';
+import Filter from '../../components/inventory/Filter.astro';
+import { products } from '../../components/inventory/productInvenDATA.jsx';
 ---
 
 <Layout>
+  <Addmodal />
+ 
+  
+  
   <!-- INVENTORY OVERVIEW -->
   <section id="overviewSection">
     <!-- Inventory Summary -->
@@ -32,209 +39,39 @@ import Layout from '../../layouts/Layout.astro';
     <div class="bg-primary p-6 rounded-lg">
       <div class="bg-primary p-6 rounded-lg">
 
-<div class="flex items-center justify-between mb-6 relative z-10">
+        <div class="flex items-center justify-between mb-6 relative z-10">
 
-  <div class="flex items-center gap-3">
-    <h2 class="text-xl font-semibold">Product Inventory</h2>
-  
+          <div class="flex items-center gap-3">
+            <h2 class="text-xl font-semibold">Product Inventory</h2>
+          </div>
+
+          <!-- Action Buttons -->
+          <div class="flex items-center gap-2">
+             <Filter />
+
+
+
+            <!-- View All Button -->
+            <a href="/inventory/Dashboard2ndpage/">
+              <button class="text-btn-primary hover:text-purple-300 text-sm sm:text-base">See All</button>
+            </a>
+          </div>
+
+
+
+        </div>
+
+        {products.slice(0, 9).map(product => (
+  <div class="grid grid-cols-5 items-center border-b border-border_color py-2">
+    <span>{product.code}</span>
+    <span class="text-left">{product.name}</span>
+    <span class="text-left">{product.category}</span>
+    <span class="text-left">{product.unit}</span>
+    <span class={`text-left ${product.reorder === 'Yes' ? 'text-green-500' : 'text-red-500'}`}>
+      {product.reorder}
+    </span>
   </div>
-
-  <!-- Action Buttons -->
-  <div class="flex items-center gap-2">
-    <!-- Filters Button -->
-<button id="toggle-filters" class="items-center rounded px-4 py-2 pr-4 bg-primary text-textColor-primary hover:bg-violet-600 active:bg-violet-600">
-  <svg id="filterIcon" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none"
-    stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-    <line x1="3" y1="6" x2="21" y2="6" />
-    <line x1="6" y1="12" x2="18" y2="12" />
-    <line x1="9" y1="18" x2="15" y2="18" />
-  </svg>
-</button>
-
-
-
-    <!-- View All Button -->
-    <a href="/inventory/Dashboard2ndpage/">
-      <button class="text-btn-primary hover:text-purple-300 text-sm sm:text-base">See All</button>
-    </a>
-  </div>
-
-          
-          <!-- Floating Filter Panel -->
-          <div id="filter-panel"
-            class="absolute top-14 right-0 w-72 bg-neutral-900 text-white rounded-lg p-4 border border-border_color shadow-lg hidden">
-            <h3 class="text-base font-semibold mb-2">Availability:</h3>
-            <div class="flex flex-col gap-1 mb-4">
-              <label><input type="checkbox" name="availability" value="in_stock" class="availability-option mr-2">In
-                Stock</label>
-              <label><input type="checkbox" name="availability" value="low_stock" class="availability-option mr-2">Low
-                Stock</label>
-              <label><input type="checkbox" name="availability" value="out_of_stock"
-                  class="availability-option mr-2">Out of Stock</label>
-            </div>
-
-            <hr class="border-border_color mb-4">
-
-            <h3 class="text-base font-semibold mb-2">Category:</h3>
-            <select class="w-full bg-neutral-800 text-white border border-neutral-700 rounded px-3 py-2 mb-4">
-              <option>Grains</option>
-              <option>Condiments</option>
-              <option>Carbs</option>
-              <option>Etc.</option>
-            </select>
-
-            <hr class="border-border_color mb-4">
-
-            <h3 class="text-base font-semibold mb-2">Price Range:</h3>
-            <div class="flex justify-between gap-2">
-              <input type="number" placeholder="Min:"
-                class="w-1/2 bg-neutral-800 text-white px-3 py-2 rounded border border-neutral-700" />
-              <input type="number" placeholder="Max:"
-                class="w-1/2 bg-neutral-800 text-white px-3 py-2 rounded border border-neutral-700" />
-            </div>
-          </div>
-        </div>
-
-        <!-- Table Header -->
-        <div class="grid grid-cols-5 text-xl font-semibold border-b border-border_color pb-2 mb-4">
-          <span class="text-left">Item Code</span>
-          <span class="text-left">Item Name</span>
-          <span class="text-left">Category</span>
-          <span class="text-left">Supplier</span>
-          <span class="text-left">Unit Price</span>
-        </div>
-
-        <!-- Table Rows -->
-        <div class="space-y-2 text-xl">
-          <div class="grid grid-cols-5 items-center border-b border-border_color py-2">
-            <span>1001</span>
-            <span class="text-left">Product 1</span>
-            <span class="text-left">Grains</span>
-            <span class="text-left">Pending</span>
-            <span class="text-left text-green-500">Yes</span>
-          </div>
-          <div class="grid grid-cols-5 items-center border-b border-border_color py-2">
-            <span>1002</span>
-            <span class="text-left">Product 2</span>
-            <span class="text-left">Condiments</span>
-            <span class="text-left">Pending</span>
-            <span class="text-left text-green-500">Yes</span>
-          </div>
-          <div class="grid grid-cols-5 items-center border-b border-border_color py-2">
-            <span>1003</span>
-            <span class="text-left">Product 3</span>
-            <span class="text-left">Condiments</span>
-            <span class="text-left">Pending</span>
-            <span class="text-left text-green-500">Yes</span>
-          </div>
-          <div class="grid grid-cols-5 items-center border-b border-border_color py-2">
-            <span>1004</span>
-            <span class="text-left">Product 4</span>
-            <span class="text-left">Condiments</span>
-            <span class="text-left">Pending</span>
-            <span class="text-left text-green-500">Yes</span>
-          </div>
-          <div class="grid grid-cols-5 items-center border-b border-border_color py-2">
-            <span>1005</span>
-            <span class="text-left">Product 5</span>
-            <span class="text-left">Condiments</span>
-            <span class="text-left">Pending</span>
-            <span class="text-left text-green-500">Yes</span>
-          </div>
-          <div class="grid grid-cols-5 items-center border-b border-border_color py-2">
-            <span>1006</span>
-            <span class="text-left">Product 6</span>
-            <span class="text-left">Condiments</span>
-            <span class="text-left">Pending</span>
-            <span class="text-left text-green-500">Yes</span>
-          </div>
-        </div>
-      </div>
-
-
-
-      <!-- ✅ Modal -->
-      <div id="transferModal" class="hidden fixed inset-0 bg-black/60 flex items-center justify-center z-50">
-        <div class="bg-primary text-textColor-primary rounded-lg w-[460px] p-6 space-y-5 relative">
-          <!-- Header -->
-          <div class="flex justify-between items-center mb-1">
-            <h2 class="text-xl font-bold">Add Product</h2>
-            <button id="close-transfer-modal" class="text-textColor-primary text-2xl font-bold">&times;</button>
-          </div>
-
-          <p class="text-sm text-textColor-primary">Add new product.</p>
-
-          <!-- Item Name -->
-          <div class="flex items-center space-x-3">
-            <label for="itemName" class="w-40 text-base font-semibold">Item Name:</label>
-            <input type="text" id="itemName" placeholder="ABC"
-              class="flex-1 bg-primary text-textColor-primary text-sm border border-neutral-700 rounded px-3 py-2 focus:outline-none focus:ring-1 focus:ring-green-500" />
-          </div>
-
-          <!-- Category -->
-          <div class="flex items-center space-x-3">
-            <label for="category" class="w-40 text-base font-semibold">Category:</label>
-            <select id="category"
-              class="flex-1 bg-primary text-textColor-primary text-sm border border-neutral-700 rounded px-3 py-2 focus:outline-none focus:ring-1 focus:ring-green-500">
-              <option value="category1">Category 1</option>
-              <option value="category2">Category 2</option>
-              <option value="category3">Category 3</option>
-              <option value="category4">Category 4</option>
-            </select>
-          </div>
-
-          <!-- Description -->
-          <div class="flex items-start space-x-3">
-            <label for="description" class="w-40 text-base font-semibold pt-2">
-              Description: <br>
-              <span class="text-sm font-normal text-textColor-primary">(Optional)</span>
-            </label>
-            <textarea id="description" rows="2" placeholder="Say anything..."
-              class="flex-1 bg-primary text-textColor-primary text-sm border border-neutral-700 rounded px-3 py-2 resize-none focus:outline-none focus:ring-1 focus:ring-green-500"></textarea>
-          </div>
-
-          <!-- Min Quantity -->
-          <div class="flex items-center space-x-3">
-            <label for="minQty" class="w-40 text-base font-semibold">Minimum Quantity:</label>
-            <input type="number" id="minQty" placeholder="10"
-              class="flex-1 bg-primary text-textColor-primary text-sm border border-neutral-700 rounded px-3 py-2 focus:outline-none focus:ring-1 focus:ring-green-500" />
-          </div>
-
-          <!-- Max Quantity -->
-          <div class="flex items-center space-x-3">
-            <label for="maxQty" class="w-40 text-base font-semibold">Maximum Quantity:</label>
-            <input type="number" id="maxQty" placeholder="100"
-              class="flex-1 bg-primary text-textColor-primary text-sm border border-neutral-700 rounded px-3 py-2 focus:outline-none focus:ring-1 focus:ring-green-500" />
-          </div>
-
-          <!-- Auto Re-order Switch -->
-          <div class="flex items-center space-x-3">
-            <label for="autoReorder" class="w-40 text-base font-semibold">Auto Re-order:</label>
-            <label class="relative inline-flex items-center cursor-pointer">
-              <input type="checkbox" id="autoReorder" class="sr-only peer" checked>
-              <div
-                class="w-11 h-6 bg-gray-700 rounded-full peer peer-checked:bg-green-500 peer-focus:ring-2 peer-focus:ring-green-500 transition-all">
-              </div>
-              <div
-                class="absolute left-0.5 top-0.5 w-5 h-5 bg-white rounded-full transition-all peer-checked:translate-x-full">
-              </div>
-            </label>
-          </div>
-
-          <!-- Buttons -->
-          <div class="flex justify-end space-x-3 pt-4">
-            <button id="cancelBtn"
-              class="bg-red-600 text-white text-sm px-5 py-2 rounded hover:bg-red-700 transition">Cancel</button>
-            <button id="confirmBtn"
-              class="bg-green-600 text-white text-sm px-5 py-2 rounded hover:bg-green-700 transition">Confirm</button>
-          </div>
-        </div>
-      </div>
-
-
-
-
-
+))}
 
       </table>
     </div>
@@ -242,6 +79,6 @@ import Layout from '../../layouts/Layout.astro';
 
   </main>
   </div>
- 
+
   <script src="/scripts/inventory/inventory.js" is:inline></script>
 </Layout>

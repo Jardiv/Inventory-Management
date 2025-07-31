@@ -1,181 +1,116 @@
 ---
 import Layout from '../../layouts/Layout.astro';
+import Addmodal from '../../components/inventory/Addmodal.astro';
+import { products } from '../../components/inventory/productInvenDATA.jsx';
 ---
 <Layout>
-
+  <Addmodal />
   <section id="viewAllSection">
     <div class="bg-primary p-6 rounded-lg">
       <div class="flex justify-between items-center mb-4">
-  <div class="flex items-center gap-3">
-    <h2 class="text-xl font-semibold">Product Inventory</h2>
-    <!-- Add Products Button -->
-    <button id="open-transfer-modal"
-      class=" flex items-center border-2 border-transparent rounded text-textColor-primary px-12 py-2 hover:border-btn-primary transition-colors duration-500 text-base">
-      <span>Add Products</span>
-    </button>
-  </div>
+        <div class="flex items-center gap-3">
+          <h2 class="text-xl font-semibold">Product Inventory</h2>
+          <!-- Add Products Button -->
+          <button id="open-transfer-modal"
+            class=" flex items-center border-2 border-transparent rounded text-textColor-primary px-12 py-2 hover:border-btn-primary transition-colors duration-500 text-base">
+            <span>Add Products</span>
+          </button>
+        </div>
 
 
+        <div class="relative flex gap-2">
+          <!-- Filter Button -->
+          <button id="toggle-filters"
+            class="items-center rounded px-4 py-2 pr-4 bg-primary text-textColor-primary hover:bg-violet-600 active:bg-violet-600">
+            <svg id="filterIcon" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none"
+              stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+              <line x1="3" y1="6" x2="21" y2="6" />
+              <line x1="6" y1="12" x2="18" y2="12" />
+              <line x1="9" y1="18" x2="15" y2="18" />
+            </svg>
+          </button>
 
-        </button></a>
-        <a href="/inventory/Dashboard"
-          class="group flex items-center gap-1 px-4 py-2 text-textColor-primary hover:bg-btn-hover hover:text-white rounded">
-          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5"
-            stroke="currentColor" class="w-5 h-5">
-            <path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12" />
-          </svg>
-        </a>
+          <!-- Filter Panel -->
+          <div id="filter-panel"
+            class="absolute top-14 right-0 w-72 bg-primary text-textColor-primary rounded-lg p-4 border border-border_color shadow-lg hidden z-50">
+
+            <h3 class="text-textColor-primary font-semibold mb-2">Availability:</h3>
+            <div class="flex flex-col gap-1 mb-4">
+              <label><input type="checkbox" name="availability" value="in_stock" class="availability-option mr-2">In
+                Stock</label>
+              <label><input type="checkbox" name="availability" value="low_stock" class="availability-option mr-2">Low
+                Stock</label>
+              <label><input type="checkbox" name="availability" value="out_of_stock"
+                  class="availability-option mr-2">Out of Stock</label>
+            </div>
+
+            <hr class="border-border_color mb-4">
+
+            <h3 class="text-textColor-primary font-semibold mb-2">Category:</h3>
+            <select class="w-full bg-primary text-textColor-primary border border-neutral-700 rounded px-3 py-2 mb-4">
+              <option>Grains</option>
+              <option>Condiments</option>
+              <option>Carbs</option>
+              <option>Etc.</option>
+            </select>
+
+            <hr class="border-border_color mb-4">
+
+            <h3 class="text-textColor-primary font-semibold mb-2">Price Range:</h3>
+            <div class="flex justify-between gap-2">
+              <input type="number" placeholder="Min:"
+                class="w-1/2 bg-primary text-textColor-primary px-3 py-2 rounded border border-neutral-700" />
+              <input type="number" placeholder="Max:"
+                class="w-1/2 bg-primary text-white px-3 py-2 rounded border border-neutral-700" />
+            </div>
+          </div>
+          <!-- Download Button -->
+          <button id="download-btn"
+            class="items-center rounded px-4 py-2 bg-primary text-textColor-primary hover:bg-btn-hover active:bg-green-700">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5"
+              stroke="currentColor" class="w-5 h-5">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75L12 20.25L19.5 12.75M12 3.75V20.25" />
+            </svg>
+          </button>
+
+          <!-- Go Back Button -->
+          <a href="/inventory/Dashboard" class="p-2 text-textColor-primary hover:bg-btn-hover hover:text-white rounded">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5"
+              stroke="currentColor" class="w-5 h-5">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12" />
+            </svg>
+          </a>
+        </div>
+
       </div>
 
-      <div>
-
-        <!-- Table Header -->
-        <div class="grid grid-cols-5 text-xl font-semibold border-b border-border_color pb-2 mb-4">
-          <span>Item Code</span>
-          <span class="text-left">Item Name</span>
-          <span class="text-left">Category</span>
-          <span class="text-left">Unit</span>
-          <span class="text-left">Auto Re-order Status</span>
-
-        </div>
-
-        <!-- Table Rows -->
-        <div class="space-y-2 text-xl">
-          <div class="grid grid-cols-5 items-center border-b border-border_color py-2">
-            <span>1001</span>
-            <span class="text-left">Product 1</span>
-            <span class="text-left">Grains</span>
-            <span class="text-left">10Kg</span>
-            <span class="text-left text-green-500">Yes</span>
-
-          </div>
-          <div class="grid grid-cols-5 items-center border-b border-border_color py-2">
-            <span>1002</span>
-            <span class="text-left">Product 2</span>
-            <span class="text-left">Condiments</span>
-            <span class="text-left">Liter</span>
-            <span class="text-left text-green-500">Yes</span>
-          </div>
-          <div class="grid grid-cols-5 items-center border-b border-border_color py-2">
-            <span>1003</span>
-            <span class="text-left">Product 3</span>
-            <span class="text-left">Carbs</span>
-            <span class="text-left">N/A</span>
-            <span class="text-left text-green-500">Yes</span>
-          </div>
-          <div class="grid grid-cols-5 items-center border-b border-border_color py-2">
-            <span>1004</span>
-            <span class="text-left">Product 4</span>
-            <span class="text-left">Condiments</span>
-            <span class="text-left">Liter</span>
-            <span class="text-left text-red-500 ">No</span>
-          </div>
-          <div class="grid grid-cols-5 items-center border-b border-border_color py-2">
-            <span>1005</span>
-            <span class="text-left">Product 5</span>
-            <span class="text-left">Condiments</span>
-            <span class="text-left">Liter</span>
-            <span class="text-left text-green-500">Yes</span>
-          </div>
-          <div class="grid grid-cols-5 items-center border-b border-border_color py-2">
-            <span>1006</span>
-            <span class="text-left">Product 6</span>
-            <span class="text-left">Carbs</span>
-            <span class="text-left">Grams</span>
-            <span class="text-left text-green-500">Yes</span>
-          </div>
-          <div class="grid grid-cols-5 items-center border-b border-border_color py-2">
-            <span>1007</span>
-            <span class="text-left">Product 7</span>
-            <span class="text-left">Condiments</span>
-            <span class="text-left">Liter</span>
-            <span class="text-left text-red-500 ">No</span>
-          </div>
-          <div class="grid grid-cols-5 items-center border-b border-border_color py-2">
-            <span>1008</span>
-            <span class="text-left">Product 8</span>
-            <span class="text-left">Condiments</span>
-            <span class="text-left">Liter</span>
-            <span class="text-left text-red-500 ">No</span>
-          </div>
-          <div class="grid grid-cols-5 items-center border-b border-border_color py-2">
-            <span>1009</span>
-            <span class="text-left">Product 9</span>
-            <span class="text-left">Condiments</span>
-            <span class="text-left">Liter</span>
-            <span class="text-left text-red-500 ">No</span>
-          </div>
-          <div class="grid grid-cols-5 items-center border-b border-border_color py-2">
-            <span>1010</span>
-            <span class="text-left">Product 10</span>
-            <span class="text-left">Condiments</span>
-            <span class="text-left">Liter</span>
-            <span class="text-left text-green-500 ">Yes</span>
-          </div>
+{products.slice(0, 10).map(product => (
+  <a href={`/inventory/product/${product.code}`}>
+    <div class="grid grid-cols-5 items-center border-b border-border_color py-2 hover:bg-btn-hover cursor-pointer">
+      <span>{product.code}</span>
+      <span class="text-left">{product.name}</span>
+      <span class="text-left">{product.category}</span>
+      <span class="text-left">{product.unit}</span>
+      <span class={`text-left ${product.reorder === 'Yes' ? 'text-green-500' : 'text-red-500'}`}>
+        {product.reorder}
+      </span>
+    </div>
+  </a>
+))}
 
 
 
-          </table>
-        </div>
 
-        <div class="flex justify-between items-center mt-6 text-sm">
-          <button
-            class="flex items-center border border-border_color rounded-md px-4 py-2 hover:bg-btn-primary hover:text-textColor-secondary transition">Previous</button>
-          <p class="text-gray-400">Page 1 of 10</p>
-          <a href="/inventory/ThirdPage/"><button
-              class=" px-4 py-1 border border-border_color rounded-md hover:bg-btn-primary hover:text-textColor-secondary transition">Next</button>
-        </div>
+
+      <div class="flex justify-between items-center mt-6 text-sm">
+        <button
+          class="flex items-center border border-border_color rounded-md px-4 py-2 hover:bg-btn-primary hover:text-textColor-secondary transition">Previous</button>
+        <p class="text-gray-400">Page 1 of 10</p>
+        <a href="/inventory/ThirdPage/"><button
+            class="flex items-center px-7 py-2 border border-border_color rounded-md hover:bg-btn-primary hover:text-textColor-secondary transition">Next</button>
       </div>
+    </div>
   </section>
-<script>   
-   const transferModal = document.getElementById('transferModal');
-    const openTransferBtn = document.getElementById('open-transfer-modal');
-    const closeTransferBtn = document.getElementById('close-transfer-modal');
-    const cancelBtn = document.getElementById('cancelBtn');
-    const confirmBtn = document.getElementById('confirmBtn');
 
-    // Open modal
-    openTransferBtn.addEventListener('click', () => {
-      transferModal.classList.remove('hidden');
-    });
-
-    // Close modal on cancel or X
-    [closeTransferBtn, cancelBtn].forEach(btn => {
-      btn.addEventListener('click', () => {
-        transferModal.classList.add('hidden');
-      });
-    });
-
-    // Close on outside click
-    transferModal.addEventListener('click', (e) => {
-      if (e.target === transferModal) {
-        transferModal.classList.add('hidden');
-      }
-    });
-
-    // Confirm action
-    confirmBtn.addEventListener('click', () => {
-      const itemName = document.getElementById('itemName').value;
-      const category = document.getElementById('category').value;
-      const description = document.getElementById('description').value;
-      const minQty = document.getElementById('minQty').value;
-      const maxQty = document.getElementById('maxQty').value;
-      const autoReorder = document.getElementById('autoReorder').checked;
-
-      console.log('New Product:', {
-        itemName,
-        category,
-        description,
-        minQty,
-        maxQty,
-        autoReorder
-      });
-
-      // Close modal after confirm
-      transferModal.classList.add('hidden');
-
-      // You can add code here to actually insert the data into your table or backend
-    });
-    
-    </script>
+  <script src="/scripts/inventory/inventory.js" is:inline></script>
 </Layout>

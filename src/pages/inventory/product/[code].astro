@@ -1,0 +1,29 @@
+---
+import Layout from '../../../layouts/Layout.astro';
+import { products } from '../../../components/inventory/productInvenDATA.jsx';
+
+const { code } = Astro.params;
+const product = products.find(p => p.code === code);
+---
+
+<Layout>
+  {product ? (
+    <section class="p-6 max-w-3xl mx-auto bg-white rounded-lg shadow-md mt-10">
+      <h1 class="text-2xl font-bold mb-4 text-gray-800">Product Details</h1>
+      <ul class="space-y-2 text-gray-700">
+        <li><strong>Code:</strong> {product.code}</li>
+        <li><strong>Name:</strong> {product.name}</li>
+        <li><strong>Category:</strong> {product.category}</li>
+        <li><strong>Unit:</strong> {product.unit}</li>
+        <li><strong>Reorder:</strong> {product.reorder}</li>
+        <li><strong>Description:</strong> {product.description}</li>
+      </ul>
+    </section>
+  ) : (
+    <div class="text-red-500 p-6">Product not found.</div>
+  )}
+  <a href="/inventory/Dashboard2ndpage" class="inline-block px-4 py-2 text-sm rounded bg-primary text-textColor-primary hover:bg-btn-hover">
+  ← Back to Inventory
+</a>
+
+</Layout>
