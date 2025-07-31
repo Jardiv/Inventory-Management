@@ -2,6 +2,7 @@
 import Layout from '../../layouts/Layout.astro';
 import Button from '../../components/Button.astro';
 import DateTimeInput from '../../components/DateTimeInput.astro';
+import LogsTable from '../../components/transactions/LogsTable.jsx';
 
 const transactionLogs = [
     { 
@@ -19,105 +20,35 @@ const transactionLogs = [
         supplier: "--", 
         status: "Processing", 
         statusClass: "text-yellow-600" 
-    },
-    { 
-        ref: "TRF009876", 
-        date: "20/11/2025", 
-        type: "Transfer", 
-        supplier: "--", 
-        status: "Completed", 
-        statusClass: "text-green-600" 
-    },
-    { 
-        ref: "STK002468", 
-        date: "22/11/2025", 
-        type: "Stock In", 
-        supplier: "Fresh Produce Co", 
-        status: "Pending", 
-        statusClass: "text-orange-600" 
-    },
-    { 
-        ref: "RTN013579", 
-        date: "25/11/2025", 
-        type: "Return", 
-        supplier: "Dairy Suppliers Ltd", 
-        status: "Rejected", 
-        statusClass: "text-red-600" 
-    },
-    { 
-        ref: "SAL024681", 
-        date: "28/11/2025", 
-        type: "Sale", 
-        supplier: "--", 
-        status: "Completed", 
-        statusClass: "text-green-600" 
-    },
-    { 
-        ref: "STK003691", 
-        date: "30/11/2025", 
-        type: "Stock In", 
-        supplier: "Global Food Distributors", 
-        status: "In Transit", 
-        statusClass: "text-blue-600" 
     }
 ];
 ---
 
 <Layout>
-    <DateTimeInput />
+	<DateTimeInput />
 
-    <div class="flex flex-col gap-1 w-full bg-primary p-4 mt-4">
-        <div class="w-full flex justify-between">
-            <h1 class="text-xl font-bold">Transaction Logs</h1>
-            <a href="/stockTransaction/Dashboard/">
-                <Button
-                    class="text-btn-primary border-none w-fit hover:text-btn-primary"
-                    >Back</Button
-                >
-            </a>
-        </div>
-        <div class="p-2 flex flex-col gap-4">
-            <table class="w-full text-left">
-                <thead>
-                    <tr>
-                        <th class="table-header">Reference no</th>
-                        <th class="table-header">Date</th>
-                        <th class="table-header">Type</th>
-                        <th class="table-header">Supplier</th>
-                        <th class="table-header">Status</th>
-                        <th class="table-header text-center">Action</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {transactionLogs.map((log) => (
-                    <tr class="table-row">
-                        <td class="table-data">{log.ref}</td>
-                        <td class="table-data">{log.date}</td>
-                        <td class="table-data">{log.type}</td>
-                        <td class="table-data">{log.supplier}</td>
-                        <td class="{`table-data ${log.statusClass}`}">
-                            {log.status}
-                        </td>
-                        <td class="table-data text-center">
-                            <Button class="table-view-btn">View</Button>
-                        </td>
-                    </tr>
-                    ))}
-                </tbody>
-            </table>
-            <div class="flex justify-between items-center flex-shrink-0">
-                <button
-                    class="bg-btn-primary hover:bg-gray-600 text-textColor-secondary px-4 py-2 rounded font-medium transition-colors text-sm"
-                >
-                    Previous
-                </button>
-                <span class="text-textColor-primary text-sm">Page 1 of 1</span>
-                <button
-                    class="bg-btn-primary hover:bg-gray-600 text-textColor-secondary px-4 py-2 rounded font-medium transition-colors text-sm"
-                >
-                    Next
-                </button>
-            </div>
-        </div>
-    </div>
+	<div class="flex flex-col gap-1 w-full bg-primary p-4 mt-4">
+        
+		<div class="w-full flex justify-between">
+			<h1 class="text-xl font-bold">Transaction Logs</h1>
+			<a href="/stockTransaction/Dashboard/">
+				<Button class="text-btn-primary border-none w-fit hover:text-btn-primary">Back</Button>
+			</a>
+		</div>
+
+		<div class="p-2 flex flex-col gap-4">
+
+			<LogsTable client:load limit="10" />
+
+			<div class="flex justify-between items-center flex-shrink-0">
+				<button class="bg-btn-primary hover:bg-gray-600 text-textColor-secondary px-4 py-2 rounded font-medium transition-colors text-sm">
+					Previous
+				</button>
+				<span class="text-textColor-primary text-sm">Page 1 of 1</span>
+				<button class="bg-btn-primary hover:bg-gray-600 text-textColor-secondary px-4 py-2 rounded font-medium transition-colors text-sm">
+					Next
+				</button>
+			</div>
+		</div>
+	</div>
 </Layout>

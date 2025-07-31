@@ -1,0 +1,35 @@
+---
+import Layout from '../../layouts/Layout.astro';
+import Button from '../../components/Button.astro';
+import DateTimeInput from '../../components/DateTimeInput.astro';
+import StockInTable from '../../components/transactions/StockInTable.jsx';
+
+
+---
+
+<Layout>
+	<DateTimeInput />
+
+	<div className="flex flex-col gap-1 w-full bg-primary p-4 mt-4">
+		<div className="w-full flex justify-between">
+			<h1 className="text-xl font-bold">Stock In Transactions</h1>
+			<a href="/stockTransaction/Dashboard/">
+				<button className="text-btn-primary border-none w-fit hover:text-btn-primary">Back</button>
+			</a>
+		</div>
+
+		<div className="p-2 flex flex-col gap-4">
+			<StockInTable limit="10" client:load />
+
+			<div className="flex justify-between items-center flex-shrink-0">
+				<button className="bg-btn-primary hover:bg-gray-600 text-textColor-secondary px-4 py-2 rounded font-medium transition-colors text-sm">
+					Previous
+				</button>
+				<span className="text-textColor-primary text-sm"> Page 1 of 1 </span>
+				<button className="bg-btn-primary hover:bg-gray-600 text-textColor-secondary px-4 py-2 rounded font-medium transition-colors text-sm">
+					Next
+				</button>
+			</div>
+		</div>
+	</div>
+</Layout>
