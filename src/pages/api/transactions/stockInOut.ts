@@ -1,7 +1,7 @@
 import { supabase } from "../../../utils/supabaseClient.ts";
 
 /**
- * Handles GET requests to fetch 'stock-in' transactions with supplier name.
+ * Handles GET requests to fetch all transactions with flattened related data.
  * Supports an optional 'limit' query parameter.
  */
 export async function GET({ request }: { request: Request }) {
@@ -9,47 +9,43 @@ export async function GET({ request }: { request: Request }) {
 	const rawLimit = url.searchParams.get("limit");
 	const limit = parseLimit(rawLimit);
 
-	// Fetch stock-in transactions with joined supplier name
+	// Fetch transactions with related data
 	const { data, error } = await supabase
 		.from("transactions")
 		.select(`
-        *,
-        suppliers:supplier_id (
-            name
-        )
-        `
-		)
-		.eq("type", "stock-in")
+			id,
+			invoice_no,
+			transaction_datetime,
+			status,
+			transaction_types:transaction_type_id (name),
+			suppliers:supplier_id (name)
+		`)
 		.order("transaction_datetime", { ascending: false })
 		.limit(limit);
 
-	// Handle Supabase error
 	if (error) {
+		console.error("Supabase error:", error.message);
 		return jsonResponse({ error: error.message }, 500);
 	}
 
-	// Transform data: flatten supplier name and remove nested supplier object
-	const formattedData = data.map((transaction) => ({
-		...transaction,
-		supplier_name: transaction.suppliers?.name ?? null,
-		suppliers: undefined, // remove nested object to clean response
+	// Format response for frontend table
+	const formatted = (data ?? []).map(tx => ({
+		id: tx.id,
+		invoice_no: tx.invoice_no,
+		transaction_datetime: tx.transaction_datetime,
+		transaction_type: tx.transaction_types?.name ?? "Unknown",
+		supplier_name: tx.suppliers?.name ?? "N/A",
+		status: tx.status ?? "Pending"
 	}));
 
-	return jsonResponse(formattedData, 200);
+	return jsonResponse(formatted, 200);
 }
 
-/**
- * Parses the 'limit' query string value into a number.
- * Returns a fallback default value if parsing fails.
- */
-function parseLimit(rawLimit: string | null, defaultLimit = 10): number {
-	const numericLimit = Number(rawLimit);
-	return rawLimit !== null && !isNaN(numericLimit) ? numericLimit : defaultLimit;
+function parseLimit(rawLimit: string | null, defaultLimit = 20): number {
+	const num = Number(rawLimit);
+	return rawLimit !== null && !isNaN(num) ? num : defaultLimit;
 }
 
-/**
- * Returns a standard JSON response with status and content-type headers.
- */
 function jsonResponse(data: unknown, status: number): Response {
 	return new Response(JSON.stringify(data), {
 		status,

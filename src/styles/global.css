@@ -89,18 +89,6 @@
 	.icon {
 		@apply sm:w-6 sm:h-6 w-8 h-8;
 	}
-	.bar {
-		@apply bg-textColor-primary w-10 h-0.5 mx-[6px] transform transition duration-300 ease-in-out;
-	}
-	.burger-menu.active .bar1 {
-		@apply rotate-45 translate-y-3;
-	}
-	.burger-menu.active .bar2 {
-		@apply opacity-0;
-	}
-	.burger-menu.active .bar3 {
-		@apply -rotate-45 -translate-y-2;
-	}
 
 	.sidebar.active {
 		@apply left-0;
@@ -118,17 +106,23 @@
 		@apply opacity-100;
 	}
 
+	.stock-table {
+		@apply w-full text-left;
+	}
+	.stock-table thead {
+		@apply py-2;
+	}
 	.table-row {
 		@apply bg-primary text-textColor-primary border-t-2 border-border_color ;
 	}
+	.table-header {
+		@apply py-2 text-lg;
+	}
 
 	.table-data {
-		@apply py-2;
+		@apply py-4 w-[250px];
 	}
-
-	.table-view-btn {
-		@apply text-center px-2 py-1 bg-green hover:text-btn-primary;
-	}
+	
 }
 
 /* Custom Scrollbar Styles - Shadcn inspired */
