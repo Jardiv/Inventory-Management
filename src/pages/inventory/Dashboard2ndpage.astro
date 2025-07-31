@@ -5,28 +5,37 @@ import Layout from '../../layouts/Layout.astro';
 
   <section id="viewAllSection">
     <div class="bg-primary p-6 rounded-lg">
-      <div class="flex justify-between mb-4">
-        <div class="flex gap-2">
-          <a href="/inventory/Additem/"><button
-              class="flex items-center border border-border_color rounded-md px-4 py-2 hover:bg-btn-primary hover:text-textColor-secondary transition">Add
-              Products</button>
-          
-        </div>
-        <a href="/inventory/Dashboard/"><button
-            class="group flex items-center gap-1 px-4 py-2 hover:text-btn-primary transition text-base">
-            <span>Go Back</span>
-            <span class="transform transition-transform duration-200 group-hover:translate-x-1"> &#10229;</span>
-          </button></a>
+      <div class="flex justify-between items-center mb-4">
+  <div class="flex items-center gap-3">
+    <h2 class="text-xl font-semibold">Product Inventory</h2>
+    <!-- Add Products Button -->
+    <button id="open-transfer-modal"
+      class=" flex items-center border-2 border-transparent rounded text-textColor-primary px-12 py-2 hover:border-btn-primary transition-colors duration-500 text-base">
+      <span>Add Products</span>
+    </button>
+  </div>
+
+
+
+        </button></a>
+        <a href="/inventory/Dashboard"
+          class="group flex items-center gap-1 px-4 py-2 text-textColor-primary hover:bg-btn-hover hover:text-white rounded">
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5"
+            stroke="currentColor" class="w-5 h-5">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12" />
+          </svg>
+        </a>
       </div>
 
       <div>
+
         <!-- Table Header -->
         <div class="grid grid-cols-5 text-xl font-semibold border-b border-border_color pb-2 mb-4">
           <span>Item Code</span>
-          <span class="text-center">Item Name</span>
-          <span class="text-center">Category</span>
-          <span class="text-center">Unit</span>
-          <span class="text-center">Auto Re-order Status</span>
+          <span class="text-left">Item Name</span>
+          <span class="text-left">Category</span>
+          <span class="text-left">Unit</span>
+          <span class="text-left">Auto Re-order Status</span>
 
         </div>
 
@@ -34,74 +43,74 @@ import Layout from '../../layouts/Layout.astro';
         <div class="space-y-2 text-xl">
           <div class="grid grid-cols-5 items-center border-b border-border_color py-2">
             <span>1001</span>
-            <span class="text-center">Product 1</span>
-            <span class="text-center">Grains</span>
-            <span class="text-center">10Kg</span>
-            <span class="text-center text-green-500">Yes</span>
+            <span class="text-left">Product 1</span>
+            <span class="text-left">Grains</span>
+            <span class="text-left">10Kg</span>
+            <span class="text-left text-green-500">Yes</span>
 
           </div>
           <div class="grid grid-cols-5 items-center border-b border-border_color py-2">
             <span>1002</span>
-            <span class="text-center">Product 2</span>
-            <span class="text-center">Condiments</span>
-            <span class="text-center">Liter</span>
-            <span class="text-center text-green-500">Yes</span>
+            <span class="text-left">Product 2</span>
+            <span class="text-left">Condiments</span>
+            <span class="text-left">Liter</span>
+            <span class="text-left text-green-500">Yes</span>
           </div>
           <div class="grid grid-cols-5 items-center border-b border-border_color py-2">
             <span>1003</span>
-            <span class="text-center">Product 3</span>
-            <span class="text-center">Carbs</span>
-            <span class="text-center">N/A</span>
-            <span class="text-center text-green-500">Yes</span>
+            <span class="text-left">Product 3</span>
+            <span class="text-left">Carbs</span>
+            <span class="text-left">N/A</span>
+            <span class="text-left text-green-500">Yes</span>
           </div>
           <div class="grid grid-cols-5 items-center border-b border-border_color py-2">
             <span>1004</span>
-            <span class="text-center">Product 4</span>
-            <span class="text-center">Condiments</span>
-            <span class="text-center">Liter</span>
-            <span class="text-center text-red-500 ">No</span>
+            <span class="text-left">Product 4</span>
+            <span class="text-left">Condiments</span>
+            <span class="text-left">Liter</span>
+            <span class="text-left text-red-500 ">No</span>
           </div>
           <div class="grid grid-cols-5 items-center border-b border-border_color py-2">
             <span>1005</span>
-            <span class="text-center">Product 5</span>
-            <span class="text-center">Condiments</span>
-            <span class="text-center">Liter</span>
-            <span class="text-center text-green-500">Yes</span>
+            <span class="text-left">Product 5</span>
+            <span class="text-left">Condiments</span>
+            <span class="text-left">Liter</span>
+            <span class="text-left text-green-500">Yes</span>
           </div>
           <div class="grid grid-cols-5 items-center border-b border-border_color py-2">
             <span>1006</span>
-            <span class="text-center">Product 6</span>
-            <span class="text-center">Carbs</span>
-            <span class="text-center">Grams</span>
-            <span class="text-center text-green-500">Yes</span>
+            <span class="text-left">Product 6</span>
+            <span class="text-left">Carbs</span>
+            <span class="text-left">Grams</span>
+            <span class="text-left text-green-500">Yes</span>
           </div>
           <div class="grid grid-cols-5 items-center border-b border-border_color py-2">
             <span>1007</span>
-            <span class="text-center">Product 7</span>
-            <span class="text-center">Condiments</span>
-            <span class="text-center">Liter</span>
-            <span class="text-center text-red-500 ">No</span>
+            <span class="text-left">Product 7</span>
+            <span class="text-left">Condiments</span>
+            <span class="text-left">Liter</span>
+            <span class="text-left text-red-500 ">No</span>
           </div>
           <div class="grid grid-cols-5 items-center border-b border-border_color py-2">
             <span>1008</span>
-            <span class="text-center">Product 8</span>
-            <span class="text-center">Condiments</span>
-            <span class="text-center">Liter</span>
-            <span class="text-center text-red-500 ">No</span>
+            <span class="text-left">Product 8</span>
+            <span class="text-left">Condiments</span>
+            <span class="text-left">Liter</span>
+            <span class="text-left text-red-500 ">No</span>
           </div>
           <div class="grid grid-cols-5 items-center border-b border-border_color py-2">
             <span>1009</span>
-            <span class="text-center">Product 9</span>
-            <span class="text-center">Condiments</span>
-            <span class="text-center">Liter</span>
-            <span class="text-center text-red-500 ">No</span>
+            <span class="text-left">Product 9</span>
+            <span class="text-left">Condiments</span>
+            <span class="text-left">Liter</span>
+            <span class="text-left text-red-500 ">No</span>
           </div>
           <div class="grid grid-cols-5 items-center border-b border-border_color py-2">
             <span>1010</span>
-            <span class="text-center">Product 10</span>
-            <span class="text-center">Condiments</span>
-            <span class="text-center">Liter</span>
-            <span class="text-center text-green-500 ">Yes</span>
+            <span class="text-left">Product 10</span>
+            <span class="text-left">Condiments</span>
+            <span class="text-left">Liter</span>
+            <span class="text-left text-green-500 ">Yes</span>
           </div>
 
 
@@ -118,5 +127,55 @@ import Layout from '../../layouts/Layout.astro';
         </div>
       </div>
   </section>
+<script>   
+   const transferModal = document.getElementById('transferModal');
+    const openTransferBtn = document.getElementById('open-transfer-modal');
+    const closeTransferBtn = document.getElementById('close-transfer-modal');
+    const cancelBtn = document.getElementById('cancelBtn');
+    const confirmBtn = document.getElementById('confirmBtn');
 
+    // Open modal
+    openTransferBtn.addEventListener('click', () => {
+      transferModal.classList.remove('hidden');
+    });
+
+    // Close modal on cancel or X
+    [closeTransferBtn, cancelBtn].forEach(btn => {
+      btn.addEventListener('click', () => {
+        transferModal.classList.add('hidden');
+      });
+    });
+
+    // Close on outside click
+    transferModal.addEventListener('click', (e) => {
+      if (e.target === transferModal) {
+        transferModal.classList.add('hidden');
+      }
+    });
+
+    // Confirm action
+    confirmBtn.addEventListener('click', () => {
+      const itemName = document.getElementById('itemName').value;
+      const category = document.getElementById('category').value;
+      const description = document.getElementById('description').value;
+      const minQty = document.getElementById('minQty').value;
+      const maxQty = document.getElementById('maxQty').value;
+      const autoReorder = document.getElementById('autoReorder').checked;
+
+      console.log('New Product:', {
+        itemName,
+        category,
+        description,
+        minQty,
+        maxQty,
+        autoReorder
+      });
+
+      // Close modal after confirm
+      transferModal.classList.add('hidden');
+
+      // You can add code here to actually insert the data into your table or backend
+    });
+    
+    </script>
 </Layout>
