@@ -3,8 +3,6 @@ import Layout from '../../layouts/Layout.astro';
 import Button from '../../components/Button.astro';
 import DateTimeInput from '../../components/DateTimeInput.astro';
 import StockInTable from '../../components/transactions/StockInTable.jsx';
-
-
 ---
 
 <Layout>
@@ -21,15 +19,16 @@ import StockInTable from '../../components/transactions/StockInTable.jsx';
 		<div className="p-2 flex flex-col gap-4">
 			<StockInTable limit="10" client:load />
 
-			<div className="flex justify-between items-center flex-shrink-0">
-				<button className="bg-btn-primary hover:bg-gray-600 text-textColor-secondary px-4 py-2 rounded font-medium transition-colors text-sm">
+			<div class="flex justify-between items-center flex-shrink-0">
+				<button class="hover:bg-btn-primary text-textColor-secondary px-4 py-2 rounded font-medium transition-colors text-sm">
 					Previous
 				</button>
-				<span className="text-textColor-primary text-sm"> Page 1 of 1 </span>
-				<button className="bg-btn-primary hover:bg-gray-600 text-textColor-secondary px-4 py-2 rounded font-medium transition-colors text-sm">
+				<span class="text-textColor-primary text-sm">Page 1 of 1</span>
+				<button class="hover:bg-btn-primary text-textColor-secondary px-4 py-2 rounded font-medium transition-colors text-sm">
 					Next
 				</button>
 			</div>
 		</div>
 	</div>
+	
 </Layout>

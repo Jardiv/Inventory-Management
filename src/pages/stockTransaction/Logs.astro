@@ -3,32 +3,13 @@ import Layout from '../../layouts/Layout.astro';
 import Button from '../../components/Button.astro';
 import DateTimeInput from '../../components/DateTimeInput.astro';
 import LogsTable from '../../components/transactions/LogsTable.jsx';
-
-const transactionLogs = [
-    { 
-        ref: "STK001234", 
-        date: "15/11/2025", 
-        type: "Stock In", 
-        supplier: "Metro Wholesale", 
-        status: "Completed", 
-        statusClass: "text-green-600" 
-    },
-    { 
-        ref: "SAL005678", 
-        date: "18/11/2025", 
-        type: "Sale", 
-        supplier: "--", 
-        status: "Processing", 
-        statusClass: "text-yellow-600" 
-    }
-];
 ---
 
 <Layout>
 	<DateTimeInput />
 
 	<div class="flex flex-col gap-1 w-full bg-primary p-4 mt-4">
-        
+
 		<div class="w-full flex justify-between">
 			<h1 class="text-xl font-bold">Transaction Logs</h1>
 			<a href="/stockTransaction/Dashboard/">
@@ -41,14 +22,15 @@ const transactionLogs = [
 			<LogsTable client:load limit="10" />
 
 			<div class="flex justify-between items-center flex-shrink-0">
-				<button class="bg-btn-primary hover:bg-gray-600 text-textColor-secondary px-4 py-2 rounded font-medium transition-colors text-sm">
+				<button class="hover:bg-btn-primary text-textColor-secondary px-4 py-2 rounded font-medium transition-colors text-sm">
 					Previous
 				</button>
 				<span class="text-textColor-primary text-sm">Page 1 of 1</span>
-				<button class="bg-btn-primary hover:bg-gray-600 text-textColor-secondary px-4 py-2 rounded font-medium transition-colors text-sm">
+				<button class="hover:bg-btn-primary text-textColor-secondary px-4 py-2 rounded font-medium transition-colors text-sm">
 					Next
 				</button>
 			</div>
 		</div>
 	</div>
+
 </Layout>

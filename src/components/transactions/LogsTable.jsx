@@ -37,27 +37,27 @@ export default function StockInTable({ limit }) {
 	};
 
 	return (
-		<table class="w-full text-left">
+		<table className="w-full text-left">
 			<thead>
 				<tr>
-					<th class="table-header">Reference no</th>
-					<th class="table-header">Date</th>
-					<th class="table-header">Type</th>
-					<th class="table-header">Supplier</th>
-					<th class="table-header">Status</th>
-					<th class="table-header text-center">Action</th>
+					<th className="table-header">Invoice no</th>
+					<th className="table-header">Date</th>
+					<th className="table-header">Type</th>
+					<th className="table-header">Supplier</th>
+					<th className="table-header">Status</th>
+					<th className="table-header text-center">Action</th>
 				</tr>
 			</thead>
 			<tbody>
 				{transactions.map((log) => (
-					<tr class="table-row">
-						<td class="table-data">{log.ref_no}</td>
-						<td class="table-data">{log.transaction_datetime}</td>
-						<td class="table-data">{log.type}</td>
-						<td class="table-data">{log.supplier_name}</td>
-						<td class={`table-data ${statusColorMap[log.status]}`}>{log.status}</td>
-						<td class="table-data text-center">
-							<button class="table-view-btn">View</button>
+					<tr className="table-row" key={log.id}>
+						<td className="table-data">{log.invoice_no}</td>
+						<td className="table-data">{log.transaction_datetime}</td>
+						<td className="table-data">{log.type}</td>
+						<td className="table-data">{log.supplier_name}</td>
+						<td className={`table-data ${statusColorMap[log.status]}`}>{log.status}</td>
+						<td className="table-data text-center">
+							<button className="table-view-btn">View</button>
 						</td>
 					</tr>
 				))}
