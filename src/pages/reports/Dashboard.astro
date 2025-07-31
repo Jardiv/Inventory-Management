@@ -131,32 +131,32 @@ const summaryIcons = ["📦", "⚠️", "❌", "🏭"];
                                 <th class="text-left py-1 px-2 text-xs sm:text-sm">Status</th>
                             </tr>
                         </thead>
-                        <tbody>
-                            {Array.from({ length: 8 }, (_, index) => {
-                                const warehouse = warehouseCapacityData[index];
-                                const isVisible = warehouse && index < Math.max(5, warehouseCapacityData.length);
-                                return (
-                                    <tr class={`${index < 7 ? "border-b border-gray-800" : ""} ${!isVisible ? "opacity-0" : ""}`}>
-                                        <td class="py-2 px-2 text-textColor-primary text-xs sm:text-sm">
-                                            {isVisible ? warehouse.warehouseName : "Hidden Warehouse"}
-                                        </td>
-                                        <td class="py-2 px-2 text-textColor-primary text-xs sm:text-sm">
-                                            {isVisible ? warehouse.used.toLocaleString() : "0"}
-                                        </td>
-                                        <td class="py-2 px-2 text-textColor-primary text-xs sm:text-sm">
-                                            {isVisible ? warehouse.available.toLocaleString() : "0"}
-                                        </td>
-                                        <td class="py-2 px-2">
-                                            <span class={`${isVisible ? warehouse.statusColor : "text-gray-400"} text-xs sm:text-sm`}>
-                                                {isVisible ? warehouse.status : "Hidden"}
-                                            </span>
-                                        </td>
-                                    </tr>
-                                );
-                            })}
-                        </tbody>
-                    </table>
-                </div>
+                            <tbody>
+                                {Array.from({ length: 8 }, (_, index) => {
+                                    const warehouse = warehouseCapacityData[index];
+                                    const isVisible = warehouse && index < Math.max(5, warehouseCapacityData.length);
+                                    return (
+                                        <tr class={`${index < 7 ? "border-b border-gray-800" : ""} ${!isVisible ? "opacity-0" : ""}`}>
+                                            <td class="py-2 px-2 text-textColor-primary text-xs sm:text-sm">
+                                                {isVisible ? warehouse.warehouseName : "Hidden Warehouse"}
+                                            </td>
+                                            <td class="py-2 px-2 text-textColor-primary text-xs sm:text-sm">
+                                                {isVisible ? warehouse.used.toLocaleString() : "0"}
+                                            </td>
+                                            <td class="py-2 px-2 text-textColor-primary text-xs sm:text-sm">
+                                                {isVisible ? warehouse.available.toLocaleString() : "0"}
+                                            </td>
+                                            <td class="py-2 px-2">
+                                                <span class={`${isVisible ? warehouse.statusColor : "text-gray-400"} text-xs sm:text-sm`}>
+                                                    {isVisible ? warehouse.status : "Hidden"}
+                                                </span>
+                                            </td>
+                                        </tr>
+                                    );
+                                })}
+                            </tbody>
+                        </table>
+                    </div>
             </div>
         </div>
         <div class="bg-primary col-span-5 row-span-1 rounded-lg flex flex-col">
@@ -175,37 +175,37 @@ const summaryIcons = ["📦", "⚠️", "❌", "🏭"];
                             <th class="text-left py-1 px-2 text-xs sm:text-sm">Current</th>
                             <th class="text-left py-1 px-2 text-xs sm:text-sm">To order</th>
                             <th class="text-left py-1 px-2 text-xs sm:text-sm">Status</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {Array.from({ length: 8 }, (_, index) => {
-                            const item = lowStockItemsData[index];
-                            const isVisible = item && index < Math.max(5, lowStockItemsData.length);
-                            return (
-                                <tr class={`${index < 7 ? "border-b border-gray-800" : ""} ${!isVisible ? "opacity-0" : ""}`}>
-                                    <td class="py-2 px-2 text-textColor-primary text-xs sm:text-sm">
-                                        {isVisible ? item.itemCode : "XXX"}
-                                    </td>
-                                    <td class="py-2 px-2 text-textColor-primary text-xs sm:text-sm">
-                                        {isVisible ? item.itemName : "Hidden Item"}
-                                    </td>
-                                    <td class="py-2 px-2 text-textColor-primary text-xs sm:text-sm">
-                                        {isVisible ? item.current : "0"}
-                                    </td>
-                                    <td class="py-2 px-2 text-textColor-primary text-xs sm:text-sm">
-                                        {isVisible ? item.toOrder : "0"}
-                                    </td>
-                                    <td class="py-2 px-2">
-                                        <span class={`${isVisible ? item.statusColor : "text-gray-400"} text-xs sm:text-sm`}>
-                                            {isVisible ? item.status : "Hidden"}
-                                        </span>
-                                    </td>
-                                </tr>
-                            );
-                        })}
-                    </tbody>
-                </table>
-            </div>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {Array.from({ length: 8 }, (_, index) => {
+                                const item = lowStockItemsData[index];
+                                const isVisible = item && index < Math.max(5, lowStockItemsData.length);
+                                return (
+                                    <tr class={`${index < 7 ? "border-b border-gray-800" : ""} ${!isVisible ? "opacity-0" : ""}`}>
+                                        <td class="py-2 px-2 text-textColor-primary text-xs sm:text-sm">
+                                            {isVisible ? item.itemCode : "XXX"}
+                                        </td>
+                                        <td class="py-2 px-2 text-textColor-primary text-xs sm:text-sm">
+                                            {isVisible ? item.itemName : "Hidden Item"}
+                                        </td>
+                                        <td class="py-2 px-2 text-textColor-primary text-xs sm:text-sm">
+                                            {isVisible ? item.current : "0"}
+                                        </td>
+                                        <td class="py-2 px-2 text-textColor-primary text-xs sm:text-sm">
+                                            {isVisible ? item.toOrder : "0"}
+                                        </td>
+                                        <td class="py-2 px-2">
+                                            <span class={`${isVisible ? item.statusColor : "text-gray-400"} text-xs sm:text-sm`}>
+                                                {isVisible ? item.status : "Hidden"}
+                                            </span>
+                                        </td>
+                                    </tr>
+                                );
+                            })}
+                        </tbody>
+                    </table>
+                </div>
         </div>
     </div>
 
