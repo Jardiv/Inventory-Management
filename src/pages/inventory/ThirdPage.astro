@@ -1,123 +1,115 @@
 ---
 import Layout from '../../layouts/Layout.astro';
+import Addmodal from '../../components/inventory/Addmodal.astro';
+import { products } from '../../components/inventory/productInvenDATA.jsx';
 ---
 <Layout>
-
-    <section id="viewAllSection">
-        <div class="bg-primary p-6 rounded-lg">
-      <div class="flex justify-between mb-4">
-        <div class="flex gap-2">
-          <a href="/inventory/Additem/"><button
-              class="flex items-center border border-border_color rounded-md px-4 py-2 hover:bg-btn-primary hover:text-textColor-secondary transition">Add
-              Products</button>
-          
+  <Addmodal />
+  <section id="viewAllSection">
+    <div class="bg-primary p-6 rounded-lg">
+      <div class="flex justify-between items-center mb-4">
+        <div class="flex items-center gap-3">
+          <h2 class="text-xl font-semibold">Product Inventory</h2>
+          <!-- Add Products Button -->
+          <button id="open-transfer-modal"
+            class=" flex items-center border-2 border-transparent rounded text-textColor-primary px-12 py-2 hover:border-btn-primary transition-colors duration-500 text-base">
+            <span>Add Products</span>
+          </button>
         </div>
-        <a href="/inventory/Dashboard/"><button
-            class="group flex items-center gap-1 px-4 py-2 hover:text-btn-primary transition text-base">
-            <span>Go Back</span>
-            <span class="transform transition-transform duration-200 group-hover:translate-x-1"> &#10229;</span>
-          </button></a>
+
+
+        <div class="relative flex gap-2">
+          <!-- Filter Button -->
+          <button id="toggle-filters"
+            class="items-center rounded px-4 py-2 pr-4 bg-primary text-textColor-primary hover:bg-violet-600 active:bg-violet-600">
+            <svg id="filterIcon" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none"
+              stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+              <line x1="3" y1="6" x2="21" y2="6" />
+              <line x1="6" y1="12" x2="18" y2="12" />
+              <line x1="9" y1="18" x2="15" y2="18" />
+            </svg>
+          </button>
+
+          <!-- Filter Panel -->
+          <div id="filter-panel"
+            class="absolute top-14 right-0 w-72 bg-primary text-textColor-primary rounded-lg p-4 border border-border_color shadow-lg hidden z-50">
+
+            <h3 class="text-textColor-primary font-semibold mb-2">Availability:</h3>
+            <div class="flex flex-col gap-1 mb-4">
+              <label><input type="checkbox" name="availability" value="in_stock" class="availability-option mr-2">In
+                Stock</label>
+              <label><input type="checkbox" name="availability" value="low_stock" class="availability-option mr-2">Low
+                Stock</label>
+              <label><input type="checkbox" name="availability" value="out_of_stock"
+                  class="availability-option mr-2">Out of Stock</label>
+            </div>
+
+            <hr class="border-border_color mb-4">
+
+            <h3 class="text-textColor-primary font-semibold mb-2">Category:</h3>
+            <select class="w-full bg-primary text-textColor-primary border border-neutral-700 rounded px-3 py-2 mb-4">
+              <option>Grains</option>
+              <option>Condiments</option>
+              <option>Carbs</option>
+              <option>Etc.</option>
+            </select>
+
+            <hr class="border-border_color mb-4">
+
+            <h3 class="text-textColor-primary font-semibold mb-2">Price Range:</h3>
+            <div class="flex justify-between gap-2">
+              <input type="number" placeholder="Min:"
+                class="w-1/2 bg-primary text-textColor-primary px-3 py-2 rounded border border-neutral-700" />
+              <input type="number" placeholder="Max:"
+                class="w-1/2 bg-primary text-white px-3 py-2 rounded border border-neutral-700" />
+            </div>
+          </div>
+          <!-- Download Button -->
+          <button id="download-btn"
+            class="items-center rounded px-4 py-2 bg-primary text-textColor-primary hover:bg-btn-hover active:bg-green-700">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5"
+              stroke="currentColor" class="w-5 h-5">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75L12 20.25L19.5 12.75M12 3.75V20.25" />
+            </svg>
+          </button>
+
+          <!-- Go Back Button -->
+          <a href="/inventory/Dashboard" class="p-2 text-textColor-primary hover:bg-btn-hover hover:text-white rounded">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5"
+              stroke="currentColor" class="w-5 h-5">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12" />
+            </svg>
+          </a>
+        </div>
+
       </div>
 
-      <div>
-                <!-- Table Header -->
-                <div class="grid grid-cols-5 text-xl font-semibold border-b border-border_color pb-2 mb-4">
-                    <span>Item Code</span>
-                    <span class="text-center">Item Name</span>
-                    <span class="text-center">Category</span>
-                    <span class="text-center">Unit</span>
-                    <span class="text-center">Auto Re-order Status</span>
 
-                </div>
-
-                <!-- Table Rows -->
-                <div class="space-y-2 text-xl">
-                    <div class="grid grid-cols-5 items-center border-b border-border_color py-2">
-                        <span>1011</span>
-                        <span class="text-center">Product 1</span>
-                        <span class="text-center">Grains</span>
-                        <span class="text-center">10Kg</span>
-                        <span class="text-center text-green-500">Yes</span>
-
-                    </div>
-                    <div class="grid grid-cols-5 items-center border-b border-border_color py-2">
-                        <span>1012</span>
-                        <span class="text-center">Product 2</span>
-                        <span class="text-center">Condiments</span>
-                        <span class="text-center">Liter</span>
-                        <span class="text-center text-green-500">Yes</span>
-                    </div>
-                    <div class="grid grid-cols-5 items-center border-b border-border_color py-2">
-                        <span>1013</span>
-                        <span class="text-center">Product 3</span>
-                        <span class="text-center">Carbs</span>
-                        <span class="text-center">N/A</span>
-                        <span class="text-center text-green-500">Yes</span>
-                    </div>
-                    <div class="grid grid-cols-5 items-center border-b border-border_color py-2">
-                        <span>1014</span>
-                        <span class="text-center">Product 4</span>
-                        <span class="text-center">Condiments</span>
-                        <span class="text-center">Liter</span>
-                        <span class="text-center text-red-500 ">No</span>
-                    </div>
-                    <div class="grid grid-cols-5 items-center border-b border-border_color py-2">
-                        <span>1015</span>
-                        <span class="text-center">Product 5</span>
-                        <span class="text-center">Condiments</span>
-                        <span class="text-center">Liter</span>
-                        <span class="text-center text-green-500">Yes</span>
-                    </div>
-                    <div class="grid grid-cols-5 items-center border-b border-border_color py-2">
-                        <span>1016</span>
-                        <span class="text-center">Product 6</span>
-                        <span class="text-center">Carbs</span>
-                        <span class="text-center">Grams</span>
-                        <span class="text-center text-green-500">Yes</span>
-                    </div>
-                    <div class="grid grid-cols-5 items-center border-b border-border_color py-2">
-                        <span>1017</span>
-                        <span class="text-center">Product 7</span>
-                        <span class="text-center">Condiments</span>
-                        <span class="text-center">Liter</span>
-                        <span class="text-center text-red-500 ">No</span>
-                    </div>
-                    <div class="grid grid-cols-5 items-center border-b border-border_color py-2">
-                        <span>1018</span>
-                        <span class="text-center">Product 8</span>
-                        <span class="text-center">Condiments</span>
-                        <span class="text-center">Liter</span>
-                        <span class="text-center text-red-500 ">No</span>
-                    </div>
-                    <div class="grid grid-cols-5 items-center border-b border-border_color py-2">
-                        <span>1019</span>
-                        <span class="text-center">Product 9</span>
-                        <span class="text-center">Condiments</span>
-                        <span class="text-center">Liter</span>
-                        <span class="text-center text-red-500 ">No</span>
-                    </div>
-                    <div class="grid grid-cols-5 items-center border-b border-border_color py-2">
-                        <span>1011</span>
-                        <span class="text-center">Product 10</span>
-                        <span class="text-center">Condiments</span>
-                        <span class="text-center">Liter</span>
-                        <span class="text-center text-green-500 ">Yes</span>
-                    </div>
+{products
+  .filter(product => ['1011', '1012', '1013', '1014', '1015', '1016'].includes(product.code))
+  .map(product => (
+    <div class="grid grid-cols-5 items-center border-b border-border_color py-2">
+      <span>{product.code}</span>
+      <span class="text-left">{product.name}</span>
+      <span class="text-left">{product.category}</span>
+      <span class="text-left">{product.unit}</span>
+      <span class={`text-left ${product.reorder === 'Yes' ? 'text-green-500' : 'text-red-500'}`}>
+        {product.reorder}
+      </span>
+    </div>
+))}
 
 
 
-                    </table>
-                </div>
+      <div class="flex justify-between items-center mt-6 text-sm">
+        <button
+          class="flex items-center border border-border_color rounded-md px-4 py-2 hover:bg-btn-primary hover:text-textColor-secondary transition">Previous</button>
+        <p class="text-gray-400">Page 1 of 10</p>
+        <a href="/inventory/ThirdPage/"><button
+            class="flex items-center px-7 py-2 border border-border_color rounded-md hover:bg-btn-primary hover:text-textColor-secondary transition">Next</button>
+      </div>
+    </div>
+  </section>
 
-                <div class="flex justify-between items-center mt-6 text-sm">
-
-                    <a href="/inventory/Dashboard2ndpage/"><button
-                            class="flex items-center border border-border_color rounded-md px-4 py-2 hover:bg-btn-primary hover:text-textColor-secondary transition">Previous</button></a>
-                    <p class="text-gray-400">Page 2 of 10</p>
-                    <button
-                        class=" px-4 py-1 border border-border_color rounded-md hover:bg-btn-primary hover:text-textColor-secondary transition">Next</button>
-                </div>
-            </div>
-    </section>
-
+  <script src="/scripts/inventory/inventory.js" is:inline></script>
 </Layout>
