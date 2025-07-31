@@ -11,8 +11,11 @@ import Layout from '../../layouts/Layout.astro';
                             class="flex items-center border border-border_color rounded-md px-4 py-2 hover:bg-btn-primary hover:text-textColor-secondary transition">Add
                             Products</button>
                         <a href="/inventory/Dashboard/"><button
-                                class="flex items-center border border-border_color rounded-md px-4 py-2 hover:bg-btn-primary hover:text-textColor-secondary transition">Go
-                                Back</button></a>
+                                class="group flex items-center gap-1 px-4 py-2 hover:text-btn-primary transition text-base">
+                                <span>Go Back</span>
+                                <span class="transform transition-transform duration-200 group-hover:translate-x-1">
+                                    &#10229;</span>
+                            </button></a>
                 </div>
             </div>
 
@@ -110,9 +113,9 @@ import Layout from '../../layouts/Layout.astro';
 
                     <a href="/inventory/Dashboard2ndpage/"><button
                             class="flex items-center border border-border_color rounded-md px-4 py-2 hover:bg-btn-primary hover:text-textColor-secondary transition">Previous</button></a>
-                        <p class="text-gray-400">Page 2 of 10</p>
-                        <button
-                            class=" px-4 py-1 border border-border_color rounded-md hover:bg-btn-primary hover:text-textColor-secondary transition">Next</button>
+                    <p class="text-gray-400">Page 2 of 10</p>
+                    <button
+                        class=" px-4 py-1 border border-border_color rounded-md hover:bg-btn-primary hover:text-textColor-secondary transition">Next</button>
                 </div>
             </div>
     </section>
