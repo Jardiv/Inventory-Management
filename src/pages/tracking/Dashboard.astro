@@ -1,192 +1,235 @@
 ---
 import Layout from '../../layouts/Layout.astro';
+
+// Quick Summary Data
+const quickSummaryData = [
+    { label: "Warehouses", value: "8", color: "text-blue" },
+    { label: "Total Stocks", value: "11,000", color: "text-yellow" },
+    { label: "Shipments Received", value: "8", color: "text-green" },
+    { label: "Pending Shipments", value: "5", color: "text-red" }
+];
+
+// Icons for Quick Summary (defined in component, not in data)
+const summaryIcons = ["🏭", "📦", "📥", "🔄"];
 ---
 
 <!-- TRACKING DASHBOARD -->
 <Layout>
-  <div class="w-full max-w-[100%] h-[245px] bg-primary rounded-lg relative p-6 mb-6">
-    <!-- Header -->
-    <div class="text-textColor-primary text-2xl font-semibold mb-6">Quick Summary</div>
-
-    <!-- Summary Card -->
-    <div class="w-full h-[115px] bg-primary border border-border_color rounded-lg flex justify-between items-center px-6">
-      
-      <!-- Block 1 -->
-      <div class="flex flex-col text-left">
-        <span class="text-textColor-tertiary text-lg font-medium">Warehouses</span>
-        <span class="text-textColor-primary text-2xl font-medium">8</span>
-      </div>
-
-      <!-- Divider -->
-      <div class="w-px h-14 bg-border_color"></div>
-
-      <!-- Block 2 -->
-      <div class="flex flex-col text-left">
-        <span class="text-textColor-tertiary text-lg font-medium">Items in Transit</span>
-        <span class="text-textColor-primary text-2xl font-medium">5</span>
-      </div>
-
-      <!-- Divider -->
-      <div class="w-px h-14 bg-border_color"></div>
-
-      <!-- Block 3 -->
-      <div class="flex flex-col text-left">
-        <span class="text-textColor-tertiary text-lg font-medium">Successfully Received</span>
-        <span class="text-textColor-primary text-2xl font-medium">23</span>
-      </div>
-
-      <!-- Divider -->
-      <div class="w-px h-14 bg-border_color"></div>
-
-      <!-- Block 4 -->
-      <div class="flex flex-col text-left">
-        <span class="text-textColor-tertiary text-lg font-medium">Pending</span>
-        <span class="text-textColor-primary text-2xl font-medium">6</span>
-      </div>
-
-    </div>
-  </div>
-  <div class="w-full max-w-[100%] bg-primary rounded-md mx-auto p-6 text-textColor-primary font-poppins">
-    
-    <!-- Header Row -->
-    <div class="flex justify-between items-center mb-6">
-      <div class="flex items-center space-x-4">
-        <h2 class="text-2xl font-semibold">Recent Shipments</h2>
-
-        <!-- Receive Products Button -->
-        <a href="/tracking/shipment-history" class="flex items-center border border-border_color rounded-md px-4 py-2 hover:bg-btn-hover hover:text-textColor-secondary transition">
-			<!-- Icon -->
-          <div class="flex items-center">
-            <svg xmlns="http://www.w3.org/2000/svg"
-                viewBox="0 0 24 24"
-                fill="currentColor"
-                class="size-6 mr-2">
-              <path d="M3.375 3C2.339 3 1.5 3.84 1.5 4.875v.75c0 1.036.84 1.875 1.875 1.875h17.25c1.035 0 1.875-.84 1.875-1.875v-.75C22.5 3.839 21.66 3 20.625 3H3.375Z" />
-              <path fill-rule="evenodd"
-                    d="m3.087 9 .54 9.176A3 3 0 0 0 6.62 21h10.757a3 3 0 0 0 2.995-2.824L20.913 9H3.087ZM12 10.5a.75.75 0 0 1 .75.75v4.94l1.72-1.72a.75.75 0 1 1 1.06 1.06l-3 3a.75.75 0 0 1-1.06 0l-3-3a.75.75 0 1 1 1.06-1.06l1.72 1.72v-4.94a.75.75 0 0 1 .75-.75Z"
-                    clip-rule="evenodd" />
-            </svg>
-            <span class="text-xl">Receive Product</span>
+  <!----Quick summary card---->
+  <div class="w-full grid grid-cols-5 grid-rows-1 gap-4 mb-4">
+      <!-- Quick Summary Section -->
+      <div class="bg-primary col-span-5 row-span-1 p-6 rounded-lg">
+          <div class="flex justify-between items-center mb-4">
+              <h2 class="text-textColor-primary text-lg sm:text-xl lg:text-2xl font-semibold">Quick Summary</h2>
           </div>
-		    </a>
-
+          <div class="grid grid-cols-2 sm:grid-cols-4 gap-4">
+              {quickSummaryData.map((item, index) => (
+                  <div class="bg-background rounded-lg p-4 text-center">
+                      <div class="text-2xl mb-2">{summaryIcons[index]}</div>
+                      <div class={`text-xl font-bold ${item.color} mb-1`}>{item.value}</div>
+                      <div class="text-textColor-primary text-sm">{item.label}</div>
+                  </div>
+              ))}
+          </div>
       </div>
-
-      <a href="/tracking/shipment-history" class="text-btn-primary text-xl cursor-pointer hover:underline">See All</a>
-    </div>
-
-    <!-- Table -->
-    <div>
-      <!-- Table Header -->
-      <div class="grid grid-cols-4 text-xl font-semibold border-b border-border_color pb-2 mb-4">
-        <span>Shipment ID</span>
-        <span class="text-center">Name</span>
-        <span class="text-center">Quantity</span>
-        <span class="text-center">Status</span>
-      </div>
-
-      <!-- Table Rows -->
-      <div class="space-y-2 text-xl">
-        <div class="grid grid-cols-4 items-center border-b border-border_color py-2">
-          <span>A2B1</span>
-          <span class="text-center">Sardines</span>
-          <span class="text-center">120</span>
-          <span class="text-center text-green-500 font-semibold">RECEIVED</span>
-        </div>
-        <div class="grid grid-cols-4 items-center border-b border-border_color py-2">
-          <span>B4B1</span>
-          <span class="text-center">PS4</span>
-          <span class="text-center">30</span>
-          <span class="text-center text-orange-500 font-semibold">DELIVERED</span>
-        </div>
-        <div class="grid grid-cols-4 items-center border-b border-border_color py-2">
-          <span>C1A1</span>
-          <span class="text-center">Clothes</span>
-          <span class="text-center">1000</span>
-          <span class="text-center text-red-500 font-semibold">PENDING</span>
-        </div>
-        <div class="grid grid-cols-4 items-center border-b border-border_color py-2">
-          <span>A2B1</span>
-          <span class="text-center">Sardines</span>
-          <span class="text-center">120</span>
-          <span class="text-center text-green-500 font-semibold">RECEIVED</span>
-        </div>
-      </div>
-    </div>
   </div>
-  
-  <!---RECENT TRANSFERS TABLE-->
-  <div class="w-full max-w-[100%] bg-primary rounded-md mx-auto p-6 text-textColor-primary font-poppins transition-colors mt-10">
-    
+
+  <!-- Warehouse Summary -->
+  <div class="w-full bg-primary rounded-lg p-6 mb-4 text-textColor-primary font-[Poppins]">
     <!-- Header Row -->
     <div class="flex justify-between items-center mb-6">
-      <div class="flex items-center space-x-4">
-        <h2 class="text-2xl font-semibold">Recent Transfers</h2>
-        <!-- Transfer Products Button -->
-        <a href="/tracking/Transfer_product"class="flex items-center border border-border_color rounded-md px-4 py-2 hover:bg-btn-hover hover:text-textColor-secondary transition">
-          <!-- Icon -->
-          <svg xmlns="http://www.w3.org/2000/svg"viewBox="0 0 24 24" fill="currentColor"class="size-6 mr-2">
-            <path fill-rule="evenodd" d="M15.97 2.47a.75.75 0 0 1 1.06 0l4.5 4.5a.75.75 0 0 1 0 1.06l-4.5 4.5a.75.75 0 1 1-1.06-1.06l3.22-3.22H7.5a.75.75 0 0 1 0-1.5h11.69l-3.22-3.22a.75.75 0 0 1 0-1.06Zm-7.94 9a.75.75 0 0 1 0 1.06l-3.22 3.22H16.5a.75.75 0 0 1 0 1.5H4.81l3.22 3.22a.75.75 0 1 1-1.06 1.06l-4.5-4.5a.75.75 0 0 1 0-1.06l4.5-4.5a.75.75 0 0 1 1.06 0Z"clip-rule="evenodd" />
-          </svg>
-          <span class="text-xl font-medium">Transfer Products</span>
-        </a>
+      <!-- Left: Title + Dropdown -->
+      <div class="flex items-center gap-4">
+        <h2 class="text-2xl font-semibold">Warehouse Summary</h2>
+
+          <!-- Dropdown -->
+          <div class="relative">
+            <div class="relative inline-block text-left">
+              <button onclick="document.getElementById('dropdown').classList.toggle('hidden')"
+                class="flex justify-between items-center bg-primary text-textColor-primary rounded px-4 py-2 text-sm w-auto min-w-[160px] whitespace-nowrap
+                      border border-transparent hover:border-btn-hover active:border-btn-hover">
+                <span>Select Warehouse</span>
+                <svg class="w-4 h-4 ml-2 text-textColor-primary" viewBox="0 0 20 20" fill="currentColor">
+                  <path fill-rule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 10.939l3.71-3.71a.75.75 0 111.06 1.06l-4.24 4.25a.75.75 0 01-1.06 0L5.21 8.27a.75.75 0 01.02-1.06z" clip-rule="evenodd" />
+                </svg>
+              </button>
+              <div id="dropdown" class="hidden absolute mt-2 bg-primary border border-border_color rounded shadow-md z-10 w-[160px]">
+                <ul class="py-1 text-sm text-textColor-primary">
+                  <li><a href="#" class="block px-4 py-2 hover:bg-btn-hover hover:text-textColor-secondary">Warehouse 1</a></li>
+                  <li><a href="#" class="block px-4 py-2 hover:bg-btn-hover hover:text-textColor-secondary">Warehouse 2</a></li>
+                  <li><a href="#" class="block px-4 py-2 hover:bg-btn-hover hover:text-textColor-secondary">Warehouse 3</a></li>
+                </ul>
+              </div>
+            </div>
+          </div>
       </div>
 
-      <a href="/tracking/Transfer_product" class="text-btn-primary text-xl cursor-pointer hover:underline">See All</a>
+      <!-- Right: See All -->
+      <div class="text-btn-primary text-lg cursor-pointer hover:underline">See All</div>
     </div>
 
-    <!-- Table -->
-    <div>
-      <!-- Table Header -->
-      <div class="grid grid-cols-5 text-xl font-semibold border-b border-border_color pb-2 mb-4">
-        <span>Transfer ID</span>
-        <span class="text-center">Name</span>
-        <span class="text-center">Transferred Qty.</span>
-        <span class="text-center">From</span>
-        <span class="text-center">To</span>
+    <!-- Table Header -->
+    <div class="grid grid-cols-4 text-lg font-semibold border-b border-border_color py-3">
+      <div class="text-center w-full">Item ID</div>
+      <div class="text-center w-full">Name</div>
+      <div class="text-center w-full">Quantity</div>
+      <div class="text-center w-full">Category</div>
+    </div>
+
+    <!-- Table Rows -->
+    <div class="divide-y divide-border_color">
+      <div class="grid grid-cols-4 py-4 text-center text-lg">
+        <div class="w-full min-w-0">A2B1</div>
+        <div class="w-full min-w-0">Sardines</div>
+        <div class="w-full min-w-0">120</div>
+        <div class="w-full min-w-0 font-semibold text-base">Canned Goods</div>
+      </div>
+      <div class="grid grid-cols-4 py-4 text-center text-lg">
+        <div class="w-full min-w-0">B4B1</div>
+        <div class="w-full min-w-0">PS4</div>
+        <div class="w-full min-w-0">30</div>
+        <div class="w-full min-w-0 font-semibold text-base">Console</div>
+      </div>
+      <div class="grid grid-cols-4 py-4 text-center text-lg">
+        <div class="w-full min-w-0">C1A1</div>
+        <div class="w-full min-w-0">T-shirt</div>
+        <div class="w-full min-w-0">1000</div>
+        <div class="w-full min-w-0 font-semibold text-base">Clothes</div>
+      </div>
+      <div class="grid grid-cols-4 py-4 text-center text-lg">
+        <div class="w-full min-w-0">A2B1</div>
+        <div class="w-full min-w-0">Sardines</div>
+        <div class="w-full min-w-0">120</div>
+        <div class="w-full min-w-0 font-semibold text-base">Canned Goods</div>
+      </div>
+    </div>
+  </div>
+
+
+
+
+  <div class="w-full flex gap-6">
+    <!-- Recent Shipments Table -->
+    <div class="w-1/2 bg-primary rounded-md p-6 text-textColor-primary font-poppins">
+      <!-- Header Row -->
+      <div class="flex justify-between items-center mb-6">
+        <div class="flex items-center space-x-4">
+          <h2 class="text-xl font-semibold">Recent Shipments</h2>
+        </div>
+        <a href="/tracking/shipment-history" class="text-btn-primary text-sm hover:underline">See All</a>
       </div>
 
-      <!-- Table Rows -->
-      <div class="space-y-2 text-xl">
-        <!-- Row 1 -->
-        <div class="grid grid-cols-5 items-center border-b border-border_color py-2">
-          <span>T1</span>
-          <span class="text-center">Soap</span>
-          <span class="text-center">120</span>
-          <span class="text-center">W1</span>
-          <span class="text-center">W2</span>
+      <!-- Table -->
+      <div>
+        <div class="grid grid-cols-4 text-sm font-semibold border-b border-border_color pb-2 mb-4 text-left">
+          <span>Shipment ID</span>
+          <span>Name</span>
+          <span>Quantity</span>
+          <span>Status</span>
         </div>
-
-        <!-- Row 2 -->
-        <div class="grid grid-cols-5 items-center border-b border-border_color py-2">
-          <span>T2</span>
-          <span class="text-center">Juice</span>
-          <span class="text-center">80</span>
-          <span class="text-center">W2</span>
-          <span class="text-center">W3</span>
+        <div class="space-y-2 text-sm">
+          <div class="grid grid-cols-4 items-center border-b border-border_color py-2">
+            <span>A2B1</span>
+            <span>Sardines</span>
+            <span>120</span>
+            <span class="text-green-500 font-semibold">RECEIVED</span>
+          </div>
+          <div class="grid grid-cols-4 items-center border-b border-border_color py-2">
+            <span>A2B1</span>
+            <span>Sardines</span>
+            <span>120</span>
+            <span class="text-green-500 font-semibold">RECEIVED</span>
+          </div>
+          <div class="grid grid-cols-4 items-center border-b border-border_color py-2">
+            <span>A2B1</span>
+            <span>Sardines</span>
+            <span>120</span>
+            <span class="text-green-500 font-semibold">RECEIVED</span>
+          </div>
+          <div class="grid grid-cols-4 items-center py-2">
+            <span>A2B1</span>
+            <span>Sardines</span>
+            <span>120</span>
+            <span class="text-green-500 font-semibold">RECEIVED</span>
+          </div>
+          
+          <!-- More rows... -->
         </div>
+      </div>
+    </div>
 
-        <!-- Row 3 -->
-        <div class="grid grid-cols-5 items-center border-b border-border_color py-2">
-          <span>T3</span>
-          <span class="text-center">Meat</span>
-          <span class="text-center">50</span>
-          <span class="text-center">W3</span>
-          <span class="text-center">W1</span>
+    <!-- Recent Transfers Table -->
+    <div class="w-1/2 bg-primary rounded-md p-6 text-textColor-primary font-poppins">
+      <!-- Header Row -->
+      <div class="flex justify-between items-center mb-6">
+        <div class="flex items-center space-x-4">
+          <h2 class="text-xl font-semibold">Recent Transfers</h2>
         </div>
+        <a href="/tracking/Transfer_product" class="text-btn-primary text-sm hover:underline">See All</a>
+      </div>
 
-        <!-- Row 4 -->
-        <div class="grid grid-cols-5 items-center border-b border-border_color py-2">
-          <span>T4</span>
-          <span class="text-center">Meat</span>
-          <span class="text-center">50</span>
-          <span class="text-center">W3</span>
-          <span class="text-center">W1</span>
+      <!-- Table -->
+      <div>
+        <div class="grid grid-cols-5 text-sm font-semibold border-b border-border_color pb-2 mb-4 text-left">
+          <span>Transfer ID</span>
+          <span>Name</span>
+          <span>Qty.</span>
+          <span>From</span>
+          <span>To</span>
+        </div>
+        <div class="space-y-2 text-sm">
+          <div class="grid grid-cols-5 items-center border-b border-border_color py-2">
+            <span>T1</span>
+            <span>Soap</span>
+            <span>120</span>
+            <span>W1</span>
+            <span>W2</span>
+          </div>
+          <div class="grid grid-cols-5 items-center border-b border-border_color py-2">
+            <span>T1</span>
+            <span>Soap</span>
+            <span>120</span>
+            <span>W1</span>
+            <span>W2</span>
+          </div>
+          <div class="grid grid-cols-5 items-center border-b border-border_color py-2">
+            <span>T1</span>
+            <span>Soap</span>
+            <span>120</span>
+            <span>W1</span>
+            <span>W2</span>
+          </div>
+          <div class="grid grid-cols-5 items-center  py-2">
+            <span>T1</span>
+            <span>Soap</span>
+            <span>120</span>
+            <span>W1</span>
+            <span>W2</span>
+          </div>
+          <!-- More rows... -->
         </div>
       </div>
     </div>
   </div>
-  <div></div>
+  <script>
+    const modal = document.getElementById('modal');
+    const openBtn = document.getElementById('open-modal');
+    const closeBtn = document.getElementById('close-modal');
+
+    openBtn.addEventListener('click', () => {
+      modal.classList.remove('hidden');
+    });
+
+    closeBtn.addEventListener('click', () => {
+      modal.classList.add('hidden');
+    });
+
+    modal.addEventListener('click', (e) => {
+      if (e.target === modal) {
+        modal.classList.add('hidden');
+      }
+    });
+  </script>
 </Layout>
 
 
