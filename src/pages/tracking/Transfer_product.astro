@@ -9,27 +9,47 @@ import Layout from '../../layouts/Layout.astro';
       
       <div class="flex items-center gap-4">
         <!-- Transfer Button -->
-        <button id="open-transfer-modal" class="flex items-center gap-2 border border-border_color rounded-md px-4 py-2 hover:bg-btn-primary hover:text-textColor-secondary transition">
+        <button id="open-transfer-modal" class="flex items-center gap-2 px-4 py-2 border border-transparent rounded hover:border-btn-hover hover:text-textColor-secondary transition">
           <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="size-6 mr-2">
             <path fill-rule="evenodd" d="M15.97 2.47a.75.75 0 0 1 1.06 0l4.5 4.5a.75.75 0 0 1 0 1.06l-4.5 4.5a.75.75 0 1 1-1.06-1.06l3.22-3.22H7.5a.75.75 0 0 1 0-1.5h11.69l-3.22-3.22a.75.75 0 0 1 0-1.06Zm-7.94 9a.75.75 0 0 1 0 1.06l-3.22 3.22H16.5a.75.75 0 0 1 0 1.5H4.81l3.22 3.22a.75.75 0 1 1-1.06 1.06l-4.5-4.5a.75.75 0 0 1 0-1.06l4.5-4.5a.75.75 0 0 1 1.06 0Z" clip-rule="evenodd" />
           </svg>
           <span class="text-lg">Transfer Items</span>
         </button>
 
-        <!-- Filter Button -->
-        <div class="relative inline-block text-left">
-          <button onclick="document.getElementById('dropdown').classList.toggle('hidden')"
-            class="bg-primary text-btn-secondary border border-border_color rounded px-4 py-3 text-sm hover:bg-btn-hover hover:text-textColor-secondary w-[130px]">
-            Filter By
-          </button>
+        <!-- Filter + Cancel Buttons -->
+        <div class="flex items-center gap-2 relative">
+          <!-- Filter Button -->
+          <div class="relative inline-block text-center">
+            <button onclick="document.getElementById('dropdown').classList.toggle('hidden')"
+              class="bg-primary text-secondary rounded px-4 py-3 text-sm hover:text-textColor-secondary hover:bg-violet-600 w-[60px] ">
+              <svg id="filterIcon" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none"
+                stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                <line x1="3" y1="6" x2="21" y2="6" />
+                <line x1="6" y1="12" x2="18" y2="12" />
+                <line x1="9" y1="18" x2="15" y2="18" />
+              </svg>
+            </button>
 
-          <div id="dropdown" class="hidden absolute mt-6 bg-primary border border-border_color rounded shadow-md z-10 w-[130px]">
-            <ul class="py-1 text-sm text-textColor-primary">
-              <li><a href="#" class="block px-4 py-2 hover:bg-btn-hover">Received</a></li>
-              <li><a href="#" class="block px-4 py-2 hover:bg-btn-hover">Delivered</a></li>
-              <li><a href="#" class="block px-4 py-2 hover:bg-btn-hover">Pending</a></li>
-            </ul>
+            <!-- Dropdown -->
+            <div id="dropdown"
+              class="hidden absolute left-1/2 -translate-x-1/2 mt-2 bg-primary border border-border_color rounded shadow-md z-10 w-[130px]">
+              <ul class="py-1 text-sm text-textColor-primary text-left">
+                <li><a href="#" class="block px-4 py-2 hover:bg-btn-hover">Date</a></li>
+                <li><a href="#" class="block px-4 py-2 hover:bg-btn-hover">Warehouse</a></li>
+                <li><a href="#" class="block px-4 py-2 hover:bg-btn-hover">Transfer Code</a></li>
+              </ul>
+            </div>
           </div>
+
+          <!-- Cancel Button -->
+           <a href="/tracking/Dashboard">
+            <button class="bg-primary text-secondary rounded px-4 py-3 text-sm hover:text-textColor-secondary hover:bg-violet-600 w-[60px]">
+              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
+                stroke-width="1.5" stroke="currentColor" class="w-5 h-5 mx-auto">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12" />
+              </svg>
+            </button>
+           </a>
         </div>
       </div>
     </div>
@@ -134,39 +154,41 @@ import Layout from '../../layouts/Layout.astro';
           </div>
         </div>
 
-        <!-- Add Items Button -->
-        <div class="flex justify-end">
-          <button id="open-add-items-modal" class="flex items-center gap-2 bg-green hover:bg-green/80 text-white px-4 py-2 rounded-md transition">
-            <svg class="w-4 h-4" fill="white" viewBox="0 0 24 24"><path d="M12 5v14m7-7H5"/></svg>
-            Add items to transfer
-          </button>
-        </div>
-
-        <!-- Table Header -->
-        <div class="grid grid-cols-5 text-textColor-primary text-lg font-medium border-b border-border_color pb-2">
-          <div>Product ID</div>
-          <div>Product</div>
-          <div class="text-center">Available Qty</div>
-          <div class="text-center">Selected Qty</div>
-          <div class="text-center">Action</div>
-        </div>
-
-        <!-- Items List -->
-        <div class="divide-y divide-border_color max-h-[300px] overflow-y-auto">
-          <div class="grid grid-cols-5 py-3 items-center">
-            <div>1741</div>
-            <div>Product 1</div>
-            <div class="text-center">0</div>
-            <div class="text-center">0</div>
-            <div class="text-center">
-              <button class="text-red hover:text-red/80 transition">
-                <svg class="w-5 h-5 mx-auto" fill="currentColor" viewBox="0 0 20 20">
-                  <path fill-rule="evenodd" clip-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm2.121-11.121a1 1 0 10-1.414-1.414L10 8.586 8.293 6.879a1 1 0 10-1.414 1.414L8.586 10l-1.707 1.707a1 1 0 101.414 1.414L10 11.414l1.707 1.707a1 1 0 001.414-1.414L11.414 10l1.707-1.707z"/>
-                </svg>
-              </button>
-            </div>
+        <!-- Add Items Button + Table Container -->
+        <div class="border border-border_color rounded-md p-4 space-y-4">
+          <!-- Table Header -->
+          <div class="grid grid-cols-5 text-textColor-primary text-lg font-medium border-b border-border_color pb-2">
+            <div>Product ID</div>
+            <div>Product</div>
+            <div class="text-center">Available Qty</div>
+            <div class="text-center">Selected Qty</div>
+            <div class="text-center">Action</div>
           </div>
-          <!-- Repeat rows as needed -->
+
+          <!-- Items List -->
+          <div class="divide-y divide-border_color max-h-[300px] overflow-y-auto">
+            <div class="grid grid-cols-5 py-3 items-center">
+              <div>1741</div>
+              <div>Product 1</div>
+              <div class="text-center">0</div>
+              <div class="text-center">0</div>
+              <div class="text-center">
+                <button class="text-red hover:text-red/80 transition">
+                  <svg class="w-5 h-5 mx-auto" fill="currentColor" viewBox="0 0 20 20">
+                    <path fill-rule="evenodd" clip-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm2.121-11.121a1 1 0 10-1.414-1.414L10 8.586 8.293 6.879a1 1 0 10-1.414 1.414L8.586 10l-1.707 1.707a1 1 0 101.414 1.414L10 11.414l1.707 1.707a1 1 0 001.414-1.414L11.414 10l1.707-1.707z"/>
+                  </svg>
+                </button>
+              </div>
+            </div>
+            <!-- Repeat rows as needed -->
+          </div>
+          <!-- Add Items Button -->
+          <div class="flex justify-end">
+            <button id="open-add-items-modal" class="flex items-center gap-2 bg-green hover:bg-green/80 text-white px-4 py-2 rounded-md transition">
+              <svg class="w-4 h-4" fill="white" viewBox="0 0 24 24"><path d="M12 5v14m7-7H5"/></svg>
+              Add items to transfer
+            </button>
+          </div>
         </div>
       </div>
 
