@@ -85,7 +85,8 @@ const paginationPages = generatePaginationPages(paginationData.currentPage, pagi
         <div class="flex justify-between items-center pt-6 pb-6 border-t border-gray-700 flex-shrink-0">
             <button id="selectAllButton" class="bg-gray-700 hover:bg-gray-600 text-white px-4 py-2 rounded font-medium text-sm transition-colors flex items-center gap-2">
                 <input type="checkbox" id="selectAllBottom" class="rounded bg-gray-700 border-gray-600 pointer-events-none">
-                Select All
+                <span id="selectAllText">Select All</span>
+                <span id="selectedCount" class="text-xs bg-blue-600 px-2 py-1 rounded-full hidden"></span>
             </button>
             
             <!-- Pagination Controls -->
@@ -119,8 +120,8 @@ const paginationPages = generatePaginationPages(paginationData.currentPage, pagi
                                 href={`/reports/LowStock?page=${page}`}
                                 class={`px-3 py-2 rounded-md text-sm font-medium transition-colors ${
                                     isActive 
-                                        ? 'bg-btn-primary text-white hover:bg-btn-hover' 
-                                        : 'text-textColor-primary hover:bg-gray-700'
+                                        ? 'bg-btn-primary text-white hover:bg-btn-hover ' 
+                                        : 'text-textColor-primary hover:bg-gray-700 hover:text-white'
                                 }`}
                             >
                                 {page}
@@ -133,7 +134,7 @@ const paginationPages = generatePaginationPages(paginationData.currentPage, pagi
                         href={paginationData.hasNextPage ? `/reports/LowStock?page=${paginationData.currentPage + 1}` : '#'}
                         class={`p-2 rounded-md transition-colors ${
                             paginationData.hasNextPage 
-                                ? 'text-textColor-primary hover:bg-gray-700' 
+                                ? 'text-textColor-primary hover:bg-gray-700 ' 
                                 : 'text-gray-500 cursor-not-allowed'
                         }`}
                     >
@@ -237,5 +238,5 @@ const paginationPages = generatePaginationPages(paginationData.currentPage, pagi
         </div>
     </div>
 
-    <script is:inline src="/scripts/reports/LowStock.js"></script>
+    <script is:inline src="/scripts/reports/LowStockNew.js"></script>
 </Layout>

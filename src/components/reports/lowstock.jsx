@@ -1,9 +1,153 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 
 const LowStockTable = ({ currentPage = 1 }) => {
     const [lowStockData, setLowStockData] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
+    const [selectedItems, setSelectedItems] = useState(new Set());
+    const [selectAll, setSelectAll] = useState(false);
+    const [isIndeterminate, setIsIndeterminate] = useState(false);
+
+    // Storage key for selected items
+    const STORAGE_KEY = 'lowstock_selected_items';
+
+    // Load selected items from localStorage
+    const loadSelectedItems = useCallback(() => {
+        try {
+            const stored = localStorage.getItem(STORAGE_KEY);
+            if (stored) {
+                const selectedIds = JSON.parse(stored);
+                setSelectedItems(new Set(selectedIds));
+            }
+        } catch (error) {
+            console.error('Error loading selected items:', error);
+        }
+    }, []);
+
+    // Save selected items to localStorage
+    const saveSelectedItems = useCallback((selectedSet) => {
+        try {
+            localStorage.setItem(STORAGE_KEY, JSON.stringify([...selectedSet]));
+        } catch (error) {
+            console.error('Error saving selected items:', error);
+        }
+    }, []);
+
+    // Update select all state based on current page selections
+    const updateSelectAllState = useCallback(() => {
+        if (lowStockData.length === 0) {
+            setSelectAll(false);
+            setIsIndeterminate(false);
+            return;
+        }
+
+        const currentPageIds = lowStockData.map(item => item.id);
+        const selectedOnCurrentPage = currentPageIds.filter(id => selectedItems.has(id));
+        
+        if (selectedOnCurrentPage.length === 0) {
+            setSelectAll(false);
+            setIsIndeterminate(false);
+        } else if (selectedOnCurrentPage.length === currentPageIds.length) {
+            setSelectAll(true);
+            setIsIndeterminate(false);
+        } else {
+            setSelectAll(false);
+            setIsIndeterminate(true);
+        }
+    }, [lowStockData, selectedItems]);
+
+    // Handle individual item selection
+    const handleItemSelect = useCallback((itemId, isChecked) => {
+        setSelectedItems(prev => {
+            const newSelected = new Set(prev);
+            if (isChecked) {
+                newSelected.add(itemId);
+            } else {
+                newSelected.delete(itemId);
+            }
+            saveSelectedItems(newSelected);
+            return newSelected;
+        });
+    }, [saveSelectedItems]);
+
+    // Handle select all toggle
+    const handleSelectAll = useCallback(() => {
+        const currentPageIds = lowStockData.map(item => item.id);
+        setSelectedItems(prev => {
+            const newSelected = new Set(prev);
+            
+            // Check if all items on current page are selected
+            const allCurrentPageSelected = currentPageIds.every(id => newSelected.has(id));
+            
+            if (allCurrentPageSelected) {
+                // If all are selected, unselect all items on current page
+                currentPageIds.forEach(id => newSelected.delete(id));
+            } else {
+                // If not all are selected, select all items on current page
+                currentPageIds.forEach(id => newSelected.add(id));
+            }
+            
+            saveSelectedItems(newSelected);
+            return newSelected;
+        });
+    }, [lowStockData, saveSelectedItems]);
+
+    // Clear all selections
+    const clearAllSelections = useCallback(() => {
+        setSelectedItems(new Set());
+        localStorage.removeItem(STORAGE_KEY);
+    }, [STORAGE_KEY]);
+
+    // Function to fetch all low stock item IDs
+    const fetchAllLowStockIds = async () => {
+        try {
+            const response = await fetch('/api/reports/lowstock?getAllIds=true');
+            const result = await response.json();
+            
+            if (result.success) {
+                return result.allIds || [];
+            } else {
+                console.error('Failed to fetch all IDs:', result.error);
+                return [];
+            }
+        } catch (error) {
+            console.error('Error fetching all IDs:', error);
+            return [];
+        }
+    };
+
+    // Handle single button select/unselect all
+    const handleToggleSelectAll = useCallback(async () => {
+        setSelectedItems(prev => {
+            const newSelected = new Set(prev);
+            
+            // If any items are selected globally, clear ALL selections
+            if (newSelected.size > 0) {
+                newSelected.clear();
+                saveSelectedItems(newSelected);
+                return newSelected;
+            } else {
+                // If no items are selected, we need to select ALL items across all pages
+                // We'll do this asynchronously
+                return newSelected; // Return current state for now
+            }
+        });
+
+        // If no items were selected, fetch all IDs and select them
+        if (selectedItems.size === 0) {
+            const allIds = await fetchAllLowStockIds();
+            if (allIds.length > 0) {
+                const newSelected = new Set(allIds);
+                setSelectedItems(newSelected);
+                saveSelectedItems(newSelected);
+            }
+        }
+    }, [selectedItems, saveSelectedItems, fetchAllLowStockIds]);
+
+    // Get selected items count
+    const getSelectedCount = useCallback(() => {
+        return selectedItems.size;
+    }, [selectedItems]);
 
     // Function to get status styling
     const getStatusStyle = (status) => {
@@ -42,6 +186,27 @@ const LowStockTable = ({ currentPage = 1 }) => {
     useEffect(() => {
         fetchLowStockData(currentPage);
     }, [currentPage]);
+
+    // Load selected items on component mount
+    useEffect(() => {
+        loadSelectedItems();
+    }, [loadSelectedItems]);
+
+    // Update select all state when data or selections change
+    useEffect(() => {
+        updateSelectAllState();
+    }, [updateSelectAllState]);
+
+    // Expose functions to parent component via global object
+    useEffect(() => {
+        window.lowStockTable = {
+            getSelectedCount,
+            clearAllSelections,
+            handleSelectAll,
+            handleToggleSelectAll,
+            selectedItems: [...selectedItems]
+        };
+    }, [getSelectedCount, clearAllSelections, handleSelectAll, handleToggleSelectAll, selectedItems]);
 
     if (loading) {
         return (
@@ -146,7 +311,16 @@ const LowStockTable = ({ currentPage = 1 }) => {
                         <thead>
                             <tr className="text-textColor-primary border-b border-gray-700">
                                 <th className="text-left py-3 px-4 font-medium w-[5%]">
-                                    <input type="checkbox" id="selectAllHeader" className="rounded bg-gray-700 border-gray-600 pointer-events-none" disabled />
+                                    <input 
+                                        type="checkbox" 
+                                        id="selectAllHeader" 
+                                        className="rounded bg-gray-700 border-gray-600" 
+                                        checked={selectAll}
+                                        ref={input => {
+                                            if (input) input.indeterminate = isIndeterminate;
+                                        }}
+                                        onChange={handleSelectAll}
+                                    />
                                 </th>
                                 <th className="text-left py-3 px-4 font-medium w-[15%]">SKU</th>
                                 <th className="text-left py-3 px-4 font-medium w-[18%]">Name</th>
@@ -162,7 +336,12 @@ const LowStockTable = ({ currentPage = 1 }) => {
                             {lowStockData.map((item, index) => (
                                 <tr key={item.id} className={`border-b border-gray-800 hover:bg-gray-800/30 ${index === 9 ? 'border-b-0' : ''}`}>
                                     <td className="py-4 px-4">
-                                        <input type="checkbox" className="item-checkbox rounded bg-gray-700 border-gray-600" />
+                                        <input 
+                                            type="checkbox" 
+                                            className="item-checkbox rounded bg-gray-700 border-gray-600" 
+                                            checked={selectedItems.has(item.id)}
+                                            onChange={(e) => handleItemSelect(item.id, e.target.checked)}
+                                        />
                                     </td>
                                     <td className="py-4 px-4 text-textColor-primary">{item.sku}</td>
                                     <td className="py-4 px-4 text-textColor-primary">{item.name}</td>

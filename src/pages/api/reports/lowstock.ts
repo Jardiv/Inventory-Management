@@ -5,6 +5,7 @@ export const GET: APIRoute = async ({ url }) => {
   try {
     const searchParams = new URL(url).searchParams;
     const page = parseInt(searchParams.get('page') || '1');
+    const getAllIds = searchParams.get('getAllIds') === 'true'; // New parameter
     const limit = 10; // Fixed limit of 10 items per page
     const offset = (page - 1) * limit;
 
@@ -65,6 +66,18 @@ export const GET: APIRoute = async ({ url }) => {
       })
       // Filter to only show low stock and out of stock items
       .filter(item => item.status === 'Low' || item.status === 'Out of stock');
+
+    // If requested, return just all IDs for global selection
+    if (getAllIds) {
+      return new Response(JSON.stringify({
+        success: true,
+        allIds: allLowStockItems.map(item => item.id),
+        totalItems: allLowStockItems.length
+      }), {
+        status: 200,
+        headers: { 'Content-Type': 'application/json' }
+      });
+    }
 
     // NOW apply pagination to the filtered low stock items
     const totalLowStockItems = allLowStockItems.length;
