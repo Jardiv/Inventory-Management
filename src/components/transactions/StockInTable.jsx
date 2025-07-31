@@ -6,20 +6,20 @@ export default function StockInTable({ limit }) {
 	console.log("Limit received stock In table:", limit);
 	limit = limit || 10;
 
-	useEffect(() => {
+	useEffect(() => { 
 		if (!limit) return; 
 
 		async function fetchTransactions() {
 			try {
-				const res = await fetch(`/api/transactions/stockInTransactions?limit=${limit}`);
-				console.log("Fetching from:", `/api/transactions/stockInTransactions?limit=${limit}`);
-				const data = await res.json();
-				setTransactions(data);
-			} catch (err) {
-				console.error("Error fetching transactions:", err);
-			} finally {
-				setLoading(false);
-			}
+				const res = await fetch(`/api/transactions/stockIn?limit=${limit}`);
+				console.log("Fetching from:", `/api/transactions/stockIn?limit=${limit}`);
+				const data = await res.json(); 
+				setTransactions(data); 
+			} catch (err) { 
+				console.error("Error fetching transactions:", err); 
+			} finally { 
+				setLoading(false); 
+			} 
 		}
 
 		fetchTransactions();
@@ -37,14 +37,15 @@ export default function StockInTable({ limit }) {
 
 
 	return (
-		<table className="w-full text-left">
-			<thead>
+		<table className="stock-table">
+			<thead className="py-20">
 				<tr>
 					<th className="table-header">Invoice no</th>
 					<th className="table-header">Date</th>
+					<th className="table-header">Item</th>
+					<th className="table-header">Amount</th>
 					<th className="table-header">Supplier</th>
 					<th className="table-header">Status</th>
-					<th className="table-header text-center">Action</th>
 				</tr>
 			</thead>
 			<tbody>
@@ -52,17 +53,17 @@ export default function StockInTable({ limit }) {
 					<tr key={log.id} className="table-row">
 						<td className="table-data">{log.invoice_no}</td>
 						<td className="table-data">{log.transaction_datetime}</td>
+						<td className="table-data">{log.item_name}</td>
+						<td className="table-data">{log.quantity}</td>
 						<td className="table-data">{log.supplier_name}</td>
 						<td
 							className={`table-data ${statusColorMap[log.status]}`}>
 							{log.status}
 						</td>
-						<td className="table-data text-center">
-							<button className="table-view-btn">View</button>
-						</td>
 					</tr>
 				))}
 			</tbody>
+			
 		</table>
 	);
 }
