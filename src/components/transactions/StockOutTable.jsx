@@ -39,7 +39,7 @@ export default function StockInTable({ limit }) {
 		<table className="w-full text-left">
 				<thead>
 					<tr>
-						<th class="table-header">Reference no</th>
+						<th class="table-header">Invoice no</th>
 						<th class="table-header">Date</th>
 						<th class="table-header">Type</th>
 						<th class="table-header text-center">Action</th>
@@ -48,7 +48,7 @@ export default function StockInTable({ limit }) {
 				<tbody>
 					{transactions.map((log) => (
 					<tr key="{log.id}" className="table-row">
-						<td className="table-data">{log.ref_no}</td>
+						<td className="table-data">{log.invoice_no}</td>
 						<td className="table-data">{log.transaction_datetime}</td>
 						<td className="table-data">{log.source}</td>
 						<td className="table-data text-center">
