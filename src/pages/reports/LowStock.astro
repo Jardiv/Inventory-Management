@@ -1,75 +1,68 @@
 ---
 import Layout from '../../layouts/Layout.astro';
+import LowStockTable from '../../components/reports/lowstock.jsx';
 
-// Mock low stock data
-const lowStockData = [
-  { 
-    id: 1, 
-    itemCode: 'ABC123', 
-    item: 'Product 2', 
-    current: 15, 
-    minimum: 20, 
-    toOrder: 50, 
-    status: 'Low' 
-  },
-  { 
-    id: 2, 
-    itemCode: 'ABC123', 
-    item: 'Product 3', 
-    current: 0, 
-    minimum: 20, 
-    toOrder: 50, 
-    status: 'Out of stock' 
-  },
-  { 
-    id: 3, 
-    itemCode: 'ABC123', 
-    item: 'Product 4', 
-    current: 0, 
-    minimum: 20, 
-    toOrder: 50, 
-    status: 'Out of stock' 
-  },
-  { 
-    id: 4, 
-    itemCode: 'ABC123', 
-    item: 'Product 5', 
-    current: 15, 
-    minimum: 20, 
-    toOrder: 50, 
-    status: 'Low' 
-  },
-  { 
-    id: 5, 
-    itemCode: 'ABC123', 
-    item: 'Product 6', 
-    current: 15, 
-    minimum: 20, 
-    toOrder: 50, 
-    status: 'Low' 
-  },
-  { 
-    id: 6, 
-    itemCode: 'ABC123', 
-    item: 'Product 7', 
-    current: 15, 
-    minimum: 20, 
-    toOrder: 50, 
-    status: 'Low' 
-  },
-];
+// Get current page from URL parameters
+const currentPage = parseInt(Astro.url.searchParams.get('page') || '1');
 
-// Function to get status styling
-function getStatusStyle(status: string) {
-  switch (status) {
-    case 'Low':
-      return 'text-yellow-400';
-    case 'Out of stock':
-      return 'text-red-400';
-    default:
-      return 'text-gray-400';
-  }
+// Fetch pagination data from API
+let paginationData = {
+    currentPage: 1,
+    totalPages: 1,
+    totalItems: 0,
+    hasNextPage: false,
+    hasPrevPage: false
+};
+
+try {
+    const response = await fetch(`${Astro.url.origin}/api/reports/lowstock?page=${currentPage}`);
+    const result = await response.json();
+    
+    if (result.success && result.pagination) {
+        paginationData = result.pagination;
+    }
+} catch (error) {
+    console.error('Failed to fetch pagination data:', error);
 }
+
+// Generate pagination pages array
+function generatePaginationPages(currentPage: number, totalPages: number): (number | string)[] {
+    const pages = [];
+    
+    // Always show first page
+    if (totalPages > 0) {
+        pages.push(1);
+    }
+    
+    // Add ellipsis if needed before current page range
+    if (currentPage > 4) {
+        pages.push('...');
+    }
+    
+    // Add pages around current page
+    const start = Math.max(2, currentPage - 1);
+    const end = Math.min(totalPages - 1, currentPage + 1);
+    
+    for (let i = start; i <= end; i++) {
+        if (!pages.includes(i)) {
+            pages.push(i);
+        }
+    }
+    
+    // Add ellipsis if needed after current page range
+    if (currentPage < totalPages - 3) {
+        pages.push('...');
+    }
+    
+    // Always show last page
+    if (totalPages > 1 && !pages.includes(totalPages)) {
+        pages.push(totalPages);
+    }
+    
+    return pages;
+}
+
+const paginationPages = generatePaginationPages(paginationData.currentPage, paginationData.totalPages);
 ---
 
 <Layout>
@@ -84,57 +77,74 @@ function getStatusStyle(status: string) {
             </a>
         </div>
         
-        <div class="p-6 h-full overflow-y-auto">
+        <div class=" h-full overflow-y-auto">
             <!-- Low Stock Table -->
-            <div>
-                <table class="w-full text-sm">
-                    <thead>
-                        <tr class="text-textColor-primary border-b border-gray-700">
-                            <th class="text-left py-3 px-4 font-medium w-[5%]">
-                                <input type="checkbox" id="selectAllHeader" class="rounded bg-gray-700 border-gray-600 pointer-events-none" disabled>
-                            </th>
-                            <th class="text-left py-3 px-4 font-medium w-[15%]">Item Code</th>
-                            <th class="text-left py-3 px-4 font-medium w-[20%]">Item</th>
-                            <th class="text-left py-3 px-4 font-medium w-[12%]">Current</th>
-                            <th class="text-left py-3 px-4 font-medium w-[12%]">Minimum</th>
-                            <th class="text-left py-3 px-4 font-medium w-[12%]">To Order</th>
-                            <th class="text-left py-3 px-4 font-medium w-[12%]">Status</th>
-                            <th class="text-left py-3 px-4 font-medium w-[12%]">Action</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {lowStockData.map((item, index) => (
-                            <tr class={`border-b border-gray-800 hover:bg-gray-800/30 ${index === lowStockData.length - 1 ? 'border-b-0' : ''}`}>
-                                <td class="py-4 px-4">
-                                    <input type="checkbox" class="item-checkbox rounded bg-gray-700 border-gray-600">
-                                </td>
-                                <td class="py-4 px-4 text-textColor-primary">{item.itemCode}</td>
-                                <td class="py-4 px-4 text-textColor-primary">{item.item}</td>
-                                <td class="py-4 px-4 text-textColor-primary">{item.current}</td>
-                                <td class="py-4 px-4 text-textColor-primary">{item.minimum}</td>
-                                <td class="py-4 px-4 text-textColor-primary">{item.toOrder}</td>
-                                <td class="py-4 px-4">
-                                    <span class={`font-semibold ${getStatusStyle(item.status)}`}>
-                                        {item.status}
-                                    </span>
-                                </td>
-                                <td class="py-4 px-4">
-                                    <button data-item-code={item.itemCode} data-item-name={item.item} data-current-qty={item.current} data-order-qty={item.toOrder} class="edit-btn bg-green-600 hover:bg-green-700 text-white px-3 py-1 rounded text-xs font-medium transition-colors">
-                                        Edit
-                                    </button>
-                                </td>
-                            </tr>
-                        ))}
-                    </tbody>
-                </table>
-            </div>
+            <LowStockTable client:load currentPage={currentPage} />
         </div>
         
-        <div class="flex justify-between items-center p-6 border-t border-gray-700 flex-shrink-0">
+        <div class="flex justify-between items-center pt-6 pb-6 border-t border-gray-700 flex-shrink-0">
             <button id="selectAllButton" class="bg-gray-700 hover:bg-gray-600 text-white px-4 py-2 rounded font-medium text-sm transition-colors flex items-center gap-2">
                 <input type="checkbox" id="selectAllBottom" class="rounded bg-gray-700 border-gray-600 pointer-events-none">
-                Select All
+                <span id="selectAllText">Select All</span>
+                <span id="selectedCount" class="text-xs bg-blue-600 px-2 py-1 rounded-full hidden"></span>
             </button>
+            
+            <!-- Pagination Controls -->
+            {paginationData.totalPages > 1 && (
+                <div class="flex items-center gap-1">
+                    <!-- Previous Button -->
+                    <a 
+                        href={paginationData.hasPrevPage ? `/reports/LowStock?page=${paginationData.currentPage - 1}` : '#'}
+                        class={`p-2 rounded-md transition-colors ${
+                            paginationData.hasPrevPage 
+                                ? 'text-textColor-primary hover:bg-gray-700' 
+                                : 'text-gray-500 cursor-not-allowed'
+                        }`}
+                    >
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 19.5 8.25 12l7.5-7.5" />
+                        </svg>
+                    </a>
+
+                    <!-- Page Numbers -->
+                    {paginationPages.map(page => {
+                        if (page === '...') {
+                            return (
+                                <span class="px-3 py-2 text-gray-500">...</span>
+                            );
+                        }
+                        
+                        const isActive = page === paginationData.currentPage;
+                        return (
+                            <a 
+                                href={`/reports/LowStock?page=${page}`}
+                                class={`px-3 py-2 rounded-md text-sm font-medium transition-colors ${
+                                    isActive 
+                                        ? 'bg-btn-primary text-white hover:bg-btn-hover ' 
+                                        : 'text-textColor-primary hover:bg-gray-700 hover:text-white'
+                                }`}
+                            >
+                                {page}
+                            </a>
+                        );
+                    })}
+
+                    <!-- Next Button -->
+                    <a 
+                        href={paginationData.hasNextPage ? `/reports/LowStock?page=${paginationData.currentPage + 1}` : '#'}
+                        class={`p-2 rounded-md transition-colors ${
+                            paginationData.hasNextPage 
+                                ? 'text-textColor-primary hover:bg-gray-700 ' 
+                                : 'text-gray-500 cursor-not-allowed'
+                        }`}
+                    >
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="m8.25 4.5 7.5 7.5-7.5 7.5" />
+                        </svg>
+                    </a>
+                </div>
+            )}
+            
             <button id="generatePurchaseOrderBtn" class="bg-purple-600 hover:bg-purple-700 text-white px-6 py-2 rounded font-medium text-sm transition-colors">
                 Generate Purchase Order
             </button>
@@ -228,5 +238,5 @@ function getStatusStyle(status: string) {
         </div>
     </div>
 
-    <script is:inline src="/scripts/reports/LowStock.js"></script>
+    <script is:inline src="/scripts/reports/LowStockNew.js"></script>
 </Layout>

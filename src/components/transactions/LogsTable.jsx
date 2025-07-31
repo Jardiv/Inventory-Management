@@ -6,7 +6,7 @@ export default function StockInTable({ limit }) {
 	console.log("Limit received stock In table:", limit);
 
 	useEffect(() => {
-		if (!limit) return; // optional guard
+		if (!limit) return; 
 
 		async function fetchTransactions() {
 			try {
@@ -37,7 +37,7 @@ export default function StockInTable({ limit }) {
 	};
 
 	return (
-		<table className="w-full text-left">
+		<table className="stock-table">
 			<thead>
 				<tr>
 					<th className="table-header">Invoice no</th>
@@ -45,7 +45,6 @@ export default function StockInTable({ limit }) {
 					<th className="table-header">Type</th>
 					<th className="table-header">Supplier</th>
 					<th className="table-header">Status</th>
-					<th className="table-header text-center">Action</th>
 				</tr>
 			</thead>
 			<tbody>
@@ -53,12 +52,9 @@ export default function StockInTable({ limit }) {
 					<tr className="table-row" key={log.id}>
 						<td className="table-data">{log.invoice_no}</td>
 						<td className="table-data">{log.transaction_datetime}</td>
-						<td className="table-data">{log.type}</td>
+						<td className="table-data">{log.transaction_type}</td>
 						<td className="table-data">{log.supplier_name}</td>
 						<td className={`table-data ${statusColorMap[log.status]}`}>{log.status}</td>
-						<td className="table-data text-center">
-							<button className="table-view-btn">View</button>
-						</td>
 					</tr>
 				))}
 			</tbody>

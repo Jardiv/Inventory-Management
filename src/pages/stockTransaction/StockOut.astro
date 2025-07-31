@@ -29,15 +29,15 @@ import StockInTransaction from '../../components/transactions/StockInTable.jsx';
 				</thead>
 				<tbody>
 					{transactions.map((log) => (
-					<tr key="{log.id}" className="table-row">
-						<td className="table-data">{log.ref_no}</td>
-						<td className="table-data">{log.transaction_datetime}</td>
-						<td className="table-data">{log.supplier_id}</td>
-						<td className="table-data">{log.status}</td>
-						<td className="table-data text-center">
-							<button className="table-view-btn">View</button>
-						</td>
-					</tr>
+						<tr key="{log.id}" className="table-row">
+							<td className="table-data">{log.ref_no}</td>
+							<td className="table-data">{log.transaction_datetime}</td>
+							<td className="table-data">{log.supplier_id}</td>
+							<td className="table-data">{log.status}</td>
+							<td className="table-data text-center">
+								<button className="table-view-btn">View</button>
+							</td>
+						</tr>
 					))}
 				</tbody>
 			</table>
