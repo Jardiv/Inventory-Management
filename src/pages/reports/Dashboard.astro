@@ -1,37 +1,8 @@
 ---
 import Layout from '../../layouts/Layout.astro';
+import DashboardSummary from '../../components/Summary.jsx';
 
-// Inventory Stock Data
-const inventoryStockData = [
-    { itemName: "Product 0", current: 11, minimum: 10, status: "Normal", statusColor: "text-green-400" },
-    { itemName: "Product 0", current: 12, minimum: 10, status: "Normal", statusColor: "text-green-400" },
-    { itemName: "Product 0", current: 0, minimum: 10, status: "Out of Stock", statusColor: "text-red-400" },
-    { itemName: "Product 0", current: 0, minimum: 10, status: "Out of Stock", statusColor: "text-red-400" },
-    { itemName: "Product 0", current: 0, minimum: 10, status: "Out of Stock", statusColor: "text-red-400" },
-    { itemName: "Product 0", current: 0, minimum: 10, status: "Out of Stock", statusColor: "text-red-400" },
-    { itemName: "Product 0", current: 0, minimum: 10, status: "Out of Stock", statusColor: "text-red-400" },
-    { itemName: "Product 0", current: 0, minimum: 10, status: "Out of Stock", statusColor: "text-red-400" }
-];
-
-// Warehouse Capacity Data
-const warehouseCapacityData = [
-    { warehouseName: "Main Warehouse", used: 1243, available: 3757, status: "Normal", statusColor: "text-green-400" },
-    { warehouseName: "Warehouse A", used: 2900, available: 100, status: "Almost Full", statusColor: "text-yellow-400" },
-    { warehouseName: "Warehouse B", used: 2900, available: 100, status: "Almost Full", statusColor: "text-yellow-400" },
-    { warehouseName: "Warehouse C", used: 2900, available: 100, status: "Almost Full", statusColor: "text-yellow-400" },
-    { warehouseName: "Warehouse D", used: 2900, available: 100, status: "Almost Full", statusColor: "text-yellow-400" }
-];
-
-// Low Stock Items Data
-const lowStockItemsData = [
-    { itemCode: "ABC", itemName: "Product 0", current: 1, toOrder: 50, status: "Low", statusColor: "text-yellow-400" },
-    { itemCode: "ABC", itemName: "Product 0", current: 0, toOrder: 50, status: "Out of Stock", statusColor: "text-red-400" },
-    { itemCode: "ABC", itemName: "Product 0", current: 0, toOrder: 50, status: "Out of Stock", statusColor: "text-red-400" },
-    { itemCode: "ABC", itemName: "Product 0", current: 0, toOrder: 50, status: "Out of Stock", statusColor: "text-red-400" },
-    { itemCode: "ABC", itemName: "Product 0", current: 0, toOrder: 50, status: "Out of Stock", statusColor: "text-red-400" }
-];
-
-// Quick Summary Data
+// Quick Summary Data (keeping static for now)
 const quickSummaryData = [
     { label: "Total Items", value: "1,234", color: "text-blue" },
     { label: "Low Stock", value: "23", color: "text-yellow" },
@@ -39,7 +10,7 @@ const quickSummaryData = [
     { label: "Warehouses", value: "5", color: "text-green" }
 ];
 
-// Icons for Quick Summary (defined in component, not in data)
+// Icons for Quick Summary
 const summaryIcons = ["📦", "⚠️", "❌", "🏭"];
 ---
 
@@ -73,43 +44,7 @@ const summaryIcons = ["📦", "⚠️", "❌", "🏭"];
                         <button class="text-btn-primary hover:text-purple-300 text-sm sm:text-base">See All</button>
                     </a>
                 </div>
-                <div class="overflow-auto flex-1">
-                    <table class="w-full text-xs sm:text-sm">
-                        <thead class="sticky top-0 bg-primary">
-                            <tr class="text-textColor-primary border-b border-gray-700">
-                                <th class="text-left py-1 px-2 text-xs sm:text-sm">Item Name</th>
-                                <th class="text-left py-1 px-2 text-xs sm:text-sm">Current</th>
-                                <th class="text-left py-1 px-2 text-xs sm:text-sm">Minimum</th>
-                                <th class="text-left py-1 px-2 text-xs sm:text-sm">Status</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {Array.from({ length: 8 }, (_, index) => {
-                                const item = inventoryStockData[index];
-                                const isVisible = item && index < Math.max(5, inventoryStockData.length);
-                                return (
-                                    <tr class={`${index < 7 ? "border-b border-gray-800" : ""} ${!isVisible ? "opacity-0" : ""}`}>
-                                        <td class="py-2 px-2 text-textColor-primary text-xs sm:text-sm">
-                                            {isVisible ? item.itemName : "Hidden Item"}
-                                        </td>
-                                        <td class="py-2 px-2 text-textColor-primary text-xs sm:text-sm">
-                                            {isVisible ? item.current : "0"}
-                                        </td>
-                                        <td class="py-2 px-2 text-textColor-primary text-xs sm:text-sm">
-                                            {isVisible ? item.minimum : "0"}
-                                        </td>
-                                        
-                                        <td class="py-2 px-2">
-                                            <span class={`${isVisible ? item.statusColor : "text-gray-400"} text-xs sm:text-sm`}>
-                                                {isVisible ? item.status : "Hidden"}
-                                            </span>
-                                        </td>
-                                    </tr>
-                                );
-                            })}
-                        </tbody>
-                    </table>
-                </div>
+                <DashboardSummary section="inventory" client:load />
             </div>
         </div>
         <!-- Warehouse Capacity Section -->
@@ -121,42 +56,7 @@ const summaryIcons = ["📦", "⚠️", "❌", "🏭"];
                     <button class="text-btn-primary hover:text-purple-300 text-sm sm:text-base">See All</button>
                     </a>
                 </div>
-                <div class="overflow-auto flex-1">
-                    <table class="w-full text-xs sm:text-sm">
-                        <thead class="sticky top-0 bg-primary">
-                            <tr class="text-textColor-primary border-b border-gray-700">
-                                <th class="text-left py-1 px-2 text-xs sm:text-sm">Warehouse Name</th>
-                                <th class="text-left py-1 px-2 text-xs sm:text-sm">Used</th>
-                                <th class="text-left py-1 px-2 text-xs sm:text-sm">Available</th>
-                                <th class="text-left py-1 px-2 text-xs sm:text-sm">Status</th>
-                            </tr>
-                        </thead>
-                            <tbody>
-                                {Array.from({ length: 8 }, (_, index) => {
-                                    const warehouse = warehouseCapacityData[index];
-                                    const isVisible = warehouse && index < Math.max(5, warehouseCapacityData.length);
-                                    return (
-                                        <tr class={`${index < 7 ? "border-b border-gray-800" : ""} ${!isVisible ? "opacity-0" : ""}`}>
-                                            <td class="py-2 px-2 text-textColor-primary text-xs sm:text-sm">
-                                                {isVisible ? warehouse.warehouseName : "Hidden Warehouse"}
-                                            </td>
-                                            <td class="py-2 px-2 text-textColor-primary text-xs sm:text-sm">
-                                                {isVisible ? warehouse.used.toLocaleString() : "0"}
-                                            </td>
-                                            <td class="py-2 px-2 text-textColor-primary text-xs sm:text-sm">
-                                                {isVisible ? warehouse.available.toLocaleString() : "0"}
-                                            </td>
-                                            <td class="py-2 px-2">
-                                                <span class={`${isVisible ? warehouse.statusColor : "text-gray-400"} text-xs sm:text-sm`}>
-                                                    {isVisible ? warehouse.status : "Hidden"}
-                                                </span>
-                                            </td>
-                                        </tr>
-                                    );
-                                })}
-                            </tbody>
-                        </table>
-                    </div>
+                <DashboardSummary section="warehouse" client:load />
             </div>
         </div>
         <div class="bg-primary col-span-5 row-span-1 rounded-lg flex flex-col">
@@ -166,46 +66,7 @@ const summaryIcons = ["📦", "⚠️", "❌", "🏭"];
                 <h2 class="text-textColor-primary text-lg sm:text-xl font-semibold">Low Stock Items - Purchase Order</h2>
                 <a href="/reports/LowStock" class="text-btn-primary hover:text-purple-300 text-sm sm:text-base">See All</a>
             </div>
-            <div class="overflow-auto flex-1">
-                <table class="w-full text-xs sm:text-sm">
-                    <thead class="sticky top-0 bg-primary">
-                        <tr class="text-textColor-primary border-b border-gray-700">
-                            <th class="text-left py-1 px-2 text-xs sm:text-sm">Item Code</th>
-                            <th class="text-left py-1 px-2 text-xs sm:text-sm">Item Name</th>
-                            <th class="text-left py-1 px-2 text-xs sm:text-sm">Current</th>
-                            <th class="text-left py-1 px-2 text-xs sm:text-sm">To order</th>
-                            <th class="text-left py-1 px-2 text-xs sm:text-sm">Status</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {Array.from({ length: 8 }, (_, index) => {
-                                const item = lowStockItemsData[index];
-                                const isVisible = item && index < Math.max(5, lowStockItemsData.length);
-                                return (
-                                    <tr class={`${index < 7 ? "border-b border-gray-800" : ""} ${!isVisible ? "opacity-0" : ""}`}>
-                                        <td class="py-2 px-2 text-textColor-primary text-xs sm:text-sm">
-                                            {isVisible ? item.itemCode : "XXX"}
-                                        </td>
-                                        <td class="py-2 px-2 text-textColor-primary text-xs sm:text-sm">
-                                            {isVisible ? item.itemName : "Hidden Item"}
-                                        </td>
-                                        <td class="py-2 px-2 text-textColor-primary text-xs sm:text-sm">
-                                            {isVisible ? item.current : "0"}
-                                        </td>
-                                        <td class="py-2 px-2 text-textColor-primary text-xs sm:text-sm">
-                                            {isVisible ? item.toOrder : "0"}
-                                        </td>
-                                        <td class="py-2 px-2">
-                                            <span class={`${isVisible ? item.statusColor : "text-gray-400"} text-xs sm:text-sm`}>
-                                                {isVisible ? item.status : "Hidden"}
-                                            </span>
-                                        </td>
-                                    </tr>
-                                );
-                            })}
-                        </tbody>
-                    </table>
-                </div>
+            <DashboardSummary section="lowstock" client:load />
         </div>
     </div>
 
