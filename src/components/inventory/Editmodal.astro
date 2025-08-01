@@ -1,0 +1,78 @@
+<!-- ✅ Edit Modal -->
+<div id="editModal" class="hidden fixed inset-0 bg-black/60 flex items-center justify-center z-50">
+  <div class="bg-primary text-textColor-primary rounded-lg w-[460px] p-6 space-y-5 relative">
+
+    <!-- Modal Header -->
+    <div class="flex justify-between items-center">
+      <h2 class="text-xl font-bold">Edit Product</h2>
+      <button id="close-edit-modal" class="text-2xl font-bold text-textColor-primary hover:text-red-500 transition">&times;</button>
+    </div>
+
+    <p class="text-sm">Edit existing product details below.</p>
+
+    <!-- Form Fields -->
+    <form class="space-y-4">
+
+      <!-- Item Name -->
+      <div class="flex items-center space-x-3">
+        <label for="editItemName" class="w-40 text-base font-semibold">Item Name:</label>
+        <input type="text" id="editItemName" placeholder="ABC"
+          class="flex-1 text-sm px-3 py-2 bg-primary border border-neutral-700 rounded focus:outline-none focus:ring-1 focus:ring-green-500" />
+      </div>
+
+      <!-- Category -->
+      <div class="flex items-center space-x-3">
+        <label for="editCategory" class="w-40 text-base font-semibold">Category:</label>
+        <select id="editCategory"
+          class="flex-1 text-sm px-3 py-2 bg-primary border border-neutral-700 rounded focus:outline-none focus:ring-1 focus:ring-green-500">
+          <option value="category1">Category 1</option>
+          <option value="category2">Category 2</option>
+          <option value="category3">Category 3</option>
+          <option value="category4">Category 4</option>
+        </select>
+      </div>
+
+      <!-- Description -->
+      <div class="flex items-start space-x-3">
+        <label for="editDescription" class="w-40 text-base font-semibold pt-2">
+          Description: <br>
+          <span class="text-sm font-normal">(Optional)</span>
+        </label>
+        <textarea id="editDescription" rows="2" placeholder="Say anything..."
+          class="flex-1 text-sm px-3 py-2 bg-primary border border-neutral-700 rounded resize-none focus:outline-none focus:ring-1 focus:ring-green-500"></textarea>
+      </div>
+
+      <!-- Min Quantity -->
+      <div class="flex items-center space-x-3">
+        <label for="editMinQty" class="w-40 text-base font-semibold">Minimum Quantity:</label>
+        <input type="number" id="editMinQty" placeholder="10"
+          class="flex-1 text-sm px-3 py-2 bg-primary border border-neutral-700 rounded focus:outline-none focus:ring-1 focus:ring-green-500" />
+      </div>
+
+      <!-- Max Quantity -->
+      <div class="flex items-center space-x-3">
+        <label for="editMaxQty" class="w-40 text-base font-semibold">Maximum Quantity:</label>
+        <input type="number" id="editMaxQty" placeholder="100"
+          class="flex-1 text-sm px-3 py-2 bg-primary border border-neutral-700 rounded focus:outline-none focus:ring-1 focus:ring-green-500" />
+      </div>
+
+      <!-- Auto Re-order -->
+      <div class="flex items-center space-x-3">
+        <label for="editAutoReorder" class="w-40 text-base font-semibold">Auto Re-order:</label>
+        <label class="relative inline-flex items-center cursor-pointer">
+          <input type="checkbox" id="editAutoReorder" class="sr-only peer" checked />
+          <div class="w-11 h-6 bg-gray-700 rounded-full peer-checked:bg-green-500 transition peer-focus:ring-2 peer-focus:ring-green-500"></div>
+          <div class="absolute left-0.5 top-0.5 w-5 h-5 bg-white rounded-full transition peer-checked:translate-x-full"></div>
+        </label>
+      </div>
+
+      <!-- Modal Buttons -->
+      <div class="flex justify-end space-x-3 pt-4">
+        <button type="button" id="cancelEditBtn"
+          class="bg-red-600 text-white text-sm px-5 py-2 rounded hover:bg-red-700 transition">Cancel</button>
+        <button type="submit" id="confirmEditBtn"
+          class="bg-green-600 text-white text-sm px-5 py-2 rounded hover:bg-green-700 transition">Confirm</button>
+      </div>
+    </form>
+  </div>
+</div>
