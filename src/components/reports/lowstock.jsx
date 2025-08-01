@@ -149,15 +149,17 @@ const LowStockTable = ({ currentPage = 1 }) => {
         return selectedItems.size;
     }, [selectedItems]);
 
-    // Function to get status styling
+    // Function to get status styling using themed colors
     const getStatusStyle = (status) => {
         switch (status) {
             case 'Low':
-                return 'text-yellow-400';
+            case 'Low Stock':
+                return 'text-orange bg-orange/10';
             case 'Out of stock':
-                return 'text-red-400';
+            case 'Out of Stock':
+                return 'text-red bg-red/10';
             default:
-                return 'text-gray-400';
+                return 'text-textColor-tertiary bg-textColor-tertiary/10';
         }
     };
 
@@ -334,7 +336,7 @@ const LowStockTable = ({ currentPage = 1 }) => {
                         <tbody>
                             {/* Render actual data rows */}
                             {lowStockData.map((item, index) => (
-                                <tr key={item.id} className={`border-b border-gray-800 hover:bg-gray-800/30 ${index === 9 ? 'border-b-0' : ''}`}>
+                                <tr key={item.id} className={`border-b border-gray-800 hover:bg-tbl-hover ${index === 9 ? 'border-b-0' : ''}`}>
                                     <td className="py-4 px-4">
                                         <input 
                                             type="checkbox" 
@@ -349,7 +351,7 @@ const LowStockTable = ({ currentPage = 1 }) => {
                                     <td className="py-4 px-4 text-textColor-primary">{item.minimum}</td>
                                     <td className="py-4 px-4 text-textColor-primary">{item.toOrder}</td>
                                     <td className="py-4 px-4">
-                                        <span className={`font-semibold ${getStatusStyle(item.status)}`}>
+                                        <span className={`text-xs font-semibold px-2 py-1 rounded ${getStatusStyle(item.status)}`}>
                                             {item.status}
                                         </span>
                                     </td>

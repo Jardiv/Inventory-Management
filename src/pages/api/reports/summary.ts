@@ -24,7 +24,7 @@ export async function GET({ request }: { request: Request }) {
                         quantity
                     )
                 `)
-                .limit(8)
+                .limit(20)
                 .order("name", { ascending: true });
 
             if (inventoryError) {
@@ -81,7 +81,7 @@ export async function GET({ request }: { request: Request }) {
                     name,
                     max_capacity
                 `)
-                .limit(8)
+                .limit(20)
                 .order("name", { ascending: true });
 
             if (warehouseError) {
@@ -111,19 +111,22 @@ export async function GET({ request }: { request: Request }) {
                     const available = Math.max(0, maxCapacity - used);
                     const utilization = maxCapacity > 0 ? Math.round((used / maxCapacity) * 100) : 0;
 
-                    // Determine status based on utilization
-                    let status = 'Normal';
+                    // Determine status based on utilization to match warehouse page table
+                    let status = 'Available';
                     let statusColor = 'text-green-400';
                     
                     if (utilization >= 95) {
                         status = 'Full';
                         statusColor = 'text-red-400';
                     } else if (utilization >= 85) {
-                        status = 'Almost Full';
-                        statusColor = 'text-yellow-400';
-                    } else if (utilization >= 70) {
-                        status = 'High Usage';
+                        status = 'Critical';
                         statusColor = 'text-orange-400';
+                    } else if (utilization >= 70) {
+                        status = 'High';
+                        statusColor = 'text-orange-400';
+                    } else if (utilization >= 50) {
+                        status = 'Medium';
+                        statusColor = 'text-blue-400';
                     }
 
                     return {
@@ -205,7 +208,7 @@ export async function GET({ request }: { request: Request }) {
                     return null;
                 })
                 .filter(item => item !== null) // Remove null items
-                .slice(0, 8); // Limit to 8 items for dashboard
+                .slice(0, 20); // Limit to 20 items for dashboard to allow "+X more" functionality
 
             result.lowstock = lowStockItems;
         }

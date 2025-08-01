@@ -45,19 +45,19 @@ const summaryIcons = ["🏭", "📦", "📥", "🔄"];
           <!-- Dropdown -->
           <div class="relative">
             <div class="relative inline-block text-left">
-              <button onclick="document.getElementById('dropdown').classList.toggle('hidden')"
-                class="flex justify-between items-center bg-primary text-textColor-primary rounded px-4 py-2 text-sm w-auto min-w-[160px] whitespace-nowrap
-                      border border-transparent hover:border-btn-hover active:border-btn-hover">
-                <span>Select Warehouse</span>
+              <button id="select-button"
+                class="flex justify-between items-center bg-primary text-textColor-primary rounded px-4 py-2 text-sm w-auto min-w-[160px] whitespace-nowrap border border-transparent hover:border-btn-hover active:border-btn-hover">
+                <span id="selected-text">Select Warehouse</span>
                 <svg class="w-4 h-4 ml-2 text-textColor-primary" viewBox="0 0 20 20" fill="currentColor">
                   <path fill-rule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 10.939l3.71-3.71a.75.75 0 111.06 1.06l-4.24 4.25a.75.75 0 01-1.06 0L5.21 8.27a.75.75 0 01.02-1.06z" clip-rule="evenodd" />
                 </svg>
               </button>
+
               <div id="dropdown" class="hidden absolute mt-2 bg-primary border border-border_color rounded shadow-md z-10 w-[160px]">
                 <ul class="py-1 text-sm text-textColor-primary">
-                  <li><a href="#" class="block px-4 py-2 hover:bg-btn-hover hover:text-textColor-secondary">Warehouse 1</a></li>
-                  <li><a href="#" class="block px-4 py-2 hover:bg-btn-hover hover:text-textColor-secondary">Warehouse 2</a></li>
-                  <li><a href="#" class="block px-4 py-2 hover:bg-btn-hover hover:text-textColor-secondary">Warehouse 3</a></li>
+                  <li><a href="#" class="dropdown-item block px-4 py-2 hover:bg-btn-hover hover:text-textColor-secondary cursor-pointer">Warehouse 1</a></li>
+                  <li><a href="#" class="dropdown-item block px-4 py-2 hover:bg-btn-hover hover:text-textColor-secondary cursor-pointer">Warehouse 2</a></li>
+                  <li><a href="#" class="dropdown-item block px-4 py-2 hover:bg-btn-hover hover:text-textColor-secondary cursor-pointer">Warehouse 3</a></li>
                 </ul>
               </div>
             </div>
@@ -65,7 +65,7 @@ const summaryIcons = ["🏭", "📦", "📥", "🔄"];
       </div>
 
       <!-- Right: See All -->
-      <div class="text-btn-primary text-lg cursor-pointer hover:underline">See All</div>
+      <a href="/tracking/warehouse-storage" class="text-btn-primary text-sm hover:underline">See All</a>
     </div>
 
     <!-- Table Header -->
@@ -212,24 +212,39 @@ const summaryIcons = ["🏭", "📦", "📥", "🔄"];
     </div>
   </div>
   <script>
-    const modal = document.getElementById('modal');
-    const openBtn = document.getElementById('open-modal');
-    const closeBtn = document.getElementById('close-modal');
+    const dropdown = document.getElementById('dropdown');
+    const selectButton = document.getElementById('select-button');
+    const selectedText = document.getElementById('selected-text');
+    const items = document.querySelectorAll('.dropdown-item');
 
-    openBtn.addEventListener('click', () => {
-      modal.classList.remove('hidden');
+    // Toggle dropdown
+    selectButton.addEventListener('click', (e) => {
+      e.stopPropagation(); // Prevent closing immediately
+      dropdown.classList.toggle('hidden');
+      selectButton.classList.toggle('border-btn-hover');
     });
 
-    closeBtn.addEventListener('click', () => {
-      modal.classList.add('hidden');
+    // Handle item selection
+    items.forEach(item => {
+      item.addEventListener('click', (e) => {
+        e.preventDefault();
+        const name = e.target.textContent;
+        selectedText.textContent = name;
+
+        dropdown.classList.add('hidden');
+        selectButton.classList.add('border-btn-hover'); // Keep border active
+      });
     });
 
-    modal.addEventListener('click', (e) => {
-      if (e.target === modal) {
-        modal.classList.add('hidden');
+    // Close dropdown if click outside
+    document.addEventListener('click', (e) => {
+      if (!dropdown.contains(e.target) && !selectButton.contains(e.target)) {
+        dropdown.classList.add('hidden');
+        selectButton.classList.remove('border-btn-hover');
       }
     });
   </script>
+
 </Layout>
 
 

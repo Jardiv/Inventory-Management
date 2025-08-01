@@ -7,17 +7,17 @@ const InventoryTable = ({ currentPage = 1, itemsPerPage = 10 }) => {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
 
-    // Function to get status styling
+    // Function to get status styling using themed colors
     const getStatusStyle = (status) => {
         switch (status) {
             case 'OK':
-                return 'text-green-400 bg-green-400/10';
+                return 'text-green bg-green/10';
             case 'LOW':
-                return 'text-yellow-400 bg-yellow-400/10';
+                return 'text-orange bg-orange/10';
             case 'OUT OF STOCK':
-                return 'text-red-400 bg-red-400/10';
+                return 'text-red bg-red/10';
             default:
-                return 'text-gray-400 bg-gray-400/10';
+                return 'text-textColor-tertiary bg-textColor-tertiary/10';
         }
     };
 
@@ -136,24 +136,12 @@ const InventoryTable = ({ currentPage = 1, itemsPerPage = 10 }) => {
                         </table>
                     </div>
                 </div>
-                
-                <div className="flex justify-between items-center pt-4 mt-4 border-t border-gray-700 flex-shrink-0">
-                    <div className="px-4 py-2 rounded font-medium text-sm bg-gray-700 text-gray-500">
-                        Previous
-                    </div>
-                    <span className="text-textColor-primary text-sm">
-                        Loading...
-                    </span>
-                    <div className="px-4 py-2 rounded font-medium text-sm bg-gray-700 text-gray-500">
-                        Next
-                    </div>
-                </div>
             </>
         );
     }
 
     return (
-        <>
+        <div className="flex-1 overflow-hidden flex flex-col">
             {error && (
                 <div className="mb-4 p-3 bg-red-600/20 border border-red-600/50 rounded-lg">
                     <p className="text-red-400 text-sm">
@@ -181,7 +169,7 @@ const InventoryTable = ({ currentPage = 1, itemsPerPage = 10 }) => {
                             {tableRows.map((item, index) => (
                                 <tr 
                                     key={item.id || `empty-${index}`}
-                                    className={`border-b border-gray-800 hover:bg-gray-800/30 h-[50px] ${item.isVisible ? '' : 'invisible'} ${index === 9 ? 'border-b-0' : ''}`}
+                                    className={`border-b border-gray-800 hover:bg-tbl-hover h-[50px] ${item.isVisible ? '' : 'invisible'} ${index === 9 ? 'border-b-0' : ''}`}
                                     style={{ height: '50px' }}
                                 >
                                     <td className="py-4 px-4 text-textColor-primary">{item.code}</td>
@@ -202,33 +190,7 @@ const InventoryTable = ({ currentPage = 1, itemsPerPage = 10 }) => {
                     </table>
                 </div>
             </div>
-            
-            <div className="flex justify-between items-center pt-4 mt-4 border-t border-gray-700 flex-shrink-0">
-                <a 
-                    href={currentPage > 1 ? `?page=${currentPage - 1}` : '#'} 
-                    className={`px-4 py-2 rounded font-medium text-sm ${
-                        currentPage > 1 
-                            ? 'bg-btn-primary hover:bg-gray-600 text-textColor-secondary' 
-                            : 'bg-gray-700 text-gray-500 cursor-not-allowed'
-                    }`}
-                >
-                    Previous
-                </a>
-                <span className="text-textColor-primary text-sm">
-                    Page {currentPage} of {totalPages} • Showing {startIndex + 1}-{endIndex} of {totalItems} products
-                </span>
-                <a 
-                    href={currentPage < totalPages ? `?page=${currentPage + 1}` : '#'} 
-                    className={`px-4 py-2 rounded font-medium text-sm ${
-                        currentPage < totalPages 
-                            ? 'bg-btn-primary hover:bg-gray-600 text-textColor-secondary' 
-                            : 'bg-gray-700 text-gray-500 cursor-not-allowed'
-                    }`}
-                >
-                    Next
-                </a>
-            </div>
-        </>
+        </div>
     );
 };
 

@@ -1,17 +1,7 @@
 ---
 import Layout from '../../layouts/Layout.astro';
-import DashboardSummary from '../../components/Summary.jsx';
-
-// Quick Summary Data (keeping static for now)
-const quickSummaryData = [
-    { label: "Total Items", value: "1,234", color: "text-blue" },
-    { label: "Low Stock", value: "23", color: "text-yellow" },
-    { label: "Out of Stock", value: "8", color: "text-red" },
-    { label: "Warehouses", value: "5", color: "text-green" }
-];
-
-// Icons for Quick Summary
-const summaryIcons = ["📦", "⚠️", "❌", "🏭"];
+import DashboardSummary from '../../components/reports/Summary.jsx';
+import QuickSummary from '../../components/reports/QuickSummary.jsx';
 ---
 
 <!-- REPORT DASHBOARD -->
@@ -22,22 +12,14 @@ const summaryIcons = ["📦", "⚠️", "❌", "🏭"];
             <div class="flex justify-between items-center mb-4">
                 <h2 class="text-textColor-primary text-lg sm:text-xl lg:text-2xl font-semibold">Quick Summary</h2>
             </div>
-            <div class="grid grid-cols-2 sm:grid-cols-4 gap-4">
-                {quickSummaryData.map((item, index) => (
-                    <div class="bg-background rounded-lg p-4 text-center">
-                        <div class="text-2xl mb-2">{summaryIcons[index]}</div>
-                        <div class={`text-xl font-bold ${item.color} mb-1`}>{item.value}</div>
-                        <div class="text-textColor-primary text-sm">{item.label}</div>
-                    </div>
-                ))}
-            </div> 
+            <QuickSummary client:load />
         </div>
     </div>
     <div class="w-full min-h-screen grid grid-cols-4 grid-rows-2 gap-4 pt-4">
 
         <!-- Inventory Stock Section -->
-        <div class="bg-primary col-span-2 row-span-1 rounded-lg flex flex-col">
-            <div class="bg-primary rounded-lg p-6 flex flex-col ">
+        <div class="bg-primary col-span-2 row-span-1 rounded-lg flex flex-col min-h-[400px]">
+            <div class="bg-primary rounded-lg p-6 flex flex-col h-full">
                 <div class="flex justify-between items-center mb-4">
                     <h2 class="text-textColor-primary text-lg sm:text-xl font-semibold">Inventory Stock</h2>
                     <a href="/reports/Inventory">
@@ -48,7 +30,7 @@ const summaryIcons = ["📦", "⚠️", "❌", "🏭"];
             </div>
         </div>
         <!-- Warehouse Capacity Section -->
-        <div class="bg-primary col-span-3 row-span-1 rounded-lg flex flex-col">
+        <div class="bg-primary col-span-2 row-span-1 rounded-lg flex flex-col min-h-[400px]">
             <div class="bg-primary rounded-lg p-6 flex flex-col h-full">
                 <div class="flex justify-between items-center mb-4">
                     <h2 class="text-textColor-primary text-lg sm:text-xl font-semibold">Warehouse Capacity</h2>
@@ -59,7 +41,7 @@ const summaryIcons = ["📦", "⚠️", "❌", "🏭"];
                 <DashboardSummary section="warehouse" client:load />
             </div>
         </div>
-        <div class="bg-primary col-span-5 row-span-1 rounded-lg flex flex-col">
+        <div class="bg-primary col-span-4 row-span-1 rounded-lg flex flex-col min-h-[400px]">
             <!-- Low Stock Items - Purchase Order Section -->
         <div class="bg-primary rounded-lg p-6 flex flex-col h-full">
             <div class="flex justify-between items-center mb-4">
