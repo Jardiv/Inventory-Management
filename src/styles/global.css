@@ -111,21 +111,24 @@
 		@apply opacity-100;
 	}
 
+
 	.stock-table {
-		@apply w-full text-left;
+		@apply w-full text-left table-fixed;
 	}
-	.stock-table thead {
-		@apply py-2;
+	.skeleton-loading {
+		@apply h-[1rem] bg-gray-700 rounded animate-pulse;
+	}
+	.stock-table td, .stock-table th {
+		@apply h-[3rem] px-6;
 	}
 	.table-row {
-		@apply bg-primary text-textColor-primary border-t-2 border-border_color ;
+		@apply bg-primary text-textColor-primary border-t-2 border-border_color;
+	}
+	.table-row.item {
+		@apply bg-primary text-sm text-textColor-primary border-t-2 border-border_color hover:bg-gray-800/30 cursor-pointer;
 	}
 	.table-header {
 		@apply py-2 text-lg;
-	}
-
-	.table-data {
-		@apply py-4 w-[250px];
 	}
 
 	/* Themed status colors using CSS custom properties */
@@ -381,4 +384,49 @@ main.overflow-auto::-webkit-scrollbar-thumb:hover {
 
 .dark main.overflow-auto::-webkit-scrollbar-thumb:hover {
 	background: rgba(255, 255, 255, 0.15);
+}
+
+/* SLide out button animation */
+
+/* Button starts slightly visible (peeking) off the right side */
+.hover-trigger {
+	transform: translateX(60px);
+	opacity: 0.3;
+	transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+	z-index: 50;
+}
+
+/* Create invisible hover area in bottom-right corner */
+.hover-area {
+	position: fixed;
+	bottom: 0;
+	right: 0;
+	width: 250px;
+	height: 250px;
+	z-index: 10;
+}
+
+/* Show button when hovering the area or button itself */
+.hover-area:hover ~ .hover-trigger,
+.hover-trigger:hover {
+	transform: translateX(0) scale(1.05);
+	opacity: 1;
+	box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+}
+
+/* Extend hover area around the button when it's visible */
+.hover-trigger::before {
+	content: '';
+	position: absolute;
+	top: -40px;
+	right: -40px;
+	bottom: -40px;
+	left: -40px;
+	z-index: -1;
+}
+
+/* Enhanced hover effect on button */
+.hover-trigger:hover {
+	transform: translateX(0) scale(1.1);
+	box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
 }
