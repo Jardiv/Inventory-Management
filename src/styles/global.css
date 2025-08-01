@@ -125,7 +125,7 @@
 		@apply bg-primary text-textColor-primary border-t-2 border-border_color;
 	}
 	.table-row.item {
-		@apply bg-primary text-sm text-textColor-primary border-t-2 border-border_color hover:bg-gray-800/30 cursor-pointer;
+		@apply bg-primary text-sm text-textColor-primary border-t-2 border-border_color hover:bg-tbl-hover cursor-pointer;
 	}
 	.table-header {
 		@apply py-2 text-lg;
