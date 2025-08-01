@@ -2,78 +2,8 @@
 import Layout from '../../layouts/Layout.astro';
 import InventoryTable from '../../components/reports/items.jsx';
 
-// Get current page from URL parameters
-const currentPage = parseInt(Astro.url.searchParams.get('page') || '1');
+// Items per page for client-side pagination
 const itemsPerPage = 10;
-
-// Fetch pagination data from API
-let paginationData = {
-    currentPage: 1,
-    totalPages: 1,
-    totalItems: 0,
-    hasNextPage: false,
-    hasPreviousPage: false
-};
-
-try {
-    const response = await fetch(`${Astro.url.origin}/api/reports/items?page=${currentPage}&limit=${itemsPerPage}`);
-    const result = await response.json();
-    
-    if (result.pagination) {
-        paginationData = {
-            currentPage: result.pagination.currentPage,
-            totalPages: result.pagination.totalPages,
-            totalItems: result.pagination.totalItems,
-            hasNextPage: result.pagination.hasNextPage,
-            hasPreviousPage: result.pagination.hasPreviousPage
-        };
-    }
-} catch (error) {
-    console.error('Failed to fetch pagination data:', error);
-}
-
-// Generate pagination pages array
-function generatePaginationPages(currentPage: number, totalPages: number): (number | string)[] {
-    const pages = [];
-    
-    // Always show first page
-    if (totalPages > 0) {
-        pages.push(1);
-    }
-    
-    // Add ellipsis if needed before current page range
-    if (currentPage > 4) {
-        pages.push('...');
-    }
-    
-    // Add pages around current page
-    const start = Math.max(2, currentPage - 1);
-    const end = Math.min(totalPages - 1, currentPage + 1);
-    
-    for (let i = start; i <= end; i++) {
-        if (!pages.includes(i)) {
-            pages.push(i);
-        }
-    }
-    
-    // Add ellipsis if needed after current page range
-    if (currentPage < totalPages - 3) {
-        pages.push('...');
-    }
-    
-    // Always show last page
-    if (totalPages > 1 && !pages.includes(totalPages)) {
-        pages.push(totalPages);
-    }
-    
-    return pages;
-}
-
-const paginationPages = generatePaginationPages(paginationData.currentPage, paginationData.totalPages);
-
-// Calculate showing range
-const startItem = ((paginationData.currentPage - 1) * itemsPerPage) + 1;
-const endItem = Math.min(paginationData.currentPage * itemsPerPage, paginationData.totalItems);
 ---
 
 <!-- REPORT DASHBOARD -->
@@ -84,6 +14,11 @@ const endItem = Math.min(paginationData.currentPage * itemsPerPage, paginationDa
             <div class="flex justify-between items-center mb-6">
                 <h2 class="text-textColor-primary text-xl font-semibold">Inventory Stock</h2>
                 <div class="flex gap-2">
+                    <button id="filterBtn" class="p-2 text-textColor-primary hover:bg-btn-hover hover:text-white rounded transition-colors">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M12 3c2.755 0 5.455.232 8.083.678.533.09.917.556.917 1.096v1.044a2.25 2.25 0 0 1-.659 1.591l-5.432 5.432a2.25 2.25 0 0 0-.659 1.591v2.927a2.25 2.25 0 0 1-1.244 2.013L9.75 21v-6.568a2.25 2.25 0 0 0-.659-1.591L3.659 7.409A2.25 2.25 0 0 1 3 5.818V4.774c0-.54.384-1.006.917-1.096A48.32 48.32 0 0 1 12 3Z" />
+                        </svg>
+                    </button>
                     <button class="p-2 text-textColor-primary hover:bg-btn-hover hover:text-white rounded">
                         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5">
                             <path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5M16.5 12 12 16.5m0 0L7.5 12m4.5 4.5V3" />
@@ -96,80 +31,40 @@ const endItem = Math.min(paginationData.currentPage * itemsPerPage, paginationDa
                     </a>
                 </div>
             </div>
-            <InventoryTable client:load currentPage={currentPage} itemsPerPage={itemsPerPage} />
+            <InventoryTable client:load itemsPerPage={itemsPerPage} />
             
-            <!-- Pagination Section -->
-            <div class="flex justify-between items-center pt-6 border-t border-gray-700 flex-shrink-0">
-                <!-- Showing info -->
-                <div class="text-textColor-tertiary text-sm">
-                    {paginationData.totalItems > 0 ? (
-                        `Showing ${startItem}-${endItem} of ${paginationData.totalItems} products`
-                    ) : (
-                        'Loading products...'
-                    )}
-                </div>
-                
-                <!-- Pagination Controls -->
-                {paginationData.totalItems > 0 && paginationData.totalPages > 1 && (
-                    <div class="flex items-center gap-1">
-                        <!-- Previous Button -->
-                        <a 
-                            href={paginationData.hasPreviousPage ? `/reports/Inventory?page=${paginationData.currentPage - 1}` : '#'}
-                            class={`p-2 rounded-md transition-colors ${
-                                paginationData.hasPreviousPage 
-                                    ? 'text-textColor-primary hover:bg-gray-700' 
-                                    : 'text-gray-500 cursor-not-allowed'
-                            }`}
-                        >
-                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5">
-                                <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 19.5 8.25 12l7.5-7.5" />
-                            </svg>
-                        </a>
-
-                        <!-- Page Numbers -->
-                        {paginationPages.map(page => {
-                            if (page === '...') {
-                                return (
-                                    <span class="px-3 py-2 text-gray-500">...</span>
-                                );
-                            }
-                            
-                            const isActive = page === paginationData.currentPage;
-                            return (
-                                <a 
-                                    href={`/reports/Inventory?page=${page}`}
-                                    class={`px-3 py-2 rounded-md text-sm font-medium transition-colors ${
-                                        isActive 
-                                            ? 'bg-btn-primary text-white hover:bg-btn-hover ' 
-                                            : 'text-textColor-primary hover:bg-gray-700 hover:text-white'
-                                    }`}
-                                >
-                                    {page}
-                                </a>
-                            );
-                        })}
-
-                        <!-- Next Button -->
-                        <a 
-                            href={paginationData.hasNextPage ? `/reports/Inventory?page=${paginationData.currentPage + 1}` : '#'}
-                            class={`p-2 rounded-md transition-colors ${
-                                paginationData.hasNextPage 
-                                    ? 'text-textColor-primary hover:bg-gray-700 ' 
-                                    : 'text-gray-500 cursor-not-allowed'
-                            }`}
-                        >
-                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5">
-                                <path stroke-linecap="round" stroke-linejoin="round" d="m8.25 4.5 7.5 7.5-7.5 7.5" />
-                            </svg>
-                        </a>
-                    </div>
-                )}
-                
-                <!-- Empty space when no pagination needed to maintain layout -->
-                {(paginationData.totalItems === 0 || paginationData.totalPages <= 1) && (
-                    <div></div>
-                )}
-            </div>
+            {/* Note: Pagination is now handled inside the React component */}
         </div>
     </div>
 </Layout>
+
+<script>
+    // Connect the filter button to the React component's filter modal
+    document.addEventListener('DOMContentLoaded', function() {
+        const filterBtn = document.getElementById('filterBtn');
+        
+        if (filterBtn) {
+            // Handle filter button click
+            filterBtn.addEventListener('click', function() {
+                // Dispatch a custom event that the React component can listen to
+                window.dispatchEvent(new CustomEvent('openFilterModal'));
+            });
+            
+            // Listen for modal state changes from React component
+            window.addEventListener('filterModalStateChange', function(event) {
+                const customEvent = event as CustomEvent;
+                const isOpen = customEvent.detail.isOpen;
+                
+                if (isOpen) {
+                    // Add active state when modal is open
+                    filterBtn.classList.remove('text-textColor-primary', 'hover:bg-btn-hover', 'hover:text-white');
+                    filterBtn.classList.add('bg-btn-primary', 'text-white');
+                } else {
+                    // Remove active state when modal is closed
+                    filterBtn.classList.remove('bg-btn-primary', 'text-white');
+                    filterBtn.classList.add('text-textColor-primary', 'hover:bg-btn-hover', 'hover:text-white');
+                }
+            });
+        }
+    });
+</script>

@@ -2,67 +2,9 @@
 import Layout from '../../layouts/Layout.astro';
 import LowStockTable from '../../components/reports/lowstock.jsx';
 
-// Get current page from URL parameters
-const currentPage = parseInt(Astro.url.searchParams.get('page') || '1');
-
-// Fetch pagination data from API
-let paginationData = {
-    currentPage: 1,
-    totalPages: 1,
-    totalItems: 0,
-    hasNextPage: false,
-    hasPrevPage: false
-};
-
-try {
-    const response = await fetch(`${Astro.url.origin}/api/reports/lowstock?page=${currentPage}`);
-    const result = await response.json();
-    
-    if (result.success && result.pagination) {
-        paginationData = result.pagination;
-    }
-} catch (error) {
-    console.error('Failed to fetch pagination data:', error);
-}
-
-// Generate pagination pages array
-function generatePaginationPages(currentPage: number, totalPages: number): (number | string)[] {
-    const pages = [];
-    
-    // Always show first page
-    if (totalPages > 0) {
-        pages.push(1);
-    }
-    
-    // Add ellipsis if needed before current page range
-    if (currentPage > 4) {
-        pages.push('...');
-    }
-    
-    // Add pages around current page
-    const start = Math.max(2, currentPage - 1);
-    const end = Math.min(totalPages - 1, currentPage + 1);
-    
-    for (let i = start; i <= end; i++) {
-        if (!pages.includes(i)) {
-            pages.push(i);
-        }
-    }
-    
-    // Add ellipsis if needed after current page range
-    if (currentPage < totalPages - 3) {
-        pages.push('...');
-    }
-    
-    // Always show last page
-    if (totalPages > 1 && !pages.includes(totalPages)) {
-        pages.push(totalPages);
-    }
-    
-    return pages;
-}
-
-const paginationPages = generatePaginationPages(paginationData.currentPage, paginationData.totalPages);
+// Client-side pagination is handled by the React component
+// No server-side pagination needed
+const currentPage = 1; // Default value, actual pagination handled client-side
 ---
 
 <Layout>
@@ -70,11 +12,18 @@ const paginationPages = generatePaginationPages(paginationData.currentPage, pagi
     <div class="flex-1 overflow-hidden bg-primary rounded-lg p-6 mb-6">
         <div class="flex justify-between items-center mb-4">
             <h2 class="text-textColor-primary text-xl font-semibold">Low Stock Items</h2>
-            <a href="/reports/Dashboard" class="p-2 text-textColor-primary hover:bg-btn-hover hover:text-white rounded">
-                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5">
-                    <path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12" />
-                </svg>
-            </a>
+            <div class="flex gap-2">
+                <button id="filterBtn" class="p-2 text-textColor-primary hover:bg-btn-hover hover:text-white rounded transition-colors">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M12 3c2.755 0 5.455.232 8.083.678.533.09.917.556.917 1.096v1.044a2.25 2.25 0 0 1-.659 1.591l-5.432 5.432a2.25 2.25 0 0 0-.659 1.591v2.927a2.25 2.25 0 0 1-1.244 2.013L9.75 21v-6.568a2.25 2.25 0 0 0-.659-1.591L3.659 7.409A2.25 2.25 0 0 1 3 5.818V4.774c0-.54.384-1.006.917-1.096A48.32 48.32 0 0 1 12 3Z" />
+                    </svg>
+                </button>
+                <a href="/reports/Dashboard" class="p-2 text-textColor-primary hover:bg-btn-hover hover:text-white rounded">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12" />
+                    </svg>
+                </a>
+            </div>
         </div>
         
         <div class=" h-full overflow-y-auto">
@@ -86,64 +35,38 @@ const paginationPages = generatePaginationPages(paginationData.currentPage, pagi
             <button id="selectAllButton" class="bg-gray-700 hover:bg-gray-600 text-white px-4 py-2 rounded font-medium text-sm transition-colors flex items-center gap-2">
                 <input type="checkbox" id="selectAllBottom" class="rounded bg-gray-700 border-gray-600 pointer-events-none">
                 <span id="selectAllText">Select All</span>
-                <span id="selectedCount" class="text-xs bg-blue-600 px-2 py-1 rounded-full hidden"></span>
+                <span id="selectedCount" class="text-xs bg-purple-600 px-2 py-1 rounded-full hidden"></span>
             </button>
             
-            <!-- Pagination Controls -->
-            {paginationData.totalPages > 1 && (
-                <div class="flex items-center gap-1">
+            <!-- Center section with pagination and items count -->
+            <div class="flex flex-col items-center gap-2">
+                <!-- Client-side Pagination Controls -->
+                <div id="paginationControls" class="flex items-center gap-1">
                     <!-- Previous Button -->
-                    <a 
-                        href={paginationData.hasPrevPage ? `/reports/LowStock?page=${paginationData.currentPage - 1}` : '#'}
-                        class={`p-2 rounded-md transition-colors ${
-                            paginationData.hasPrevPage 
-                                ? 'text-textColor-primary hover:bg-gray-700' 
-                                : 'text-gray-500 cursor-not-allowed'
-                        }`}
+                    <button 
+                        id="prevPageBtn"
+                        class="p-2 rounded-md transition-colors text-textColor-primary hover:bg-gray-700"
                     >
                         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5">
                             <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 19.5 8.25 12l7.5-7.5" />
                         </svg>
-                    </a>
+                    </button>
 
-                    <!-- Page Numbers -->
-                    {paginationPages.map(page => {
-                        if (page === '...') {
-                            return (
-                                <span class="px-3 py-2 text-gray-500">...</span>
-                            );
-                        }
-                        
-                        const isActive = page === paginationData.currentPage;
-                        return (
-                            <a 
-                                href={`/reports/LowStock?page=${page}`}
-                                class={`px-3 py-2 rounded-md text-sm font-medium transition-colors ${
-                                    isActive 
-                                        ? 'bg-btn-primary text-white hover:bg-btn-hover ' 
-                                        : 'text-textColor-primary hover:bg-gray-700 hover:text-white'
-                                }`}
-                            >
-                                {page}
-                            </a>
-                        );
-                    })}
+                    <!-- Page Numbers Container -->
+                    <div id="pageNumbersContainer" class="flex items-center gap-1">
+                    </div>
 
                     <!-- Next Button -->
-                    <a 
-                        href={paginationData.hasNextPage ? `/reports/LowStock?page=${paginationData.currentPage + 1}` : '#'}
-                        class={`p-2 rounded-md transition-colors ${
-                            paginationData.hasNextPage 
-                                ? 'text-textColor-primary hover:bg-gray-700 ' 
-                                : 'text-gray-500 cursor-not-allowed'
-                        }`}
+                    <button 
+                        id="nextPageBtn"
+                        class="p-2 rounded-md transition-colors text-textColor-primary hover:bg-gray-700"
                     >
                         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5">
                             <path stroke-linecap="round" stroke-linejoin="round" d="m8.25 4.5 7.5 7.5-7.5 7.5" />
                         </svg>
-                    </a>
+                    </button>
                 </div>
-            )}
+            </div>
             
             <button id="generatePurchaseOrderBtn" class="bg-purple-600 hover:bg-purple-700 text-white px-6 py-2 rounded font-medium text-sm transition-colors">
                 Generate Purchase Order
@@ -239,4 +162,197 @@ const paginationPages = generatePaginationPages(paginationData.currentPage, pagi
     </div>
 
     <script is:inline src="/scripts/reports/LowStockNew.js"></script>
+    
+    <script is:inline>
+        // Connect the filter button to the React component's filter modal
+        document.addEventListener('DOMContentLoaded', function() {
+            const filterBtn = document.getElementById('filterBtn');
+            
+            if (filterBtn) {
+                // Handle filter button click
+                filterBtn.addEventListener('click', function() {
+                    // Dispatch a custom event that the React component can listen to
+                    window.dispatchEvent(new CustomEvent('openFilterModal'));
+                });
+                
+                // Listen for modal state changes from React component
+                window.addEventListener('filterModalStateChange', function(event) {
+                    const isOpen = event.detail.isOpen;
+                    
+                    if (isOpen) {
+                        // Add active state when modal is open
+                        filterBtn.classList.remove('text-textColor-primary', 'hover:bg-btn-hover', 'hover:text-white');
+                        filterBtn.classList.add('bg-btn-primary', 'text-white');
+                    } else {
+                        // Remove active state when modal is closed
+                        filterBtn.classList.remove('bg-btn-primary', 'text-white');
+                        filterBtn.classList.add('text-textColor-primary', 'hover:bg-btn-hover', 'hover:text-white');
+                    }
+                });
+            }
+
+            // Client-side pagination controls
+            function initializePagination() {
+                const paginationControls = document.getElementById('paginationControls');
+                const prevBtn = document.getElementById('prevPageBtn');
+                const nextBtn = document.getElementById('nextPageBtn');
+                const pageNumbersContainer = document.getElementById('pageNumbersContainer');
+                
+                let isUpdating = false; // Prevent concurrent updates
+
+                function updatePaginationControls() {
+                    if (!window.lowStockPagination || isUpdating) return;
+                    
+                    isUpdating = true;
+                    
+                    try {
+                        const { currentPage, totalPages, totalItems, itemsPerPage, hasNextPage, hasPrevPage, goToPage, goToPreviousPage, goToNextPage, getDisplayData } = window.lowStockPagination;
+
+                        // Show/hide pagination controls based on total pages
+                        if (totalPages > 1) {
+                            paginationControls.style.display = 'flex';
+                        } else {
+                            paginationControls.style.display = 'none';
+                            isUpdating = false;
+                            return; // Exit early if no pagination needed
+                        }
+
+                        // Update previous button state
+                        prevBtn.disabled = !hasPrevPage;
+                        prevBtn.className = !hasPrevPage 
+                            ? 'p-2 rounded-md transition-colors text-gray-500 cursor-not-allowed'
+                            : 'p-2 rounded-md transition-colors text-textColor-primary hover:bg-gray-700';
+
+                        // Update next button state
+                        nextBtn.disabled = !hasNextPage;
+                        nextBtn.className = !hasNextPage 
+                            ? 'p-2 rounded-md transition-colors text-gray-500 cursor-not-allowed'
+                            : 'p-2 rounded-md transition-colors text-textColor-primary hover:bg-gray-700';
+
+                        // Generate page numbers
+                        const generatePageNumbers = (currentPage, totalPages) => {
+                            const pages = [];
+                            
+                            // Always show first page
+                            if (totalPages > 0) {
+                                pages.push(1);
+                            }
+                            
+                            // Add ellipsis if needed before current page range
+                            if (currentPage > 4) {
+                                pages.push('...');
+                            }
+                            
+                            // Add pages around current page
+                            const start = Math.max(2, currentPage - 1);
+                            const end = Math.min(totalPages - 1, currentPage + 1);
+                            
+                            for (let i = start; i <= end; i++) {
+                                if (!pages.includes(i)) {
+                                    pages.push(i);
+                                }
+                            }
+                            
+                            // Add ellipsis if needed after current page range
+                            if (currentPage < totalPages - 3) {
+                                pages.push('...');
+                            }
+                            
+                            // Always show last page
+                            if (totalPages > 1 && !pages.includes(totalPages)) {
+                                pages.push(totalPages);
+                            }
+                            
+                            return pages;
+                        };
+
+                        const pageNumbers = generatePageNumbers(currentPage, totalPages);
+                        
+                        // Clear and rebuild page numbers
+                        pageNumbersContainer.innerHTML = '';
+                        
+                        pageNumbers.forEach(page => {
+                            if (page === '...') {
+                                const span = document.createElement('span');
+                                span.className = 'px-3 py-2 text-gray-500 select-none';
+                                span.textContent = '...';
+                                pageNumbersContainer.appendChild(span);
+                            } else {
+                                const button = document.createElement('button');
+                                const isActive = page === currentPage;
+                                
+                                button.className = isActive 
+                                    ? 'px-3 py-2 rounded-md text-sm font-medium transition-colors bg-btn-primary text-white cursor-default' 
+                                    : 'px-3 py-2 rounded-md text-sm font-medium transition-colors text-textColor-primary hover:bg-gray-700 hover:text-white';
+                                
+                                button.textContent = page;
+                                button.disabled = isActive;
+                                
+                                if (!isActive) {
+                                    button.addEventListener('click', (e) => {
+                                        e.preventDefault();
+                                        e.stopPropagation();
+                                        goToPage(page);
+                                    }, { once: false });
+                                }
+                                
+                                pageNumbersContainer.appendChild(button);
+                            }
+                        });
+
+                        // Set up navigation button handlers (remove existing listeners first)
+                        const newPrevBtn = prevBtn.cloneNode(true);
+                        const newNextBtn = nextBtn.cloneNode(true);
+                        
+                        if (!hasPrevPage) {
+                            newPrevBtn.disabled = true;
+                        } else {
+                            newPrevBtn.addEventListener('click', (e) => {
+                                e.preventDefault();
+                                e.stopPropagation();
+                                goToPreviousPage();
+                            });
+                        }
+                        
+                        if (!hasNextPage) {
+                            newNextBtn.disabled = true;
+                        } else {
+                            newNextBtn.addEventListener('click', (e) => {
+                                e.preventDefault();
+                                e.stopPropagation();
+                                goToNextPage();
+                            });
+                        }
+                        
+                        prevBtn.parentNode.replaceChild(newPrevBtn, prevBtn);
+                        nextBtn.parentNode.replaceChild(newNextBtn, nextBtn);
+                        
+                    } catch (error) {
+                        console.error('Error updating pagination:', error);
+                    } finally {
+                        isUpdating = false;
+                    }
+                }
+
+                // Listen for custom events from React component instead of polling
+                window.addEventListener('lowStockPaginationUpdate', updatePaginationControls);
+                
+                // Initial update with delay to ensure React component is loaded
+                setTimeout(() => {
+                    updatePaginationControls();
+                    // Fallback polling at much lower frequency
+                    const fallbackCheck = () => {
+                        if (window.lowStockPagination && !isUpdating) {
+                            updatePaginationControls();
+                        }
+                        setTimeout(fallbackCheck, 2000); // Check every 2 seconds as fallback
+                    };
+                    setTimeout(fallbackCheck, 1000);
+                }, 1000);
+            }
+
+            // Initialize pagination
+            initializePagination();
+        });
+    </script>
 </Layout>

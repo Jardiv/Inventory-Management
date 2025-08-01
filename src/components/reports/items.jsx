@@ -1,11 +1,34 @@
 import { useState, useEffect } from 'react';
 
-const InventoryTable = ({ currentPage = 1, itemsPerPage = 10 }) => {
+const InventoryTable = ({ itemsPerPage = 10 }) => {
     const [inventoryData, setInventoryData] = useState([]);
+    const [filteredData, setFilteredData] = useState([]);
+    const [allInventoryData, setAllInventoryData] = useState([]); // Store all data
+    const [currentPage, setCurrentPage] = useState(1); // Client-side pagination
     const [totalPages, setTotalPages] = useState(1);
     const [totalItems, setTotalItems] = useState(0);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
+    
+    // Sorting and filtering states
+    const [currentSort, setCurrentSort] = useState({ column: null, direction: 'asc' });
+    const [showFilterModal, setShowFilterModal] = useState(false);
+    const [filters, setFilters] = useState({
+        codeSearch: '',
+        nameSearch: '',
+        currentQuantityMin: '',
+        currentQuantityMax: '',
+        status: ''
+    });
+
+    // Function to toggle filter modal and dispatch events
+    const toggleFilterModal = (isOpen) => {
+        setShowFilterModal(isOpen);
+        // Dispatch event to update button state in parent page
+        window.dispatchEvent(new CustomEvent('filterModalStateChange', { 
+            detail: { isOpen } 
+        }));
+    };
 
     // Function to get status styling using themed colors
     const getStatusStyle = (status) => {
@@ -21,13 +44,15 @@ const InventoryTable = ({ currentPage = 1, itemsPerPage = 10 }) => {
         }
     };
 
-    // Fetch inventory data
+    // Fetch inventory data - always fetch all data for client-side pagination
     const fetchInventoryData = async () => {
         setLoading(true);
         setError(null);
         
         try {
-            const apiUrl = `/api/reports/items?limit=${itemsPerPage}&page=${currentPage}`;
+            // Always fetch all data for client-side pagination
+            const apiUrl = `/api/reports/items?limit=1000`; // Large limit to get all data
+            
             const response = await fetch(apiUrl);
             
             if (!response.ok) {
@@ -41,22 +66,53 @@ const InventoryTable = ({ currentPage = 1, itemsPerPage = 10 }) => {
                 throw new Error(result.error);
             }
             
-            setInventoryData(result.data || []);
-            setTotalPages(result.pagination?.totalPages || 1);
-            setTotalItems(result.pagination?.totalItems || 0);
+            const fetchedData = result.data || [];
+            
+            // Store all data
+            setAllInventoryData(fetchedData);
+            setInventoryData(fetchedData);
+            setFilteredData(fetchedData);
+            setTotalItems(fetchedData.length);
+            setTotalPages(Math.ceil(fetchedData.length / itemsPerPage));
             
         } catch (err) {
             console.error('Failed to fetch inventory data:', err);
             setError(err.message);
             
             // Fallback to mock data for development
-            setInventoryData([
-                { id: 1, code: 'PRD001', name: 'Product 1', current: 50, min: 20, max: 100, status: 'OK', isVisible: true },
-                { id: 2, code: 'PRD002', name: 'Product 2', current: 15, min: 20, max: 100, status: 'LOW', isVisible: true },
-                { id: 3, code: 'PRD003', name: 'Product 3', current: 0, min: 10, max: 200, status: 'OUT OF STOCK', isVisible: true },
-            ]);
-            setTotalPages(1);
-            setTotalItems(3);
+            const mockData = [
+                { id: 1, code: 'PRD001', name: 'Laptop Computer', current: 50, min: 20, max: 100, status: 'OK', isVisible: true },
+                { id: 2, code: 'PRD002', name: 'Office Chair', current: 15, min: 20, max: 100, status: 'LOW', isVisible: true },
+                { id: 3, code: 'PRD003', name: 'Wireless Mouse', current: 0, min: 10, max: 200, status: 'OUT OF STOCK', isVisible: true },
+                { id: 4, code: 'PRD004', name: 'Monitor Display', current: 75, min: 30, max: 150, status: 'OK', isVisible: true },
+                { id: 5, code: 'PRD005', name: 'Keyboard', current: 8, min: 15, max: 80, status: 'LOW', isVisible: true },
+                { id: 6, code: 'PRD006', name: 'Desk Lamp', current: 120, min: 25, max: 200, status: 'OK', isVisible: true },
+                { id: 7, code: 'PRD007', name: 'USB Cable', current: 200, min: 50, max: 300, status: 'OK', isVisible: true },
+                { id: 8, code: 'PRD008', name: 'Phone Charger', current: 5, min: 20, max: 100, status: 'LOW', isVisible: true },
+                { id: 9, code: 'PRD009', name: 'Tablet Stand', current: 0, min: 10, max: 50, status: 'OUT OF STOCK', isVisible: true },
+                { id: 10, code: 'PRD010', name: 'Webcam', current: 30, min: 15, max: 60, status: 'OK', isVisible: true },
+                { id: 11, code: 'PRD011', name: 'Headphones', current: 12, min: 20, max: 80, status: 'LOW', isVisible: true },
+                { id: 12, code: 'PRD012', name: 'Printer Paper', current: 150, min: 100, max: 500, status: 'OK', isVisible: true },
+                // Add more mock data to test pagination
+                { id: 13, code: 'PRD013', name: 'USB Drive', current: 35, min: 25, max: 100, status: 'OK', isVisible: true },
+                { id: 14, code: 'PRD014', name: 'Network Cable', current: 45, min: 30, max: 150, status: 'OK', isVisible: true },
+                { id: 15, code: 'PRD015', name: 'Power Strip', current: 8, min: 15, max: 50, status: 'LOW', isVisible: true },
+                { id: 16, code: 'PRD016', name: 'Ethernet Switch', current: 22, min: 10, max: 40, status: 'OK', isVisible: true },
+                { id: 17, code: 'PRD017', name: 'Router', current: 0, min: 5, max: 20, status: 'OUT OF STOCK', isVisible: true },
+                { id: 18, code: 'PRD018', name: 'Wireless Adapter', current: 18, min: 20, max: 60, status: 'LOW', isVisible: true },
+                { id: 19, code: 'PRD019', name: 'Bluetooth Speaker', current: 25, min: 15, max: 80, status: 'OK', isVisible: true },
+                { id: 20, code: 'PRD020', name: 'External Hard Drive', current: 12, min: 10, max: 30, status: 'OK', isVisible: true },
+                { id: 21, code: 'PRD021', name: 'Wireless Keyboard', current: 7, min: 15, max: 50, status: 'LOW', isVisible: true },
+                { id: 22, code: 'PRD022', name: 'Gaming Mouse', current: 33, min: 20, max: 75, status: 'OK', isVisible: true },
+                { id: 23, code: 'PRD023', name: 'Monitor Stand', current: 0, min: 10, max: 30, status: 'OUT OF STOCK', isVisible: true },
+                { id: 24, code: 'PRD024', name: 'Desk Organizer', current: 28, min: 15, max: 60, status: 'OK', isVisible: true },
+                { id: 25, code: 'PRD025', name: 'Cable Management', current: 41, min: 25, max: 100, status: 'OK', isVisible: true },
+            ];
+            setAllInventoryData(mockData);
+            setInventoryData(mockData);
+            setFilteredData(mockData);
+            setTotalPages(Math.ceil(mockData.length / itemsPerPage));
+            setTotalItems(mockData.length);
         } finally {
             setLoading(false);
         }
@@ -64,13 +120,235 @@ const InventoryTable = ({ currentPage = 1, itemsPerPage = 10 }) => {
 
     useEffect(() => {
         fetchInventoryData();
-    }, [currentPage, itemsPerPage]);
+    }, []); // Only fetch once on component mount
+
+    // Handle sorting after data is loaded
+    useEffect(() => {
+        if (currentSort.column && inventoryData.length > 0) {
+            const sorted = [...inventoryData].sort((a, b) => {
+                let aValue = a[currentSort.column];
+                let bValue = b[currentSort.column];
+                
+                if (typeof aValue === 'string') {
+                    aValue = aValue.toLowerCase();
+                    bValue = bValue.toLowerCase();
+                }
+                
+                if (aValue < bValue) return currentSort.direction === 'asc' ? -1 : 1;
+                if (aValue > bValue) return currentSort.direction === 'asc' ? 1 : -1;
+                return 0;
+            });
+            
+            setInventoryData(sorted);
+            applyFiltersToSortedData(sorted);
+        }
+    }, [allInventoryData, currentSort]);
+
+        // Add event listener for external filter button
+    useEffect(() => {
+        const handleOpenFilterModal = () => {
+            toggleFilterModal(true);
+        };
+
+        window.addEventListener('openFilterModal', handleOpenFilterModal);
+        
+        return () => {
+            window.removeEventListener('openFilterModal', handleOpenFilterModal);
+        };
+    }, []);
+
+    // Sort function with three states: asc → desc → default
+    const handleSort = (column) => {
+        let direction = 'asc';
+        
+        if (currentSort.column === column) {
+            if (currentSort.direction === 'asc') {
+                direction = 'desc';
+            } else if (currentSort.direction === 'desc') {
+                // Reset to default state (no sort)
+                setCurrentSort({ column: null, direction: null });
+                setInventoryData(allInventoryData);
+                applyFiltersToSortedData(allInventoryData);
+                setCurrentPage(1); // Reset to first page
+                return;
+            }
+        }
+        
+        setCurrentSort({ column, direction });
+        setCurrentPage(1); // Reset to first page when sorting
+        
+        // Sort all inventory data
+        const sorted = [...allInventoryData].sort((a, b) => {
+            let aValue = a[column];
+            let bValue = b[column];
+            
+            // Handle different data types
+            if (typeof aValue === 'string') {
+                aValue = aValue.toLowerCase();
+                bValue = bValue.toLowerCase();
+            }
+            
+            if (aValue < bValue) return direction === 'asc' ? -1 : 1;
+            if (aValue > bValue) return direction === 'asc' ? 1 : -1;
+            return 0;
+        });
+        
+        // Update the main inventory data with sorted data
+        setInventoryData(sorted);
+        
+        // Apply current filters to the sorted data
+        applyFiltersToSortedData(sorted);
+    };
+
+    // Filter function
+    const applyFilters = () => {
+        applyFiltersToSortedData(inventoryData);
+        setCurrentPage(1); // Reset to first page when filtering
+        toggleFilterModal(false);
+    };
+
+    // Apply filters to sorted data (helper function)
+    const applyFiltersToSortedData = (dataToFilter) => {
+        let filtered = [...dataToFilter];
+        
+        // Item Code search
+        if (filters.codeSearch) {
+            filtered = filtered.filter(item => 
+                item.code.toLowerCase().includes(filters.codeSearch.toLowerCase())
+            );
+        }
+        
+        // Item Name search
+        if (filters.nameSearch) {
+            filtered = filtered.filter(item => 
+                item.name.toLowerCase().includes(filters.nameSearch.toLowerCase())
+            );
+        }
+        
+        // Current quantity range
+        if (filters.currentQuantityMin) {
+            filtered = filtered.filter(item => item.current >= parseInt(filters.currentQuantityMin));
+        }
+        if (filters.currentQuantityMax) {
+            filtered = filtered.filter(item => item.current <= parseInt(filters.currentQuantityMax));
+        }
+        
+        // Status filter
+        if (filters.status) {
+            filtered = filtered.filter(item => item.status === filters.status);
+        }
+        
+        setFilteredData(filtered);
+    };
+
+    // Clear filters
+    const clearFilters = () => {
+        setFilters({
+            codeSearch: '',
+            nameSearch: '',
+            currentQuantityMin: '',
+            currentQuantityMax: '',
+            status: ''
+        });
+        // Apply cleared filters to current inventory data (which might be sorted)
+        setFilteredData(inventoryData);
+        setCurrentPage(1); // Reset to first page when clearing filters
+    };
+
+    // Get sort icon with three states
+    const getSortIcon = (column) => {
+        if (currentSort.column !== column || currentSort.direction === null) {
+            return (
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth="1.5" stroke="currentColor" className="w-3 h-3">
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 15L12 18.75 15.75 15m-7.5-6L12 5.25 15.75 9" />
+                </svg>
+            );
+        }
+        
+        if (currentSort.direction === 'asc') {
+            return (
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth="1.5" stroke="currentColor" className="w-3 h-3">
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 15L12 18.75 15.75 15" />
+                </svg>
+            );
+        } else {
+            return (
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth="1.5" stroke="currentColor" className="w-3 h-3">
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 9L12 5.25 15.75 9" />
+                </svg>
+            );
+        }
+    };
+
+    // Client-side pagination functions
+    const goToPage = (page) => {
+        if (page >= 1 && page <= totalPages) {
+            setCurrentPage(page);
+        }
+    };
+
+    const goToPreviousPage = () => {
+        if (currentPage > 1) {
+            setCurrentPage(currentPage - 1);
+        }
+    };
+
+    const goToNextPage = () => {
+        if (currentPage < totalPages) {
+            setCurrentPage(currentPage + 1);
+        }
+    };
+
+    // Generate pagination pages array
+    const generatePaginationPages = (currentPage, totalPages) => {
+        const pages = [];
+        
+        // Always show first page
+        if (totalPages > 0) {
+            pages.push(1);
+        }
+        
+        // Add ellipsis if needed before current page range
+        if (currentPage > 4) {
+            pages.push('...');
+        }
+        
+        // Add pages around current page
+        const start = Math.max(2, currentPage - 1);
+        const end = Math.min(totalPages - 1, currentPage + 1);
+        
+        for (let i = start; i <= end; i++) {
+            if (!pages.includes(i)) {
+                pages.push(i);
+            }
+        }
+        
+        // Add ellipsis if needed after current page range
+        if (currentPage < totalPages - 3) {
+            pages.push('...');
+        }
+        
+        // Always show last page
+        if (totalPages > 1 && !pages.includes(totalPages)) {
+            pages.push(totalPages);
+        }
+        
+        return pages;
+    };
 
     // Create exactly 10 rows (fill with empty invisible rows if needed)
+    // Always use client-side pagination
+    const getDisplayData = () => {
+        const startIndex = (currentPage - 1) * itemsPerPage;
+        const endIndex = startIndex + itemsPerPage;
+        return filteredData.slice(startIndex, endIndex);
+    };
+
+    const displayData = getDisplayData();
     const tableRows = [];
     for (let i = 0; i < itemsPerPage; i++) {
-        if (i < inventoryData.length) {
-            tableRows.push(inventoryData[i]);
+        if (i < displayData.length) {
+            tableRows.push(displayData[i]);
         } else {
             tableRows.push({
                 id: null,
@@ -87,7 +365,16 @@ const InventoryTable = ({ currentPage = 1, itemsPerPage = 10 }) => {
 
     // Calculate pagination info
     const startIndex = (currentPage - 1) * itemsPerPage;
-    const endIndex = Math.min(startIndex + inventoryData.length, startIndex + itemsPerPage);
+    const displayDataLength = displayData.length;
+    const totalFilteredItems = filteredData.length;
+    const endIndex = Math.min(startIndex + displayDataLength, startIndex + itemsPerPage);
+    const startItem = totalFilteredItems > 0 ? startIndex + 1 : 0;
+    const endItem = Math.min(startIndex + displayDataLength, totalFilteredItems);
+    
+    // Calculate total pages based on filtered data
+    const calculatedTotalPages = Math.ceil(totalFilteredItems / itemsPerPage) || 1;
+    
+    const paginationPages = generatePaginationPages(currentPage, calculatedTotalPages);
 
     if (loading) {
         return (
@@ -97,12 +384,60 @@ const InventoryTable = ({ currentPage = 1, itemsPerPage = 10 }) => {
                         <table className="w-full text-sm table-fixed">
                             <thead className="sticky top-0 bg-primary">
                                 <tr className="text-textColor-primary border-b border-gray-700">
-                                    <th className="text-left py-3 px-4 font-medium w-[15%]">Item Code</th>
-                                    <th className="text-left py-3 px-4 font-medium w-[25%]">Item Name</th>
-                                    <th className="text-left py-3 px-4 font-medium w-[15%]">Current</th>
-                                    <th className="text-left py-3 px-4 font-medium w-[15%]">Min</th>
-                                    <th className="text-left py-3 px-4 font-medium w-[15%]">Max</th>
-                                    <th className="text-left py-3 px-4 font-medium w-[15%]">Status</th>
+                                    <th className="text-left py-3 px-4 font-medium w-[15%]">
+                                        <button 
+                                            onClick={() => handleSort('code')}
+                                            className={`flex items-center gap-1 hover:text-btn-primary transition-colors ${currentSort.column === 'code' && currentSort.direction !== null ? 'text-btn-primary' : ''}`}
+                                        >
+                                            Item Code
+                                            {getSortIcon('code')}
+                                        </button>
+                                    </th>
+                                    <th className="text-left py-3 px-4 font-medium w-[25%]">
+                                        <button 
+                                            onClick={() => handleSort('name')}
+                                            className={`flex items-center gap-1 hover:text-btn-primary transition-colors ${currentSort.column === 'name' && currentSort.direction !== null ? 'text-btn-primary' : ''}`}
+                                        >
+                                            Item Name
+                                            {getSortIcon('name')}
+                                        </button>
+                                    </th>
+                                    <th className="text-left py-3 px-4 font-medium w-[15%]">
+                                        <button 
+                                            onClick={() => handleSort('current')}
+                                            className={`flex items-center gap-1 hover:text-btn-primary transition-colors ${currentSort.column === 'current' && currentSort.direction !== null ? 'text-btn-primary' : ''}`}
+                                        >
+                                            Current
+                                            {getSortIcon('current')}
+                                        </button>
+                                    </th>
+                                    <th className="text-left py-3 px-4 font-medium w-[15%]">
+                                        <button 
+                                            onClick={() => handleSort('min')}
+                                            className={`flex items-center gap-1 hover:text-btn-primary transition-colors ${currentSort.column === 'min' && currentSort.direction !== null ? 'text-btn-primary' : ''}`}
+                                        >
+                                            Min
+                                            {getSortIcon('min')}
+                                        </button>
+                                    </th>
+                                    <th className="text-left py-3 px-4 font-medium w-[15%]">
+                                        <button 
+                                            onClick={() => handleSort('max')}
+                                            className={`flex items-center gap-1 hover:text-btn-primary transition-colors ${currentSort.column === 'max' && currentSort.direction !== null ? 'text-btn-primary' : ''}`}
+                                        >
+                                            Max
+                                            {getSortIcon('max')}
+                                        </button>
+                                    </th>
+                                    <th className="text-left py-3 px-4 font-medium w-[15%]">
+                                        <button 
+                                            onClick={() => handleSort('status')}
+                                            className={`flex items-center gap-1 hover:text-btn-primary transition-colors ${currentSort.column === 'status' && currentSort.direction !== null ? 'text-btn-primary' : ''}`}
+                                        >
+                                            Status
+                                            {getSortIcon('status')}
+                                        </button>
+                                    </th>
                                 </tr>
                             </thead>
                             <tbody className="min-h-[500px]">
@@ -142,6 +477,109 @@ const InventoryTable = ({ currentPage = 1, itemsPerPage = 10 }) => {
 
     return (
         <div className="flex-1 overflow-hidden flex flex-col">
+            {/* Filter Modal */}
+            {showFilterModal && (
+                <div 
+                    className="fixed inset-0 bg-black/60 flex items-center justify-center z-50"
+                    onClick={() => toggleFilterModal(false)}
+                >
+                    <div 
+                        className="bg-primary rounded-lg p-6 w-[500px] max-h-[90vh] overflow-y-auto"
+                        onClick={(e) => e.stopPropagation()}
+                    >
+                        <div className="flex justify-between items-center mb-4">
+                            <h3 className="text-textColor-primary text-lg font-semibold">Filter Inventory</h3>
+                            <button 
+                                onClick={() => toggleFilterModal(false)}
+                                className="p-2 text-textColor-primary hover:bg-btn-hover hover:text-white rounded"
+                            >
+                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth="1.5" stroke="currentColor" className="w-5 h-5">
+                                    <path strokeLinecap="round" strokeLinejoin="round" d="M6 18 18 6M6 6l12 12" />
+                                </svg>
+                            </button>
+                        </div>
+                        
+                        <div className="space-y-4">
+                            {/* Item Code Search */}
+                            <div>
+                                <label className="block text-textColor-primary text-sm font-medium mb-2">Item Code:</label>
+                                <input 
+                                    type="text"
+                                    value={filters.codeSearch}
+                                    onChange={(e) => setFilters({...filters, codeSearch: e.target.value})}
+                                    placeholder="Search by item code"
+                                    className="w-full px-3 py-2 bg-background text-textColor-primary rounded border border-textColor-tertiary focus:border-blue-500 text-sm"
+                                />
+                            </div>
+                            
+                            {/* Item Name Search */}
+                            <div>
+                                <label className="block text-textColor-primary text-sm font-medium mb-2">Item Name:</label>
+                                <input 
+                                    type="text"
+                                    value={filters.nameSearch}
+                                    onChange={(e) => setFilters({...filters, nameSearch: e.target.value})}
+                                    placeholder="Search by item name"
+                                    className="w-full px-3 py-2 bg-background text-textColor-primary rounded border border-textColor-tertiary focus:border-blue-500 text-sm"
+                                />
+                            </div>
+                            
+                            {/* Current Quantity Range */}
+                            <div>
+                                <label className="block text-textColor-primary text-sm font-medium mb-2">Current Quantity Range:</label>
+                                <div className="flex items-center gap-3">
+                                    <input 
+                                        type="number"
+                                        value={filters.currentQuantityMin}
+                                        onChange={(e) => setFilters({...filters, currentQuantityMin: e.target.value})}
+                                        placeholder="Min"
+                                        className="flex-1 px-3 py-2 bg-background text-textColor-primary rounded border border-textColor-tertiary focus:border-blue-500 text-sm"
+                                    />
+                                    <span className="text-textColor-tertiary">to</span>
+                                    <input 
+                                        type="number"
+                                        value={filters.currentQuantityMax}
+                                        onChange={(e) => setFilters({...filters, currentQuantityMax: e.target.value})}
+                                        placeholder="Max"
+                                        className="flex-1 px-3 py-2 bg-background text-textColor-primary rounded border border-textColor-tertiary focus:border-blue-500 text-sm"
+                                    />
+                                </div>
+                            </div>
+                            
+                            {/* Status Filter */}
+                            <div>
+                                <label className="block text-textColor-primary text-sm font-medium mb-2">Status:</label>
+                                <select 
+                                    value={filters.status}
+                                    onChange={(e) => setFilters({...filters, status: e.target.value})}
+                                    className="w-full px-3 py-2 bg-background text-textColor-primary rounded border border-textColor-tertiary focus:border-blue-500 text-sm"
+                                >
+                                    <option value="">All Status</option>
+                                    <option value="OK">OK</option>
+                                    <option value="LOW">LOW</option>
+                                    <option value="OUT OF STOCK">OUT OF STOCK</option>
+                                </select>
+                            </div>
+                        </div>
+                        
+                        <div className="flex gap-3 mt-6">
+                            <button 
+                                onClick={clearFilters}
+                                className="flex-1 bg-background hover:bg-textColor-tertiary text-textColor-primary px-4 py-2 rounded font-medium transition-colors"
+                            >
+                                Clear All
+                            </button>
+                            <button 
+                                onClick={applyFilters}
+                                className="flex-1 bg-btn-primary hover:bg-btn-hover text-white px-4 py-2 rounded font-medium transition-colors"
+                            >
+                                Apply Filters
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
             {error && (
                 <div className="mb-4 p-3 bg-red-600/20 border border-red-600/50 rounded-lg">
                     <p className="text-red-400 text-sm">
@@ -157,12 +595,60 @@ const InventoryTable = ({ currentPage = 1, itemsPerPage = 10 }) => {
                     <table className="w-full text-sm table-fixed">
                         <thead className="sticky top-0 bg-primary">
                             <tr className="text-textColor-primary border-b border-gray-700">
-                                <th className="text-left py-3 px-4 font-medium w-[15%]">Item Code</th>
-                                <th className="text-left py-3 px-4 font-medium w-[25%]">Item Name</th>
-                                <th className="text-left py-3 px-4 font-medium w-[15%]">Current</th>
-                                <th className="text-left py-3 px-4 font-medium w-[15%]">Min</th>
-                                <th className="text-left py-3 px-4 font-medium w-[15%]">Max</th>
-                                <th className="text-left py-3 px-4 font-medium w-[15%]">Status</th>
+                                <th className="text-left py-3 px-4 font-medium w-[15%]">
+                                    <button 
+                                        onClick={() => handleSort('code')}
+                                        className={`flex items-center gap-1 hover:text-btn-primary transition-colors ${currentSort.column === 'code' && currentSort.direction !== null ? 'text-btn-primary' : ''}`}
+                                    >
+                                        Item Code
+                                        {getSortIcon('code')}
+                                    </button>
+                                </th>
+                                <th className="text-left py-3 px-4 font-medium w-[25%]">
+                                    <button 
+                                        onClick={() => handleSort('name')}
+                                        className={`flex items-center gap-1 hover:text-btn-primary transition-colors ${currentSort.column === 'name' && currentSort.direction !== null ? 'text-btn-primary' : ''}`}
+                                    >
+                                        Item Name
+                                        {getSortIcon('name')}
+                                    </button>
+                                </th>
+                                <th className="text-left py-3 px-4 font-medium w-[15%]">
+                                    <button 
+                                        onClick={() => handleSort('current')}
+                                        className={`flex items-center gap-1 hover:text-btn-primary transition-colors ${currentSort.column === 'current' && currentSort.direction !== null ? 'text-btn-primary' : ''}`}
+                                    >
+                                        Current
+                                        {getSortIcon('current')}
+                                    </button>
+                                </th>
+                                <th className="text-left py-3 px-4 font-medium w-[15%]">
+                                    <button 
+                                        onClick={() => handleSort('min')}
+                                        className={`flex items-center gap-1 hover:text-btn-primary transition-colors ${currentSort.column === 'min' && currentSort.direction !== null ? 'text-btn-primary' : ''}`}
+                                    >
+                                        Min
+                                        {getSortIcon('min')}
+                                    </button>
+                                </th>
+                                <th className="text-left py-3 px-4 font-medium w-[15%]">
+                                    <button 
+                                        onClick={() => handleSort('max')}
+                                        className={`flex items-center gap-1 hover:text-btn-primary transition-colors ${currentSort.column === 'max' && currentSort.direction !== null ? 'text-btn-primary' : ''}`}
+                                    >
+                                        Max
+                                        {getSortIcon('max')}
+                                    </button>
+                                </th>
+                                <th className="text-left py-3 px-4 font-medium w-[15%]">
+                                    <button 
+                                        onClick={() => handleSort('status')}
+                                        className={`flex items-center gap-1 hover:text-btn-primary transition-colors ${currentSort.column === 'status' && currentSort.direction !== null ? 'text-btn-primary' : ''}`}
+                                    >
+                                        Status
+                                        {getSortIcon('status')}
+                                    </button>
+                                </th>
                             </tr>
                         </thead>
                         <tbody className="min-h-[500px]">
@@ -189,6 +675,82 @@ const InventoryTable = ({ currentPage = 1, itemsPerPage = 10 }) => {
                         </tbody>
                     </table>
                 </div>
+            </div>
+            
+            {/* Client-side Pagination Section */}
+            <div className="flex justify-between items-center pt-6 border-t border-gray-700 flex-shrink-0">
+                {/* Showing info */}
+                <div className="text-textColor-tertiary text-sm">
+                    {totalFilteredItems > 0 ? (
+                        `Showing ${startItem}-${endItem} of ${totalFilteredItems} products`
+                    ) : (
+                        'No products found'
+                    )}
+                </div>
+                
+                {/* Pagination Controls */}
+                {totalFilteredItems > 0 && calculatedTotalPages > 1 && (
+                    <div className="flex items-center gap-1">
+                        {/* Previous Button */}
+                        <button 
+                            onClick={goToPreviousPage}
+                            disabled={currentPage === 1}
+                            className={`p-2 rounded-md transition-colors ${
+                                currentPage > 1
+                                    ? 'text-textColor-primary hover:bg-gray-700' 
+                                    : 'text-gray-500 cursor-not-allowed'
+                            }`}
+                        >
+                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth="1.5" stroke="currentColor" className="w-5 h-5">
+                                <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 19.5 8.25 12l7.5-7.5" />
+                            </svg>
+                        </button>
+
+                        {/* Page Numbers */}
+                        {paginationPages.map((page, index) => {
+                            if (page === '...') {
+                                return (
+                                    <span key={`ellipsis-${index}`} className="px-3 py-2 text-gray-500">...</span>
+                                );
+                            }
+                            
+                            const isActive = page === currentPage;
+                            return (
+                                <button 
+                                    key={page}
+                                    onClick={() => goToPage(page)}
+                                    className={`px-3 py-2 rounded-md text-sm font-medium transition-colors ${
+                                        isActive 
+                                            ? 'bg-btn-primary text-white hover:bg-btn-hover ' 
+                                            : 'text-textColor-primary hover:bg-gray-700 hover:text-white'
+                                    }`}
+                                >
+                                    {page}
+                                </button>
+                            );
+                        })}
+
+                        {/* Next Button */}
+                        <button 
+                            onClick={goToNextPage}
+                            disabled={currentPage === calculatedTotalPages}
+                            className={`p-2 rounded-md transition-colors ${
+                                currentPage < calculatedTotalPages
+                                    ? 'text-textColor-primary hover:bg-gray-700 ' 
+                                    : 'text-gray-500 cursor-not-allowed'
+                            }`}
+                        >
+                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth="1.5" stroke="currentColor" className="w-5 h-5">
+                                <path strokeLinecap="round" strokeLinejoin="round" d="m8.25 4.5 7.5 7.5-7.5 7.5" />
+                            </svg>
+                        </button>
+                    </div>
+                )}
+                
+                {/* Empty space when no pagination needed to maintain layout */}
+                {(totalFilteredItems === 0 || calculatedTotalPages <= 1) && (
+                    <div></div>
+                )}
             </div>
         </div>
     );

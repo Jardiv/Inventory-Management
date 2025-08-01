@@ -1,15 +1,41 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 
 const LowStockTable = ({ currentPage = 1 }) => {
     const [lowStockData, setLowStockData] = useState([]);
+    const [filteredData, setFilteredData] = useState([]);
+    const [allLowStockData, setAllLowStockData] = useState([]); // Store all data for filtering
+    const [clientCurrentPage, setClientCurrentPage] = useState(1); // Client-side pagination
+    const [totalPages, setTotalPages] = useState(1);
+    const [totalItems, setTotalItems] = useState(0);
+    const itemsPerPage = 10; // Fixed items per page
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
     const [selectedItems, setSelectedItems] = useState(new Set());
     const [selectAll, setSelectAll] = useState(false);
     const [isIndeterminate, setIsIndeterminate] = useState(false);
+    const [sortField, setSortField] = useState(null);
+    const [sortDirection, setSortDirection] = useState('asc');
+    const [currentSort, setCurrentSort] = useState({ column: null, direction: null });
+    const [showFilterModal, setShowFilterModal] = useState(false);
+    const [filters, setFilters] = useState({
+        skuSearch: '',
+        nameSearch: '',
+        quantityMin: '',
+        quantityMax: '',
+        status: ''
+    });
 
     // Storage key for selected items
     const STORAGE_KEY = 'lowstock_selected_items';
+
+    // Function to toggle filter modal and dispatch events
+    const toggleFilterModal = (isOpen) => {
+        setShowFilterModal(isOpen);
+        // Dispatch event to update button state in parent page
+        window.dispatchEvent(new CustomEvent('filterModalStateChange', { 
+            detail: { isOpen } 
+        }));
+    };
 
     // Load selected items from localStorage
     const loadSelectedItems = useCallback(() => {
@@ -35,13 +61,13 @@ const LowStockTable = ({ currentPage = 1 }) => {
 
     // Update select all state based on current page selections
     const updateSelectAllState = useCallback(() => {
-        if (lowStockData.length === 0) {
+        if (filteredData.length === 0) {
             setSelectAll(false);
             setIsIndeterminate(false);
             return;
         }
 
-        const currentPageIds = lowStockData.map(item => item.id);
+        const currentPageIds = filteredData.map(item => item.id);
         const selectedOnCurrentPage = currentPageIds.filter(id => selectedItems.has(id));
         
         if (selectedOnCurrentPage.length === 0) {
@@ -54,7 +80,7 @@ const LowStockTable = ({ currentPage = 1 }) => {
             setSelectAll(false);
             setIsIndeterminate(true);
         }
-    }, [lowStockData, selectedItems]);
+    }, [filteredData, selectedItems]);
 
     // Handle individual item selection
     const handleItemSelect = useCallback((itemId, isChecked) => {
@@ -72,7 +98,7 @@ const LowStockTable = ({ currentPage = 1 }) => {
 
     // Handle select all toggle
     const handleSelectAll = useCallback(() => {
-        const currentPageIds = lowStockData.map(item => item.id);
+        const currentPageIds = filteredData.map(item => item.id);
         setSelectedItems(prev => {
             const newSelected = new Set(prev);
             
@@ -90,7 +116,7 @@ const LowStockTable = ({ currentPage = 1 }) => {
             saveSelectedItems(newSelected);
             return newSelected;
         });
-    }, [lowStockData, saveSelectedItems]);
+    }, [filteredData, saveSelectedItems]);
 
     // Clear all selections
     const clearAllSelections = useCallback(() => {
@@ -149,6 +175,166 @@ const LowStockTable = ({ currentPage = 1 }) => {
         return selectedItems.size;
     }, [selectedItems]);
 
+    // Handle column sorting - three states: asc → desc → default
+    const handleSort = useCallback((column) => {
+        let direction = 'asc';
+        
+        if (currentSort.column === column) {
+            if (currentSort.direction === 'asc') {
+                direction = 'desc';
+            } else if (currentSort.direction === 'desc') {
+                // Reset to default state (no sort)
+                setCurrentSort({ column: null, direction: null });
+                setLowStockData(allLowStockData);
+                applyFiltersToSortedData(allLowStockData);
+                setClientCurrentPage(1); // Reset to first page
+                return;
+            }
+        }
+        
+        setCurrentSort({ column, direction });
+        setClientCurrentPage(1); // Reset to first page when sorting
+        
+        // Sort all low stock data
+        const sorted = [...allLowStockData].sort((a, b) => {
+            let aValue = a[column];
+            let bValue = b[column];
+            
+            // Handle numeric sorting for quantity, minimum, and toOrder
+            if (['quantity', 'minimum', 'toOrder'].includes(column)) {
+                aValue = parseInt(aValue) || 0;
+                bValue = parseInt(bValue) || 0;
+            } else {
+                // Handle string sorting
+                aValue = String(aValue || '').toLowerCase();
+                bValue = String(bValue || '').toLowerCase();
+            }
+            
+            if (aValue < bValue) return direction === 'asc' ? -1 : 1;
+            if (aValue > bValue) return direction === 'asc' ? 1 : -1;
+            return 0;
+        });
+        
+        // Update the main low stock data with sorted data
+        setLowStockData(sorted);
+        
+        // Apply current filters to the sorted data
+        applyFiltersToSortedData(sorted);
+    }, [currentSort, allLowStockData]);
+
+    // Filter function
+    const applyFilters = () => {
+        applyFiltersToSortedData(lowStockData);
+        setClientCurrentPage(1); // Reset to first page when filtering
+        toggleFilterModal(false);
+    };
+
+    // Apply filters to sorted data (helper function)
+    const applyFiltersToSortedData = (dataToFilter) => {
+        let filtered = [...dataToFilter];
+        
+        // SKU search
+        if (filters.skuSearch) {
+            filtered = filtered.filter(item => 
+                item.sku.toLowerCase().includes(filters.skuSearch.toLowerCase())
+            );
+        }
+        
+        // Name search
+        if (filters.nameSearch) {
+            filtered = filtered.filter(item => 
+                item.name.toLowerCase().includes(filters.nameSearch.toLowerCase())
+            );
+        }
+        
+        // Quantity range
+        if (filters.quantityMin) {
+            filtered = filtered.filter(item => item.quantity >= parseInt(filters.quantityMin));
+        }
+        if (filters.quantityMax) {
+            filtered = filtered.filter(item => item.quantity <= parseInt(filters.quantityMax));
+        }
+        
+        // Status filter
+        if (filters.status) {
+            filtered = filtered.filter(item => item.status === filters.status);
+        }
+        
+        setFilteredData(filtered);
+        setTotalItems(filtered.length);
+        setTotalPages(Math.ceil(filtered.length / itemsPerPage));
+        
+        // Reset to first page when filtering
+        setClientCurrentPage(1);
+    };
+
+    // Clear filters
+    const clearFilters = () => {
+        setFilters({
+            skuSearch: '',
+            nameSearch: '',
+            quantityMin: '',
+            quantityMax: '',
+            status: ''
+        });
+        // Apply cleared filters to current low stock data (which might be sorted)
+        setFilteredData(lowStockData);
+        setTotalItems(lowStockData.length);
+        setTotalPages(Math.ceil(lowStockData.length / itemsPerPage));
+        
+        // Reset to first page when clearing filters
+        setClientCurrentPage(1);
+    };
+
+    // Sort the data based on current sort field and direction
+    const sortedData = useMemo(() => {
+        if (!currentSort.column || !currentSort.direction) return filteredData;
+        
+        return [...filteredData].sort((a, b) => {
+            let aValue = a[currentSort.column];
+            let bValue = b[currentSort.column];
+            
+            // Handle numeric sorting for quantity, minimum, and toOrder
+            if (['quantity', 'minimum', 'toOrder'].includes(currentSort.column)) {
+                aValue = parseInt(aValue) || 0;
+                bValue = parseInt(bValue) || 0;
+            } else {
+                // Handle string sorting
+                aValue = String(aValue || '').toLowerCase();
+                bValue = String(bValue || '').toLowerCase();
+            }
+            
+            if (aValue < bValue) return currentSort.direction === 'asc' ? -1 : 1;
+            if (aValue > bValue) return currentSort.direction === 'asc' ? 1 : -1;
+            return 0;
+        });
+    }, [filteredData, currentSort]);
+
+    // Get sort icon with three states - matching inventory table
+    const getSortIcon = (column) => {
+        if (currentSort.column !== column || currentSort.direction === null) {
+            return (
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth="1.5" stroke="currentColor" className="w-3 h-3">
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 15L12 18.75 15.75 15m-7.5-6L12 5.25 15.75 9" />
+                </svg>
+            );
+        }
+        
+        if (currentSort.direction === 'asc') {
+            return (
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth="1.5" stroke="currentColor" className="w-3 h-3">
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 15L12 18.75 15.75 15" />
+                </svg>
+            );
+        } else {
+            return (
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth="1.5" stroke="currentColor" className="w-3 h-3">
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 9L12 5.25 15.75 9" />
+                </svg>
+            );
+        }
+    };
+
     // Function to get status styling using themed colors
     const getStatusStyle = (status) => {
         switch (status) {
@@ -164,16 +350,25 @@ const LowStockTable = ({ currentPage = 1 }) => {
     };
 
     // Fetch low stock data
-    const fetchLowStockData = async (page = currentPage) => {
+    const fetchLowStockData = async () => {
         setLoading(true);
         setError(null);
         
         try {
-            const response = await fetch(`/api/reports/lowstock?page=${page}`);
+            // Always fetch all data for client-side filtering and pagination (like inventory table)
+            const response = await fetch(`/api/reports/lowstock?page=1&limit=1000`); // Large limit to get all data
             const result = await response.json();
             
+            console.log('Low stock API response:', result);
+            
             if (result.success) {
-                setLowStockData(result.data);
+                const fetchedData = result.data || [];
+                console.log(`Fetched ${fetchedData.length} low stock items`);
+                setAllLowStockData(fetchedData);
+                setLowStockData(fetchedData);
+                setFilteredData(fetchedData);
+                setTotalItems(fetchedData.length);
+                setTotalPages(Math.ceil(fetchedData.length / itemsPerPage));
             } else {
                 setError(result.error || 'Failed to fetch low stock data');
             }
@@ -185,9 +380,105 @@ const LowStockTable = ({ currentPage = 1 }) => {
         }
     };
 
+    // Client-side pagination functions
+    const getDisplayData = () => {
+        const startIndex = (clientCurrentPage - 1) * itemsPerPage;
+        const endIndex = startIndex + itemsPerPage;
+        return filteredData.slice(startIndex, endIndex);
+    };
+
+    const goToPage = (page) => {
+        setClientCurrentPage(page);
+        // Dispatch event to notify Astro page of pagination change
+        setTimeout(() => {
+            window.dispatchEvent(new CustomEvent('lowStockPaginationUpdate'));
+        }, 50);
+    };
+
+    const goToPreviousPage = () => {
+        if (clientCurrentPage > 1) {
+            setClientCurrentPage(clientCurrentPage - 1);
+            // Dispatch event to notify Astro page of pagination change
+            setTimeout(() => {
+                window.dispatchEvent(new CustomEvent('lowStockPaginationUpdate'));
+            }, 50);
+        }
+    };
+
+    const goToNextPage = () => {
+        if (clientCurrentPage < totalPages) {
+            setClientCurrentPage(clientCurrentPage + 1);
+            // Dispatch event to notify Astro page of pagination change
+            setTimeout(() => {
+                window.dispatchEvent(new CustomEvent('lowStockPaginationUpdate'));
+            }, 50);
+        }
+    };
+
+    // Expose pagination data to parent Astro page
     useEffect(() => {
-        fetchLowStockData(currentPage);
-    }, [currentPage]);
+        window.lowStockPagination = {
+            currentPage: clientCurrentPage,
+            totalPages,
+            totalItems,
+            itemsPerPage,
+            hasNextPage: clientCurrentPage < totalPages,
+            hasPrevPage: clientCurrentPage > 1,
+            goToPage,
+            goToPreviousPage,
+            goToNextPage,
+            getDisplayData
+        };
+        
+        // Dispatch event to notify Astro page of pagination data update
+        setTimeout(() => {
+            window.dispatchEvent(new CustomEvent('lowStockPaginationUpdate'));
+        }, 100);
+    }, [clientCurrentPage, totalPages, totalItems, goToPage, goToPreviousPage, goToNextPage]);
+
+    useEffect(() => {
+        fetchLowStockData();
+    }, []); // Remove currentPage dependency since we're fetching all data
+
+    // Listen for filter modal open event from parent page
+    useEffect(() => {
+        const handleOpenFilterModal = () => {
+            toggleFilterModal(true);
+        };
+        
+        window.addEventListener('openFilterModal', handleOpenFilterModal);
+        
+        return () => {
+            window.removeEventListener('openFilterModal', handleOpenFilterModal);
+        };
+    }, []);
+
+    // Handle sorting after data is loaded
+    useEffect(() => {
+        if (currentSort.column && lowStockData.length > 0) {
+            const sorted = [...lowStockData].sort((a, b) => {
+                let aValue = a[currentSort.column];
+                let bValue = b[currentSort.column];
+                
+                // Handle numeric sorting for quantity, minimum, and toOrder
+                if (['quantity', 'minimum', 'toOrder'].includes(currentSort.column)) {
+                    aValue = parseInt(aValue) || 0;
+                    bValue = parseInt(bValue) || 0;
+                } else {
+                    // Handle string sorting
+                    aValue = String(aValue || '').toLowerCase();
+                    bValue = String(bValue || '').toLowerCase();
+                }
+                
+                if (aValue < bValue) return currentSort.direction === 'asc' ? -1 : 1;
+                if (aValue > bValue) return currentSort.direction === 'asc' ? 1 : -1;
+                return 0;
+            });
+            
+            setLowStockData(sorted);
+            applyFiltersToSortedData(sorted);
+        }
+    }, [allLowStockData, currentSort]);
 
     // Load selected items on component mount
     useEffect(() => {
@@ -221,12 +512,54 @@ const LowStockTable = ({ currentPage = 1 }) => {
                                 <th className="text-left py-3 px-4 font-medium w-[5%]">
                                     <input type="checkbox" className="rounded bg-gray-700 border-gray-600 pointer-events-none" disabled />
                                 </th>
-                                <th className="text-left py-3 px-4 font-medium w-[15%]">SKU</th>
-                                <th className="text-left py-3 px-4 font-medium w-[18%]">Name</th>
-                                <th className="text-left py-3 px-4 font-medium w-[10%]">Quantity</th>
-                                <th className="text-left py-3 px-4 font-medium w-[10%]">Minimum</th>
-                                <th className="text-left py-3 px-4 font-medium w-[10%]">To Order</th>
-                                <th className="text-left py-3 px-4 font-medium w-[10%]">Status</th>
+                                <th className="text-left py-3 px-4 font-medium w-[15%]">
+                                    <button className="flex items-center gap-1">
+                                        SKU
+                                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth="1.5" stroke="currentColor" className="w-3 h-3">
+                                            <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 15L12 18.75 15.75 15m-7.5-6L12 5.25 15.75 9" />
+                                        </svg>
+                                    </button>
+                                </th>
+                                <th className="text-left py-3 px-4 font-medium w-[18%]">
+                                    <button className="flex items-center gap-1">
+                                        Name
+                                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth="1.5" stroke="currentColor" className="w-3 h-3">
+                                            <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 15L12 18.75 15.75 15m-7.5-6L12 5.25 15.75 9" />
+                                        </svg>
+                                    </button>
+                                </th>
+                                <th className="text-left py-3 px-4 font-medium w-[10%]">
+                                    <button className="flex items-center gap-1">
+                                        Quantity
+                                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth="1.5" stroke="currentColor" className="w-3 h-3">
+                                            <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 15L12 18.75 15.75 15m-7.5-6L12 5.25 15.75 9" />
+                                        </svg>
+                                    </button>
+                                </th>
+                                <th className="text-left py-3 px-4 font-medium w-[10%]">
+                                    <button className="flex items-center gap-1">
+                                        Minimum
+                                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth="1.5" stroke="currentColor" className="w-3 h-3">
+                                            <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 15L12 18.75 15.75 15m-7.5-6L12 5.25 15.75 9" />
+                                        </svg>
+                                    </button>
+                                </th>
+                                <th className="text-left py-3 px-4 font-medium w-[10%]">
+                                    <button className="flex items-center gap-1">
+                                        To Order
+                                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth="1.5" stroke="currentColor" className="w-3 h-3">
+                                            <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 15L12 18.75 15.75 15m-7.5-6L12 5.25 15.75 9" />
+                                        </svg>
+                                    </button>
+                                </th>
+                                <th className="text-left py-3 px-4 font-medium w-[10%]">
+                                    <button className="flex items-center gap-1">
+                                        Status
+                                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth="1.5" stroke="currentColor" className="w-3 h-3">
+                                            <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 15L12 18.75 15.75 15m-7.5-6L12 5.25 15.75 9" />
+                                        </svg>
+                                    </button>
+                                </th>
                                 <th className="text-left py-3 px-4 font-medium w-[12%]">Action</th>
                             </tr>
                         </thead>
@@ -324,18 +657,66 @@ const LowStockTable = ({ currentPage = 1 }) => {
                                         onChange={handleSelectAll}
                                     />
                                 </th>
-                                <th className="text-left py-3 px-4 font-medium w-[15%]">SKU</th>
-                                <th className="text-left py-3 px-4 font-medium w-[18%]">Name</th>
-                                <th className="text-left py-3 px-4 font-medium w-[10%]">Quantity</th>
-                                <th className="text-left py-3 px-4 font-medium w-[10%]">Minimum</th>
-                                <th className="text-left py-3 px-4 font-medium w-[10%]">To Order</th>
-                                <th className="text-left py-3 px-4 font-medium w-[10%]">Status</th>
+                                <th className="text-left py-3 px-4 font-medium w-[15%]">
+                                    <button 
+                                        onClick={() => handleSort('sku')}
+                                        className={`flex items-center gap-1 hover:text-btn-primary transition-colors ${currentSort.column === 'sku' && currentSort.direction !== null ? 'text-btn-primary' : ''}`}
+                                    >
+                                        SKU
+                                        {getSortIcon('sku')}
+                                    </button>
+                                </th>
+                                <th className="text-left py-3 px-4 font-medium w-[18%]">
+                                    <button 
+                                        onClick={() => handleSort('name')}
+                                        className={`flex items-center gap-1 hover:text-btn-primary transition-colors ${currentSort.column === 'name' && currentSort.direction !== null ? 'text-btn-primary' : ''}`}
+                                    >
+                                        Name
+                                        {getSortIcon('name')}
+                                    </button>
+                                </th>
+                                <th className="text-left py-3 px-4 font-medium w-[10%]">
+                                    <button 
+                                        onClick={() => handleSort('quantity')}
+                                        className={`flex items-center gap-1 hover:text-btn-primary transition-colors ${currentSort.column === 'quantity' && currentSort.direction !== null ? 'text-btn-primary' : ''}`}
+                                    >
+                                        Quantity
+                                        {getSortIcon('quantity')}
+                                    </button>
+                                </th>
+                                <th className="text-left py-3 px-4 font-medium w-[10%]">
+                                    <button 
+                                        onClick={() => handleSort('minimum')}
+                                        className={`flex items-center gap-1 hover:text-btn-primary transition-colors ${currentSort.column === 'minimum' && currentSort.direction !== null ? 'text-btn-primary' : ''}`}
+                                    >
+                                        Minimum
+                                        {getSortIcon('minimum')}
+                                    </button>
+                                </th>
+                                <th className="text-left py-3 px-4 font-medium w-[10%]">
+                                    <button 
+                                        onClick={() => handleSort('toOrder')}
+                                        className={`flex items-center gap-1 hover:text-btn-primary transition-colors ${currentSort.column === 'toOrder' && currentSort.direction !== null ? 'text-btn-primary' : ''}`}
+                                    >
+                                        To Order
+                                        {getSortIcon('toOrder')}
+                                    </button>
+                                </th>
+                                <th className="text-left py-3 px-4 font-medium w-[10%]">
+                                    <button 
+                                        onClick={() => handleSort('status')}
+                                        className={`flex items-center gap-1 hover:text-btn-primary transition-colors ${currentSort.column === 'status' && currentSort.direction !== null ? 'text-btn-primary' : ''}`}
+                                    >
+                                        Status
+                                        {getSortIcon('status')}
+                                    </button>
+                                </th>
                                 <th className="text-left py-3 px-4 font-medium w-[12%]">Action</th>
                             </tr>
                         </thead>
                         <tbody>
                             {/* Render actual data rows */}
-                            {lowStockData.map((item, index) => (
+                            {getDisplayData().map((item, index) => (
                                 <tr key={item.id} className={`border-b border-gray-800 hover:bg-tbl-hover ${index === 9 ? 'border-b-0' : ''}`}>
                                     <td className="py-4 px-4">
                                         <input 
@@ -369,8 +750,8 @@ const LowStockTable = ({ currentPage = 1 }) => {
                                 </tr>
                             ))}
                             {/* Fill empty rows to always have 10 rows total */}
-                            {[...Array(Math.max(0, 10 - lowStockData.length))].map((_, index) => (
-                                <tr key={`empty-${index}`} className={`border-b border-gray-800 ${(lowStockData.length + index) === 9 ? 'border-b-0' : ''}`}>
+                            {[...Array(Math.max(0, 10 - getDisplayData().length))].map((_, index) => (
+                                <tr key={`empty-${index}`} className={`border-b border-gray-800 ${(getDisplayData().length + index) === 9 ? 'border-b-0' : ''}`}>
                                     <td className="py-4 px-4">&nbsp;</td>
                                     <td className="py-4 px-4">&nbsp;</td>
                                     <td className="py-4 px-4">&nbsp;</td>
@@ -385,6 +766,108 @@ const LowStockTable = ({ currentPage = 1 }) => {
                     </table>
                 </div>
             </div>
+
+            {/* Filter Modal */}
+            {showFilterModal && (
+                <div 
+                    className="fixed inset-0 bg-black/60 flex items-center justify-center z-50"
+                    onClick={() => toggleFilterModal(false)}
+                >
+                    <div 
+                        className="bg-primary rounded-lg p-6 w-[500px] max-h-[90vh] overflow-y-auto"
+                        onClick={(e) => e.stopPropagation()}
+                    >
+                        <div className="flex justify-between items-center mb-4">
+                            <h3 className="text-textColor-primary text-lg font-semibold">Filter Low Stock Items</h3>
+                            <button 
+                                onClick={() => toggleFilterModal(false)}
+                                className="p-2 text-textColor-primary hover:bg-btn-hover hover:text-white rounded"
+                            >
+                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth="1.5" stroke="currentColor" className="w-5 h-5">
+                                    <path strokeLinecap="round" strokeLinejoin="round" d="M6 18 18 6M6 6l12 12" />
+                                </svg>
+                            </button>
+                        </div>
+                        
+                        <div className="space-y-4">
+                            {/* SKU Search */}
+                            <div>
+                                <label className="block text-textColor-primary text-sm font-medium mb-2">SKU:</label>
+                                <input 
+                                    type="text"
+                                    value={filters.skuSearch}
+                                    onChange={(e) => setFilters({...filters, skuSearch: e.target.value})}
+                                    placeholder="Search by SKU"
+                                    className="w-full px-3 py-2 bg-background text-textColor-primary rounded border border-textColor-tertiary focus:border-blue-500 text-sm"
+                                />
+                            </div>
+                            
+                            {/* Item Name Search */}
+                            <div>
+                                <label className="block text-textColor-primary text-sm font-medium mb-2">Item Name:</label>
+                                <input 
+                                    type="text"
+                                    value={filters.nameSearch}
+                                    onChange={(e) => setFilters({...filters, nameSearch: e.target.value})}
+                                    placeholder="Search by item name"
+                                    className="w-full px-3 py-2 bg-background text-textColor-primary rounded border border-textColor-tertiary focus:border-blue-500 text-sm"
+                                />
+                            </div>
+                            
+                            {/* Quantity Range */}
+                            <div>
+                                <label className="block text-textColor-primary text-sm font-medium mb-2">Quantity Range:</label>
+                                <div className="flex items-center gap-3">
+                                    <input 
+                                        type="number"
+                                        value={filters.quantityMin}
+                                        onChange={(e) => setFilters({...filters, quantityMin: e.target.value})}
+                                        placeholder="Min"
+                                        className="flex-1 px-3 py-2 bg-background text-textColor-primary rounded border border-textColor-tertiary focus:border-blue-500 text-sm"
+                                    />
+                                    <span className="text-textColor-tertiary">to</span>
+                                    <input 
+                                        type="number"
+                                        value={filters.quantityMax}
+                                        onChange={(e) => setFilters({...filters, quantityMax: e.target.value})}
+                                        placeholder="Max"
+                                        className="flex-1 px-3 py-2 bg-background text-textColor-primary rounded border border-textColor-tertiary focus:border-blue-500 text-sm"
+                                    />
+                                </div>
+                            </div>
+                            
+                            {/* Status Filter */}
+                            <div>
+                                <label className="block text-textColor-primary text-sm font-medium mb-2">Status:</label>
+                                <select 
+                                    value={filters.status}
+                                    onChange={(e) => setFilters({...filters, status: e.target.value})}
+                                    className="w-full px-3 py-2 bg-background text-textColor-primary rounded border border-textColor-tertiary focus:border-blue-500 text-sm"
+                                >
+                                    <option value="">All Status</option>
+                                    <option value="Low">Low</option>
+                                    <option value="Out of stock">Out of stock</option>
+                                </select>
+                            </div>
+                        </div>
+                        
+                        <div className="flex gap-3 mt-6">
+                            <button 
+                                onClick={clearFilters}
+                                className="flex-1 bg-background hover:bg-textColor-tertiary text-textColor-primary px-4 py-2 rounded font-medium transition-colors"
+                            >
+                                Clear All
+                            </button>
+                            <button 
+                                onClick={applyFilters}
+                                className="flex-1 bg-btn-primary hover:bg-btn-hover text-white px-4 py-2 rounded font-medium transition-colors"
+                            >
+                                Apply Filters
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
             
         </>
     );
