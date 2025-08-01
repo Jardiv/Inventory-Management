@@ -39,22 +39,27 @@ const QuickSummary = () => {
         );
     }
 
+    if (loading) {
+        return (
+            <div className="grid grid-cols-2 sm:grid-cols-5 gap-4">
+                {Array.from({ length: 5 }, (_, index) => (
+                    <div key={index} className="bg-background rounded-lg p-4 text-center">
+                        <div className="text-2xl mb-2 opacity-50">📊</div>
+                        <div className="h-6 bg-gray-700 rounded mb-1 w-16 mx-auto"></div>
+                        <div className="h-4 bg-gray-700 rounded w-20 mx-auto"></div>
+                    </div>
+                ))}
+            </div>
+        );
+    }
+
     return (
         <div className="grid grid-cols-2 sm:grid-cols-5 gap-4">
             {summaryData.map((item, index) => (
                 <div key={index} className="bg-background rounded-lg p-4 text-center">
                     <div className="text-2xl mb-2">{summaryIcons[index] || "📊"}</div>
-                    {loading ? (
-                        <>
-                            <div className="h-6 bg-gray-700 rounded animate-pulse mb-1"></div>
-                            <div className="h-4 bg-gray-700 rounded animate-pulse"></div>
-                        </>
-                    ) : (
-                        <>
-                            <div className={`text-xl font-bold ${item.color} mb-1`}>{item.value}</div>
-                            <div className="text-textColor-primary text-sm">{item.label}</div>
-                        </>
-                    )}
+                    <div className={`text-xl font-bold ${item.color} mb-1`}>{item.value}</div>
+                    <div className="text-textColor-primary text-sm">{item.label}</div>
                 </div>
             ))}
         </div>

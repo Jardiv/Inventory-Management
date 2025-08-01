@@ -91,11 +91,11 @@ export async function GET() {
         console.log('Final counts - Low Stock:', lowStock, 'Out of Stock:', outOfStock);
 
         const summaryData = [
-            { label: "Total Items", value: totalItems?.toString() || "0", color: "text-blue-400" },
-            { label: "Total Stock Items", value: totalStockItems.toLocaleString(), color: "text-purple-400" },
-            { label: "Low Stock", value: lowStock.toString(), color: "text-yellow-400" },
-            { label: "Out of Stock", value: outOfStock.toString(), color: "text-red-400" },
-            { label: "Warehouses", value: totalWarehouses?.toString() || "0", color: "text-green-400" }
+            { label: "Total Items", value: totalItems?.toString() || "0", color: "text-blue" },
+            { label: "Total Stock Items", value: totalStockItems.toLocaleString(), color: "text-purple" },
+            { label: "Low Stock", value: lowStock.toString(), color: "text-orange" },
+            { label: "Out of Stock", value: outOfStock.toString(), color: "text-red" },
+            { label: "Warehouses", value: totalWarehouses?.toString() || "0", color: "text-green" }
         ];
 
         return new Response(JSON.stringify({
