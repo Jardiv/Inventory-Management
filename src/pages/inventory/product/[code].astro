@@ -11,54 +11,129 @@ if (!product) {
 ---
 
 <Layout>
-  <section class="max-w-4xl mx-auto px-6 py-12">
-    <div class="mb-6">
-      <button onclick="history.back()" class="text-sm text-btn-primary hover:underline">← Back to Inventory</button>
-    </div>
+  <section class="w-full bg-primary px-2 py-6 text-textColor-primary rounded-sm h-[700px] overflow-y-auto">
 
-    <h1 class="text-3xl font-bold text-gray-800 mb-4">Product Details</h1>
-
-    <div class="bg-primary text-textColor-primary p-6 rounded-lg shadow-md space-y-4">
-      <div>
-        <h2 class="text-xl font-semibold">Item Code:</h2>
-        <p>{product.code}</p>
+    <div class="bg-primary p-5 rounded-lg shadow-md space-y-8">
+      <!-- Header -->
+      <div class="flex justify-between items-center">
+        <h1 class="text-3xl font-bold">Product Overview</h1>
+        <a onclick="history.back()" class="text-btn-primary text-sm font-medium hover:underline">Back</a>
       </div>
 
-      <div>
-        <h2 class="text-xl font-semibold">Item Name:</h2>
-        <p>{product.name}</p>
+      <!-- Tabs -->
+      <div id="tabs" class="flex space-x-6 border-b border-border_color pb-2 text-sm">
+        <button data-tab="overview" class="tab-btn relative pb-2 font-semibold text-white transition-all duration-300">
+          Overview
+          <span class="tab-underline absolute left-0 -bottom-2 w-full h-[2px] bg-btn-primary scale-x-100 origin-left transition-transform duration-300"></span>
+        </button>
+        <button data-tab="stock" class="tab-btn relative pb-2 text-gray-400 hover:text-white transition-all duration-300">
+          Stock Information
+          <span class="tab-underline absolute left-0 -bottom-2 w-full h-[2px] bg-btn-primary scale-x-0 origin-left transition-transform duration-300"></span>
+        </button>
+        <button data-tab="purchase" class="tab-btn relative pb-2 text-gray-400 hover:text-white transition-all duration-300">
+          Purchase History
+          <span class="tab-underline absolute left-0 -bottom-2 w-full h-[2px] bg-btn-primary scale-x-0 origin-left transition-transform duration-300"></span>
+        </button>
       </div>
 
-      <div>
-        <h2 class="text-xl font-semibold">Category:</h2>
-        <p>{product.category}</p>
-      </div>
+      <!-- Tab Contents -->
+      <div id="tab-content" class="pt-8 min-h-[300px] overflow-y-auto">
+        <div class="bg-primary p-2 rounded space-y-1">
+          <!-- Overview Content -->
+          <div data-tab-content="overview" class="tab-section block space-y-6">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-12">
+              <div class="space-y-8">
+                <div>
+                  <h2 class="text-2xl font-semibold border-b border-border_color mb-3 pb-1">Primary Details</h2>
+                  <p><strong>Item Name:</strong> {product.name}</p>
+                  <p><strong>Item Code:</strong> {product.code}</p>
+                </div>
+                <div>
+                  <h2 class="text-2xl font-semibold border-b border-border_color mb-3 pb-1">Auto Re-order Status</h2>
+                  <p>
+                    <strong>Status:</strong>
+                    <span class={product.reorder === 'Yes' ? 'text-green-400' : 'text-red-400'}>
+                      {product.reorder}
+                    </span>
+                  </p>
+                </div>
+                <div>
+                  <h2 class="text-2xl font-semibold border-b border-border_color mb-3 pb-1">Description</h2>
+                  <p>{product.description || 'No description available.'}</p>
+                </div>
+              </div>
+              <div class="space-y-8">
+                <div>
+                  <h2 class="text-2xl font-semibold border-b border-border_color mb-3 pb-1">Category Details</h2>
+                  <p><strong>Category:</strong> {product.category}</p>
+                </div>
+                <div>
+                  <h2 class="text-2xl font-semibold border-b border-border_color mb-3 pb-1">Quantity Details</h2>
+                  <p><strong>Minimum Quantity:</strong> {product.minQty ?? 'N/A'}</p>
+                  <p><strong>Maximum Quantity:</strong> {product.maxQty ?? 'N/A'}</p>
+                </div>
+              </div>
+            </div>
+            <div class="flex justify-end gap-4 pt-8 border-t border-border_color mt-8">
+              <button class="bg-btn-primary hover:bg-purple-700 text-white font-semibold px-6 py-2 rounded transition-colors">
+                Edit
+              </button>
+              <button class="bg-red-600 hover:bg-red-700 text-white font-semibold px-6 py-2 rounded transition-colors">
+                Delete
+              </button>
+            </div>
+          </div>
 
-      <div>
-        <h2 class="text-xl font-semibold">Supplier:</h2>
-        <p>{product.supplier}</p>
-      </div>
+          <!-- Stock Information Content -->
+          <div data-tab-content="stock" class="tab-section hidden space-y-6">
+            <h2 class="text-2xl font-semibold border-b border-border_color pb-2 mb-4">Stock Information</h2>
+            <p><strong>Current Stock:</strong> {product.currentStock ?? 'N/A'}</p>
+            <p><strong>Location:</strong> {product.stockLocation ?? 'N/A'}</p>
+          </div>
 
-      <div>
-        <h2 class="text-xl font-semibold">Status:</h2>
-        <p class={product.reorder === 'Yes' ? 'text-green-500' : 'text-red-500'}>{product.reorder}</p>
-      </div>
-
-      <div>
-        <h2 class="text-xl font-semibold">Description:</h2>
-        <p>{product.description || 'No description available.'}</p>
-      </div>
-
-      <div class="grid grid-cols-2 gap-4 pt-4">
-        <div>
-          <h3 class="font-semibold">Min Quantity</h3>
-          <p>{product.minQty ?? 'N/A'}</p>
-        </div>
-        <div>
-          <h3 class="font-semibold">Max Quantity</h3>
-          <p>{product.maxQty ?? 'N/A'}</p>
+          <!-- Purchase History Content -->
+          <div data-tab-content="purchase" class="tab-section hidden space-y-6">
+            <h2 class="text-2xl font-semibold border-b border-border_color pb-2 mb-4">Purchase History</h2>
+            <p><strong>Last Purchased:</strong> {product.lastPurchased ?? 'N/A'}</p>
+            <p><strong>Supplier:</strong> {product.supplier ?? 'N/A'}</p>
+            <ul class="list-disc list-inside">
+              <li>June 15, 2025 - 50 units</li>
+              <li>May 02, 2025 - 100 units</li>
+              <li>April 01, 2025 - 30 units</li>
+            </ul>
+          </div>
         </div>
       </div>
     </div>
   </section>
+
+  <!-- Tab JS -->
+  <script type="module" is:inline>
+    const tabs = document.querySelectorAll('.tab-btn');
+    const sections = document.querySelectorAll('[data-tab-content]');
+
+    tabs.forEach(tab => {
+      tab.addEventListener('click', () => {
+        const selected = tab.getAttribute('data-tab');
+
+        // Toggle tab styles
+        tabs.forEach(t => {
+          t.classList.remove('text-white');
+          t.classList.add('text-gray-400');
+          t.querySelector('.tab-underline').classList.remove('scale-x-100');
+          t.querySelector('.tab-underline').classList.add('scale-x-0');
+        });
+        tab.classList.add('text-white');
+        tab.classList.remove('text-gray-400');
+        tab.querySelector('.tab-underline').classList.add('scale-x-100');
+        tab.querySelector('.tab-underline').classList.remove('scale-x-0');
+
+        // Toggle tab content
+        sections.forEach(sec => {
+          sec.classList.toggle('hidden', sec.getAttribute('data-tab-content') !== selected);
+          sec.classList.toggle('block', sec.getAttribute('data-tab-content') === selected);
+        });
+      });
+    });
+  </script>
 </Layout>
