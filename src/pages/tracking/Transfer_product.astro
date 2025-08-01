@@ -1,5 +1,14 @@
 ---
 import Layout from '../../layouts/Layout.astro';
+
+const transfers = [
+  { id: 'T1', name: 'Sardines', qty: 100, date: '08-01-2025', from: 'W1', to: 'W2' },
+  { id: 'T2', name: 'Tuna', qty: 50, date: '08-01-2025', from: 'W2', to: 'W3' },
+  { id: 'T3', name: 'Corned Beef', qty: 75, date: '08-01-2025', from: 'W1', to: 'W3' },
+  // ... add as many as needed, or fetch from backend
+];
+
+const emptyRows = 11 - transfers.length;
 ---
 <Layout>
 <div class="w-full max-w-[100%] min-w-[300px] bg-primary rounded-md px-4 sm:px-6 lg:px-8 py-6 text-textColor-primary font-[Poppins] mx-auto">
@@ -36,7 +45,7 @@ import Layout from '../../layouts/Layout.astro';
               <ul class="py-1 text-sm text-textColor-primary text-left">
                 <li><a href="#" class="block px-4 py-2 hover:bg-btn-hover">Date</a></li>
                 <li><a href="#" class="block px-4 py-2 hover:bg-btn-hover">Warehouse</a></li>
-                <li><a href="#" class="block px-4 py-2 hover:bg-btn-hover">Transfer Code</a></li>
+                <li><a href="#" class="block px-4 py-2 hover:bg-btn-hover">Transfer ID</a></li>
               </ul>
             </div>
           </div>
@@ -66,31 +75,64 @@ import Layout from '../../layouts/Layout.astro';
           <div class="min-w-[150px]">To</div>
         </div>
         <div class="divide-y divide-border_color">
-          <div class="grid grid-cols-6 text-center text-lg py-4 font-normal">
-            <div>T1</div>
-            <div>Sardines</div>
-            <div>100</div>
-            <div>MM-DD-YYYY</div>
-            <div>W1</div>
-            <div>W2</div>
-          </div>
+          {
+            transfers.map((t) => (
+              <div class="grid grid-cols-6 text-center text-lg py-4 font-normal">
+                <div>{t.id}</div>
+                <div>{t.name}</div>
+                <div>{t.qty}</div>
+                <div>{t.date}</div>
+                <div>{t.from}</div>
+                <div>{t.to}</div>
+              </div>
+            ))
+          }
+
+          {
+            Array.from({ length: emptyRows > 0 ? emptyRows : 0 }).map(() => (
+              <div class="grid grid-cols-6 text-center text-lg py-4 font-normal opacity-50">
+                <div>&nbsp;</div>
+                <div>&nbsp;</div>
+                <div>&nbsp;</div>
+                <div>&nbsp;</div>
+                <div>&nbsp;</div>
+                <div>&nbsp;</div>
+              </div>
+            ))
+          }
         </div>
       </div>
     </div>
 
     <!-- Pagination -->
-    <div class="mt-6">
-      <div class="flex flex-col sm:flex-row justify-between items-center gap-4">
-        <button class="border border-border_color rounded-md px-6 py-2 text-lg hover:bg-btn-primary hover:text-textColor-secondary transition">
-          Prev
-        </button>
-        <div class="text-base font-light">
-          Page <span class="font-normal">0</span> of <span class="font-normal">0</span>
-        </div>
-        <button class="border border-border_color rounded-md px-6 py-2 text-lg hover:bg-btn-primary hover:text-textColor-secondary transition">
-          Next
-        </button>
+    <div class="flex justify-between items-center border-t border-border_color pt-4 mt-4 text-sm text-gray-700">
+      <!-- Left: Showing text -->
+      <div>
+        Showing <span class="font-medium">1</span>-<span class="font-medium">10</span> of <span class="font-medium">45</span> products
       </div>
+
+      <!-- Right: Pagination -->
+      <nav class="flex items-center gap-1">
+        <!-- Prev -->
+        <a href="?page=1" class="px-2 py-1 text-gray-500 hover:text-gray-700">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7" />
+          </svg>
+        </a>
+
+        <!-- Page numbers -->
+        <a href="?page=1" class="px-3 py-1.5 bg-[#8A00C4] text-white rounded-lg font-medium">1</a>
+        <a href="?page=2" class="px-3 py-1.5 text-gray-700 hover:bg-gray-100 rounded-lg">2</a>
+        <span class="px-2 py-1 text-gray-500">...</span>
+        <a href="?page=5" class="px-3 py-1.5 text-gray-700 hover:bg-gray-100 rounded-lg">5</a>
+
+        <!-- Next -->
+        <a href="?page=2" class="px-2 py-1 text-gray-500 hover:text-gray-700">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7" />
+          </svg>
+        </a>
+      </nav>
     </div>
   </div>
 
