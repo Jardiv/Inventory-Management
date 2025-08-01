@@ -7,9 +7,9 @@ import { products } from '../../components/inventory/productInvenDATA.jsx';
 
 <Layout>
   <Addmodal />
- 
-  
-  
+
+
+
   <!-- INVENTORY OVERVIEW -->
   <section id="overviewSection">
     <!-- Inventory Summary -->
@@ -36,45 +36,43 @@ import { products } from '../../components/inventory/productInvenDATA.jsx';
     </div>
 
     <!-- Product Table Preview -->
-    <div class="bg-primary p-6 rounded-lg">
-      <div class="bg-primary p-6 rounded-lg">
-
-        <div class="flex items-center justify-between mb-6 relative z-10">
-
-          <div class="flex items-center gap-3">
-            <h2 class="text-xl font-semibold">Product Inventory</h2>
-          </div>
-
-          <!-- Action Buttons -->
-          <div class="flex items-center gap-2">
-             <Filter />
-
-
-
-            <!-- View All Button -->
-            <a href="/inventory/Dashboard2ndpage/">
-              <button class="text-btn-primary hover:text-purple-300 text-sm sm:text-base">See All</button>
-            </a>
-          </div>
-
-
-
-        </div>
-
-        {products.slice(0, 9).map(product => (
-  <div class="grid grid-cols-5 items-center border-b border-border_color py-2">
-    <span>{product.code}</span>
-    <span class="text-left">{product.name}</span>
-    <span class="text-left">{product.category}</span>
-    <span class="text-left">{product.unit}</span>
-    <span class={`text-left ${product.reorder === 'Yes' ? 'text-green-500' : 'text-red-500'}`}>
-      {product.reorder}
-    </span>
-  </div>
-))}
-
-      </table>
+<div class="bg-primary p-6 rounded-lg">
+  <div class="flex items-center justify-between mb-6 relative z-10">
+    <div class="flex items-center gap-3">
+      <h2 class="text-xl font-semibold">Product Inventory</h2>
     </div>
+
+    <!-- Action Buttons -->
+    <div class="flex items-center gap-2">
+      <Filter />
+      <a href="/inventory/ProductInventoryTBL/">
+        <button class="text-btn-primary hover:text-purple-300 px-4 py-2 pr-0 text-sm sm:text-base">See All</button>
+      </a>
+    </div>
+  </div>
+
+  <!-- 🟣 Table Header -->
+  <div class="grid grid-cols-4 items-center border-b border-border_color pb-2 font-semibold text-sm text-textColor-primary uppercase">
+    <span>Item Code</span>
+    <span class="text-left">Item Name</span>
+    <span class="text-left">Category</span>
+    <span class="text-left">Supplier</span>
+
+  </div>
+
+  <!-- 🟣 Table Body -->
+  {products.slice(0, 9).map(product => (
+    <div class="grid grid-cols-4 items-center border-b border-border_color py-2 text-sm">
+      <span>{product.code}</span>
+      <span class="text-left">{product.name}</span>
+      <span class="text-left">{product.category}</span>
+      <span class="text-left">{product.unit}</span>
+
+      </span>
+    </div>
+  ))}
+</div>
+
   </section>
 
   </main>

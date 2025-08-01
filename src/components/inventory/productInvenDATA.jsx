@@ -1,10 +1,16 @@
 export const products = [
   {
-    code: '1001',
-    name: 'Product 1',
-    category: 'Grains',
-    unit: '10Kg',
-    reorder: 'Yes'
+    code: "1001",
+    name: "Product 1",
+    category: "Category 1",
+    status: "Pending",
+    unit: 'Liter',
+    price: '1000',
+    supplier: 'nigga',
+    reorder: 'Yes',
+    minQty: 10,
+    maxQty: 100,
+    description: "Lorem ipsum brrt brrt"
   },
   {
     code: '1002',
