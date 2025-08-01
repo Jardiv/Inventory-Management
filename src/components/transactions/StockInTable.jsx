@@ -11,7 +11,7 @@ export default function StockInTable({ limit }) {
 
 		async function fetchTransactions() {
 			try {
-				const res = await fetch(`/api/transactions/stockIn?limit=${limit}`);
+				const res = await fetch(`/api/transactions/transactions/?direction=in&limit=${limit}`);
 				console.log("Fetching from:", `/api/transactions/stockIn?limit=${limit}`);
 				const data = await res.json(); 
 				setTransactions(data); 
