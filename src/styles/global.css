@@ -111,21 +111,24 @@
 		@apply opacity-100;
 	}
 
+
 	.stock-table {
-		@apply w-full text-left;
+		@apply w-full text-left table-fixed;
 	}
-	.stock-table thead {
-		@apply py-2;
+	.skeleton-loading {
+		@apply h-[1rem] bg-gray-700 rounded animate-pulse;
+	}
+	.stock-table td, .stock-table th {
+		@apply h-[3rem] px-6;
 	}
 	.table-row {
-		@apply bg-primary text-textColor-primary border-t-2 border-border_color ;
+		@apply bg-primary text-textColor-primary border-t-2 border-border_color;
+	}
+	.table-row.item {
+		@apply bg-primary text-sm text-textColor-primary border-t-2 border-border_color hover:bg-gray-800/30 cursor-pointer;
 	}
 	.table-header {
 		@apply py-2 text-lg;
-	}
-
-	.table-data {
-		@apply py-4 w-[250px];
 	}
 
 	/* Themed status colors using CSS custom properties */
