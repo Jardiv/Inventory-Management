@@ -9,6 +9,31 @@ const DashboardSummary = ({ section }) => {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
 
+    // Map status to themed colors using CSS custom properties with backgrounds
+    const getStatusColorClass = (status) => {
+        switch (status) {
+            case 'Normal':
+            case 'Available':
+                return 'text-green bg-green/10'; // Uses CSS custom property --color-green
+            case 'Low Stock':
+                return 'text-orange bg-orange/10'; // Uses CSS custom property --color-orange  
+            case 'Out of Stock':
+                return 'text-red bg-red/10'; // Uses CSS custom property --color-red
+            case 'Full':
+                return 'text-red bg-red/10'; // Uses CSS custom property --color-red
+            case 'Almost Full':
+            case 'Critical':
+                return 'text-orange bg-orange/10'; // Uses CSS custom property --color-orange
+            case 'High Usage':
+            case 'High':
+                return 'text-orange bg-orange/10'; // Uses CSS custom property --color-orange
+            case 'Medium':
+                return 'text-blue bg-blue/10'; // Uses CSS custom property --color-blue
+            default:
+                return 'text-textColor-tertiary bg-textColor-tertiary/10'; // Fallback to tertiary text color
+        }
+    };
+
     useEffect(() => {
         fetchDashboardData();
     }, [section]);
@@ -35,6 +60,8 @@ const DashboardSummary = ({ section }) => {
     // Inventory Stock Section
     const InventorySection = () => {
         const inventoryData = data.inventory || [];
+        const visibleRows = Math.min(8, Math.max(5, inventoryData.length));
+        const remainingRows = Math.max(0, inventoryData.length - visibleRows);
         
         const renderInventoryRows = () => {
             return Array.from({ length: 8 }, (_, index) => {
@@ -72,9 +99,13 @@ const DashboardSummary = ({ section }) => {
                             {isVisible ? item.minimum : "0"}
                         </td>
                         <td className="py-2 px-2">
-                            <span className={`${isVisible ? item.statusColor : "text-gray-400"} text-xs sm:text-sm`}>
-                                {isVisible ? item.status : "Hidden"}
-                            </span>
+                            {isVisible ? (
+                                <span className={`text-xs font-semibold px-2 py-1 rounded ${getStatusColorClass(item.status)}`}>
+                                    {item.status}
+                                </span>
+                            ) : (
+                                <span className="text-gray-400 text-xs sm:text-sm">Hidden</span>
+                            )}
                         </td>
                     </tr>
                 );
@@ -82,20 +113,29 @@ const DashboardSummary = ({ section }) => {
         };
 
         return (
-            <div className="overflow-auto flex-1">
-                <table className="w-full text-xs sm:text-sm">
-                    <thead className="sticky top-0 bg-primary">
-                        <tr className="text-textColor-primary border-b border-gray-700">
-                            <th className="text-left py-1 px-2 text-xs sm:text-sm">Item Name</th>
-                            <th className="text-left py-1 px-2 text-xs sm:text-sm">Current</th>
-                            <th className="text-left py-1 px-2 text-xs sm:text-sm">Minimum</th>
-                            <th className="text-left py-1 px-2 text-xs sm:text-sm">Status</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {renderInventoryRows()}
-                    </tbody>
-                </table>
+            <div className="flex flex-col h-full">
+                <div className="overflow-auto flex-1">
+                    <table className="w-full text-xs sm:text-sm">
+                        <thead className="sticky top-0 bg-primary">
+                            <tr className="text-textColor-primary border-b border-gray-700">
+                                <th className="text-left py-1 px-2 text-xs sm:text-sm">Item Name</th>
+                                <th className="text-left py-1 px-2 text-xs sm:text-sm">Current</th>
+                                <th className="text-left py-1 px-2 text-xs sm:text-sm">Minimum</th>
+                                <th className="text-left py-1 px-2 text-xs sm:text-sm">Status</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {renderInventoryRows()}
+                        </tbody>
+                    </table>
+                </div>
+                {!loading && remainingRows > 0 && (
+                    <div className="flex justify-center py-2 pt-3">
+                        <span className="text-textColor-tertiary text-xs">
+                            +{remainingRows} more
+                        </span>
+                    </div>
+                )}
             </div>
         );
     };
@@ -103,6 +143,8 @@ const DashboardSummary = ({ section }) => {
     // Warehouse Capacity Section
     const WarehouseSection = () => {
         const warehouseData = data.warehouse || [];
+        const visibleRows = Math.min(8, Math.max(5, warehouseData.length));
+        const remainingRows = Math.max(0, warehouseData.length - visibleRows);
         
         const renderWarehouseRows = () => {
             return Array.from({ length: 8 }, (_, index) => {
@@ -140,9 +182,13 @@ const DashboardSummary = ({ section }) => {
                             {isVisible ? warehouse.available.toLocaleString() : "0"}
                         </td>
                         <td className="py-2 px-2">
-                            <span className={`${isVisible ? warehouse.statusColor : "text-gray-400"} text-xs sm:text-sm`}>
-                                {isVisible ? warehouse.status : "Hidden"}
-                            </span>
+                            {isVisible ? (
+                                <span className={`text-xs font-semibold px-2 py-1 rounded ${getStatusColorClass(warehouse.status)}`}>
+                                    {warehouse.status}
+                                </span>
+                            ) : (
+                                <span className="text-gray-400 text-xs sm:text-sm">Hidden</span>
+                            )}
                         </td>
                     </tr>
                 );
@@ -150,20 +196,29 @@ const DashboardSummary = ({ section }) => {
         };
 
         return (
-            <div className="overflow-auto flex-1">
-                <table className="w-full text-xs sm:text-sm">
-                    <thead className="sticky top-0 bg-primary">
-                        <tr className="text-textColor-primary border-b border-gray-700">
-                            <th className="text-left py-1 px-2 text-xs sm:text-sm">Warehouse Name</th>
-                            <th className="text-left py-1 px-2 text-xs sm:text-sm">Used</th>
-                            <th className="text-left py-1 px-2 text-xs sm:text-sm">Available</th>
-                            <th className="text-left py-1 px-2 text-xs sm:text-sm">Status</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {renderWarehouseRows()}
-                    </tbody>
-                </table>
+            <div className="flex flex-col h-full">
+                <div className="overflow-auto flex-1">
+                    <table className="w-full text-xs sm:text-sm">
+                        <thead className="sticky top-0 bg-primary">
+                            <tr className="text-textColor-primary border-b border-gray-700">
+                                <th className="text-left py-1 px-2 text-xs sm:text-sm">Warehouse Name</th>
+                                <th className="text-left py-1 px-2 text-xs sm:text-sm">Used</th>
+                                <th className="text-left py-1 px-2 text-xs sm:text-sm">Available</th>
+                                <th className="text-left py-1 px-2 text-xs sm:text-sm">Status</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {renderWarehouseRows()}
+                        </tbody>
+                    </table>
+                </div>
+                {!loading && remainingRows > 0 && (
+                    <div className="flex justify-center py-2 pt-3">
+                        <span className="text-textColor-tertiary text-xs">
+                            +{remainingRows} more
+                        </span>
+                    </div>
+                )}
             </div>
         );
     };
@@ -171,6 +226,8 @@ const DashboardSummary = ({ section }) => {
     // Low Stock Items Section
     const LowStockSection = () => {
         const lowStockData = data.lowstock || [];
+        const visibleRows = Math.min(8, Math.max(5, lowStockData.length));
+        const remainingRows = Math.max(0, lowStockData.length - visibleRows);
         
         const renderLowStockRows = () => {
             return Array.from({ length: 8 }, (_, index) => {
@@ -214,9 +271,13 @@ const DashboardSummary = ({ section }) => {
                             {isVisible ? item.toOrder : "0"}
                         </td>
                         <td className="py-2 px-2">
-                            <span className={`${isVisible ? item.statusColor : "text-gray-400"} text-xs sm:text-sm`}>
-                                {isVisible ? item.status : "Hidden"}
-                            </span>
+                            {isVisible ? (
+                                <span className={`text-xs font-semibold px-2 py-1 rounded ${getStatusColorClass(item.status)}`}>
+                                    {item.status}
+                                </span>
+                            ) : (
+                                <span className="text-gray-400 text-xs sm:text-sm">Hidden</span>
+                            )}
                         </td>
                     </tr>
                 );
@@ -224,21 +285,30 @@ const DashboardSummary = ({ section }) => {
         };
 
         return (
-            <div className="overflow-auto flex-1">
-                <table className="w-full text-xs sm:text-sm">
-                    <thead className="sticky top-0 bg-primary">
-                        <tr className="text-textColor-primary border-b border-gray-700">
-                            <th className="text-left py-1 px-2 text-xs sm:text-sm">Item Code</th>
-                            <th className="text-left py-1 px-2 text-xs sm:text-sm">Item Name</th>
-                            <th className="text-left py-1 px-2 text-xs sm:text-sm">Current</th>
-                            <th className="text-left py-1 px-2 text-xs sm:text-sm">To order</th>
-                            <th className="text-left py-1 px-2 text-xs sm:text-sm">Status</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {renderLowStockRows()}
-                    </tbody>
-                </table>
+            <div className="flex flex-col h-full">
+                <div className="overflow-auto flex-1">
+                    <table className="w-full text-xs sm:text-sm">
+                        <thead className="sticky top-0 bg-primary">
+                            <tr className="text-textColor-primary border-b border-gray-700">
+                                <th className="text-left py-1 px-2 text-xs sm:text-sm">Item Code</th>
+                                <th className="text-left py-1 px-2 text-xs sm:text-sm">Item Name</th>
+                                <th className="text-left py-1 px-2 text-xs sm:text-sm">Current</th>
+                                <th className="text-left py-1 px-2 text-xs sm:text-sm">To order</th>
+                                <th className="text-left py-1 px-2 text-xs sm:text-sm">Status</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {renderLowStockRows()}
+                        </tbody>
+                    </table>
+                </div>
+                {!loading && remainingRows > 0 && (
+                    <div className="flex justify-center py-2 pt-3">
+                        <span className="text-textColor-tertiary text-xs">
+                            +{remainingRows} more
+                        </span>
+                    </div>
+                )}
             </div>
         );
     };

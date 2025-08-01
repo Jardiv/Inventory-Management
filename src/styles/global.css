@@ -122,6 +122,44 @@
 	.table-data {
 		@apply py-4 w-[250px];
 	}
+
+	/* Themed status colors using CSS custom properties */
+	.text-green {
+		color: var(--color-green);
+	}
+	
+	.text-red {
+		color: var(--color-red);
+	}
+	
+	.text-orange {
+		color: var(--color-orange);
+	}
+	
+	.text-blue {
+		color: var(--color-blue);
+	}
+
+	/* Themed background colors with opacity */
+	.bg-green\/10 {
+		background-color: color-mix(in srgb, var(--color-green) 10%, transparent);
+	}
+	
+	.bg-red\/10 {
+		background-color: color-mix(in srgb, var(--color-red) 10%, transparent);
+	}
+	
+	.bg-orange\/10 {
+		background-color: color-mix(in srgb, var(--color-orange) 10%, transparent);
+	}
+	
+	.bg-blue\/10 {
+		background-color: color-mix(in srgb, var(--color-blue) 10%, transparent);
+	}
+
+	.bg-textColor-tertiary\/10 {
+		background-color: color-mix(in srgb, var(--color-textColor-tertiary) 10%, transparent);
+	}
 	
 }
 

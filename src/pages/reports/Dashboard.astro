@@ -18,8 +18,8 @@ import QuickSummary from '../../components/reports/QuickSummary.jsx';
     <div class="w-full min-h-screen grid grid-cols-4 grid-rows-2 gap-4 pt-4">
 
         <!-- Inventory Stock Section -->
-        <div class="bg-primary col-span-2 row-span-1 rounded-lg flex flex-col">
-            <div class="bg-primary rounded-lg p-6 flex flex-col ">
+        <div class="bg-primary col-span-2 row-span-1 rounded-lg flex flex-col min-h-[400px]">
+            <div class="bg-primary rounded-lg p-6 flex flex-col h-full">
                 <div class="flex justify-between items-center mb-4">
                     <h2 class="text-textColor-primary text-lg sm:text-xl font-semibold">Inventory Stock</h2>
                     <a href="/reports/Inventory">
@@ -30,7 +30,7 @@ import QuickSummary from '../../components/reports/QuickSummary.jsx';
             </div>
         </div>
         <!-- Warehouse Capacity Section -->
-        <div class="bg-primary col-span-3 row-span-1 rounded-lg flex flex-col">
+        <div class="bg-primary col-span-2 row-span-1 rounded-lg flex flex-col min-h-[400px]">
             <div class="bg-primary rounded-lg p-6 flex flex-col h-full">
                 <div class="flex justify-between items-center mb-4">
                     <h2 class="text-textColor-primary text-lg sm:text-xl font-semibold">Warehouse Capacity</h2>
@@ -41,7 +41,7 @@ import QuickSummary from '../../components/reports/QuickSummary.jsx';
                 <DashboardSummary section="warehouse" client:load />
             </div>
         </div>
-        <div class="bg-primary col-span-5 row-span-1 rounded-lg flex flex-col">
+        <div class="bg-primary col-span-4 row-span-1 rounded-lg flex flex-col min-h-[400px]">
             <!-- Low Stock Items - Purchase Order Section -->
         <div class="bg-primary rounded-lg p-6 flex flex-col h-full">
             <div class="flex justify-between items-center mb-4">
