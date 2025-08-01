@@ -2,7 +2,7 @@ import { supabase } from "../../../utils/supabaseClient.ts";
 
 /**
  * Handles GET requests to fetch all transactions with complete details.
- * Supports optional query parameters: limit, offset, direction, status
+ * Supports optional query parameters: limit, offset, direction, status, sortBy, sortOrder, startDate, endDate
  */
 export async function GET({ request }: { request: Request }) {
 	const url = new URL(request.url);
@@ -10,9 +10,22 @@ export async function GET({ request }: { request: Request }) {
 	const rawOffset = url.searchParams.get("offset");
 	const direction = url.searchParams.get("direction"); // 'in' or 'out'
 	const status = url.searchParams.get("status");
+	const sortBy = url.searchParams.get("sortBy") || "transaction_datetime";
+	const sortOrder = url.searchParams.get("sortOrder") || "desc";
+	const startDate = url.searchParams.get("startDate");
+	const endDate = url.searchParams.get("endDate");
 	
 	const limit = parseLimit(rawLimit);
 	const offset = parseOffset(rawOffset);
+
+	const sortMap = {
+		'invoice_no': 'invoice_no',
+		'transaction_datetime': 'transaction_datetime',
+		'quantity': 'quantity',
+		'status': 'status'
+	};
+
+	const dbSortKey = sortMap[sortBy] || 'transaction_datetime';
 
 	// If direction is specified, use the two-step approach for accurate filtering
 	if (direction) {
@@ -42,6 +55,14 @@ export async function GET({ request }: { request: Request }) {
 			countQuery = countQuery.eq("status", status);
 		}
 
+		if (startDate) {
+			countQuery = countQuery.gte("transaction_datetime", startDate);
+		}
+
+		if (endDate) {
+			countQuery = countQuery.lte("transaction_datetime", endDate);
+		}
+
 		const { count, error: countError } = await countQuery;
 
 		if (countError) {
@@ -58,16 +79,24 @@ export async function GET({ request }: { request: Request }) {
 				quantity,
 				transaction_datetime,
 				status,
-				item:item_id ( name ),
-				transaction_type:transaction_type_id ( name, direction ),
-				supplier:supplier_id ( name )
+				items:item_id ( name ),
+				transaction_types:transaction_type_id ( name, direction ),
+				suppliers:supplier_id ( name )
 			`)
 			.in("transaction_type_id", typeIds)
-			.order("transaction_datetime", { ascending: false });
+			.order(dbSortKey, { ascending: sortOrder === 'asc' });
 
 		// Apply status filter if provided
 		if (status) {
 			query = query.eq("status", status);
+		}
+
+		if (startDate) {
+			query = query.gte("transaction_datetime", startDate);
+		}
+
+		if (endDate) {
+			query = query.lte("transaction_datetime", endDate);
 		}
 
 		// Apply pagination
@@ -84,13 +113,13 @@ export async function GET({ request }: { request: Request }) {
 		const transformedData = (data ?? []).map((tx) => ({
 			id: tx.id,
 			invoice_no: tx.invoice_no,
-			item_name: tx.item?.name ?? null,
+			item_name: tx.items?.name ?? null,
 			quantity: tx.quantity,
 			transaction_datetime: formatDateTime(tx.transaction_datetime),
-			type_name: tx.transaction_type?.name ?? null,
-			transaction_type_name: tx.transaction_type?.name ?? null,
-			transaction_direction: tx.transaction_type?.direction ?? null,
-			supplier_name: tx.supplier?.name ?? null,
+			type_name: tx.transaction_types?.name ?? null,
+			transaction_type_name: tx.transaction_types?.name ?? null,
+			transaction_direction: tx.transaction_types?.direction ?? null,
+			supplier_name: tx.suppliers?.name ?? null,
 			status: tx.status,
 		}));
 
@@ -112,6 +141,14 @@ export async function GET({ request }: { request: Request }) {
 		countQuery = countQuery.eq("status", status);
 	}
 
+	if (startDate) {
+		countQuery = countQuery.gte("transaction_datetime", startDate);
+	}
+
+	if (endDate) {
+		countQuery = countQuery.lte("transaction_datetime", endDate);
+	}
+
 	const { count, error: countError } = await countQuery;
 
 	if (countError) {
@@ -127,15 +164,23 @@ export async function GET({ request }: { request: Request }) {
 			quantity,
 			transaction_datetime,
 			status,
-			item:item_id ( name ),
-			transaction_type:transaction_type_id ( name, direction ),
-			supplier:supplier_id ( name )
+			items:item_id ( name ),
+			transaction_types:transaction_type_id ( name, direction ),
+			suppliers:supplier_id ( name )
 		`)
-		.order("transaction_datetime", { ascending: false });
+		.order(dbSortKey, { ascending: sortOrder === 'asc' });
 
 	// Apply status filter if provided
 	if (status) {
 		query = query.eq("status", status);
+	}
+
+	if (startDate) {
+		query = query.gte("transaction_datetime", startDate);
+	}
+
+	if (endDate) {
+		query = query.lte("transaction_datetime", endDate);
 	}
 
 	// Apply pagination
@@ -153,13 +198,13 @@ export async function GET({ request }: { request: Request }) {
 	const transformedData = (data ?? []).map((tx) => ({
 		id: tx.id,
 		invoice_no: tx.invoice_no,
-		item_name: tx.item?.name ?? null,
+		item_name: tx.items?.name ?? null,
 		quantity: tx.quantity,
 		transaction_datetime: formatDateTime(tx.transaction_datetime),
-		type_name: tx.transaction_type?.name ?? null,
-		transaction_type_name: tx.transaction_type?.name ?? null,
-		transaction_direction: tx.transaction_type?.direction ?? null,
-		supplier_name: tx.supplier?.name ?? null,
+		type_name: tx.transaction_types?.name ?? null,
+		transaction_type_name: tx.transaction_types?.name ?? null,
+		transaction_direction: tx.transaction_types?.direction ?? null,
+		supplier_name: tx.suppliers?.name ?? null,
 		status: tx.status,
 	}));
 

@@ -1,98 +1,85 @@
 ---
 import Layout from '../../layouts/Layout.astro';
 import Addmodal from '../../components/inventory/Addmodal.astro';
+import Filter from '../../components/inventory/Filter.astro';
+import Editmodal from '../../components/inventory/Editmodal.astro'; // Assuming this exists
 import { products } from '../../components/inventory/productInvenDATA.jsx';
 ---
 
 <Layout>
   <Addmodal />
+  <Editmodal />
 
   <section id="viewAllSection">
     <div class="bg-primary p-6 rounded-lg">
-      <!-- Header and Buttons -->
-      <div class="flex justify-between items-center mb-4">
-        <div class="flex items-center gap-3">
-          <h2 class="text-xl font-semibold">Product Inventory</h2>
+      <!-- 🔹 Header and Actions -->
+<div class="flex justify-between items-center mb-4">
+  <h2 class="text-xl font-semibold">Product Inventory</h2>
+
+  <div class="relative flex gap-2">
+<!-- ➕ Add Button -->
+<button id="open-add-modal"
+  class="flex items-center gap-2 rounded px-4 py-2 bg-primary text-textColor-primary hover:bg-violet-600 transition">
+  <svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="currentColor">
+    <path d="M440-440H200v-80h240v-240h80v240h240v80H520v240h-80v-240Z"/>
+  </svg>
+</button>
+
+
+      <!-- filter -->
+        <div class="flex items-center gap-2">
+      <Filter />
+    </div>
+
+    <!-- 📤 Download Button -->
+    <button class="p-2 text-textColor-primary hover:bg-btn-hover hover:text-white rounded">
+      <svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" class="w-5 h-5" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
+          d="M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5M16.5 12 12 16.5m0 0L7.5 12m4.5 4.5V3" />
+      </svg>
+    </button>
+
+    <!-- ❌ Back Button -->
+    <a href="/inventory/Dashboard" class="p-2 text-textColor-primary hover:bg-btn-hover hover:text-white rounded">
+      <svg xmlns="http://www.w3.org/2000/svg" stroke-width="1.5" stroke="currentColor" class="w-5 h-5">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12" />
+      </svg>
+    </a>
+  </div>
+</div>
+
+
+      <!-- 🔍 Filter Panel -->
+      <div id="filter-panel"
+        class="absolute top-full mt-2 right-0 w-72 bg-primary text-textColor-primary rounded-lg p-4 border border-border_color shadow-lg hidden z-50">
+        <h3 class="font-semibold mb-2">Availability:</h3>
+        <div class="flex flex-col gap-1 mb-4">
+          <label><input type="checkbox" value="in_stock" class="availability-option mr-2">In Stock</label>
+          <label><input type="checkbox" value="low_stock" class="availability-option mr-2">Low Stock</label>
+          <label><input type="checkbox" value="out_of_stock" class="availability-option mr-2">Out of Stock</label>
         </div>
 
-        <!-- Add, Filter, Download, and Back Buttons -->
-        <div class="relative flex gap-2">
-          <!-- Add Button -->
+        <hr class="border-border_color mb-4" />
 
-          <button id="open-transfer-modal"
-            class="items-center rounded px-4 py-2 bg-primary text-textColor-primary hover:bg-violet-600 active:bg-violet-600">
-            <svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px"
-              fill="currentColor">
-              <path d="M440-120v-320H120v-80h320v-320h80v320h320v80H520v320h-80Z" />
-            </svg>
-          </button>
+        <h3 class="font-semibold mb-2">Category:</h3>
+        <select class="w-full bg-primary text-textColor-primary border border-neutral-700 rounded px-3 py-2 mb-4">
+          <option>Grains</option>
+          <option>Condiments</option>
+          <option>Carbs</option>
+          <option>Etc.</option>
+        </select>
 
-          <!-- Filter Button -->
-          <button id="toggle-filters"
-            class="items-center rounded px-4 py-2 pr-4 bg-primary text-textColor-primary hover:bg-violet-600 active:bg-violet-600">
-            <svg id="filterIcon" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none"
-              stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-              <line x1="3" y1="6" x2="21" y2="6" />
-              <line x1="6" y1="12" x2="18" y2="12" />
-              <line x1="9" y1="18" x2="15" y2="18" />
-            </svg>
-          </button>
+        <hr class="border-border_color mb-4" />
 
-          <!-- Filter Panel -->
-          <div id="filter-panel"
-            class="absolute top-full mt-2 right-0 w-72 bg-primary text-textColor-primary rounded-lg p-4 border border-border_color shadow-lg hidden z-50">
-            <h3 class="font-semibold mb-2">Availability:</h3>
-            <div class="flex flex-col gap-1 mb-4">
-              <label><input type="checkbox" name="availability" value="in_stock" class="availability-option mr-2">In
-                Stock</label>
-              <label><input type="checkbox" name="availability" value="low_stock" class="availability-option mr-2">Low
-                Stock</label>
-              <label><input type="checkbox" name="availability" value="out_of_stock"
-                  class="availability-option mr-2">Out of Stock</label>
-            </div>
-
-            <hr class="border-border_color mb-4">
-
-            <h3 class="font-semibold mb-2">Category:</h3>
-            <select class="w-full bg-primary text-textColor-primary border border-neutral-700 rounded px-3 py-2 mb-4">
-              <option>Grains</option>
-              <option>Condiments</option>
-              <option>Carbs</option>
-              <option>Etc.</option>
-            </select>
-
-            <hr class="border-border_color mb-4">
-
-            <h3 class="font-semibold mb-2">Price Range:</h3>
-            <div class="flex justify-between gap-2">
-              <input type="number" placeholder="Min:"
-                class="w-1/2 bg-primary text-textColor-primary px-3 py-2 rounded border border-neutral-700" />
-              <input type="number" placeholder="Max:"
-                class="w-1/2 bg-primary text-textColor-primary px-3 py-2 rounded border border-neutral-700" />
-            </div>
-          </div>
-
-          <!-- Download Button -->
-          <button class="p-2 text-textColor-primary hover:bg-btn-hover hover:text-white rounded">
-            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5"
-              stroke="currentColor" class="w-5 h-5">
-              <path stroke-linecap="round" stroke-linejoin="round"
-                d="M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5M16.5 12 12 16.5m0 0L7.5 12m4.5 4.5V3" />
-            </svg>
-          </button>
-          <!-- Back Button -->
-          <a href="/inventory/Dashboard" class="p-2 text-textColor-primary hover:bg-btn-hover hover:text-white rounded">
-            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5"
-              stroke="currentColor" class="w-5 h-5">
-              <path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12" />
-            </svg>
-          </a>
+        <h3 class="font-semibold mb-2">Price Range:</h3>
+        <div class="flex justify-between gap-2">
+          <input type="number" placeholder="Min:" class="w-1/2 bg-primary text-textColor-primary px-3 py-2 rounded border border-neutral-700" />
+          <input type="number" placeholder="Max:" class="w-1/2 bg-primary text-textColor-primary px-3 py-2 rounded border border-neutral-700" />
         </div>
       </div>
 
-      <!-- Table Headers -->
-      <div
-        class="grid grid-cols-6 items-left font-semibold text-sm border-b border-border_color py-2 text-textColor-primary uppercase tracking-wide">
+      <!-- 🧾 Table Headers -->
+      <div class="grid grid-cols-6 font-semibold text-sm border-b border-border_color py-2 text-textColor-primary uppercase tracking-wide">
         <span>Item Code</span>
         <span class="text-left">Item Name</span>
         <span class="text-left">Category</span>
@@ -101,32 +88,30 @@ import { products } from '../../components/inventory/productInvenDATA.jsx';
         <span class="text-left">Status</span>
       </div>
 
-      <!-- Product List -->
+      <!-- 📦 Product Rows -->
       {
-      products.slice(0, 10).map(product => (
-      <a href={`/inventory/product/${product.code}`} class="block hover:bg-btn-hover rounded transition">
-        <div class="grid grid-cols-6 items-center border-b border-border_color py-2 cursor-pointer">
-          <span>{product.code}</span>
-          <span class="text-left">{product.name}</span>
-          <span class="text-left">{product.category}</span>
-          <span class="text-left">{product.supplier}</span>
-          <span class="text-left">{product.price}</span>
-          <span class="text-left">{product.status}</span>
-        </div>
-      </a>
-      ))
+        products.slice(0, 10).map(product => (
+          <a href={`/inventory/product/${product.code}`} class="block hover:bg-btn-hover rounded transition">
+            <div class="grid grid-cols-6 items-center border-b border-border_color py-2 cursor-pointer">
+              <span>{product.code}</span>
+              <span class="text-left">{product.name}</span>
+              <span class="text-left">{product.category}</span>
+              <span class="text-left">{product.supplier}</span>
+              <span class="text-left">{product.price}</span>
+              <span class="text-left">{product.status}</span>
+            </div>
+          </a>
+        ))
       }
 
-      <!-- Pagination -->
+      <!-- 🔄 Pagination -->
       <div class="flex justify-between items-center mt-6 text-sm">
-        <button
-          class="flex items-center border border-border_color rounded-md px-4 py-2 hover:bg-btn-primary hover:text-textColor-secondary transition">
+        <button class="flex items-center border border-border_color rounded-md px-4 py-2 hover:bg-btn-primary hover:text-textColor-secondary">
           Previous
         </button>
         <p class="text-gray-400">Page 1 of 10</p>
         <a href="/inventory/ThirdPage/">
-          <button
-            class="flex items-center px-7 py-2 border border-border_color rounded-md hover:bg-btn-primary hover:text-textColor-secondary transition">
+          <button class="flex items-center px-7 py-2 border border-border_color rounded-md hover:bg-btn-primary hover:text-textColor-secondary">
             Next
           </button>
         </a>

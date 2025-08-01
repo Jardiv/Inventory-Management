@@ -28,3 +28,34 @@
 		</div>
 	</label>
 </div>
+
+<script>
+	document.addEventListener('DOMContentLoaded', () => {
+		const fromDateInput = document.getElementById('fromDateInput');
+		const toDateInput = document.getElementById('toDateInput');
+
+		const formatDateTime = (date) => {
+			if (!date) return '';
+			const d = new Date(date);
+			const month = String(d.getMonth() + 1).padStart(2, '0');
+			const day = String(d.getDate()).padStart(2, '0');
+			const year = d.getFullYear();
+			const hours = String(d.getHours()).padStart(2, '0');
+			const minutes = String(d.getMinutes()).padStart(2, '0');
+			return `${month}/${day}/${year} ${hours}:${minutes}`;
+		};
+
+		const dispatchDateChange = () => {
+			const event = new CustomEvent('dateRangeChanged', {
+				detail: {
+					startDate: fromDateInput.value ? formatDateTime(fromDateInput.value) : '',
+					endDate: toDateInput.value ? formatDateTime(toDateInput.value) : ''
+				}
+			});
+			document.dispatchEvent(event);
+		};
+
+		fromDateInput.addEventListener('change', dispatchDateChange);
+		toDateInput.addEventListener('change', dispatchDateChange);
+	});
+</script>

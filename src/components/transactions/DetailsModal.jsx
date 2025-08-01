@@ -208,9 +208,7 @@ const DetailsModal = ({ transactionId, onClose }) => {
 								</div>
 								<div>
 									<p className="text-sm text-textColor-tertiary">Location</p>
-									<p className="font-medium text-textColor-primary mt-1">
-										{transaction.supplier_location ? new Date(transaction.expiry_date).toLocaleDateString() : "N/A"}
-									</p>
+									<p className="font-medium text-textColor-primary mt-1">{transaction.supplier_location}</p>
 								</div>
 							</div>
 							{/* 
@@ -229,7 +227,8 @@ const DetailsModal = ({ transactionId, onClose }) => {
                                 <div>
                                     <p className="text-sm text-textColor-tertiary">Remarks</p>
                                     <p className="font-medium text-textColor-primary mt-1">{transaction.remarks || "No remarks"}</p>
-                                </div> */}
+                                </div> 
+							*/}
 						</section>
 					</div>
 				) : (
