@@ -1,36 +1,39 @@
 ---
 import Layout from '../../layouts/Layout.astro';
-import Button from '../../components/Button.astro';
-import DateTimeInput from '../../components/DateTimeInput.astro';
+import DateTimeInput from '../../components/transactions/DateTimeInput.astro';
 import LogsTable from '../../components/transactions/LogsTable.jsx';
+
+// Get current page from URL parameters
+const currentPage = parseInt(Astro.url.searchParams.get('page') || '1');
+const itemsPerPage = 10;
 ---
 
 <Layout>
 	<DateTimeInput />
 
-	<div class="flex flex-col gap-1 w-full bg-primary p-4 mt-4">
+	<div class="flex flex-col gap-1 w-full bg-primary p-4 mt-4 rounded-lg">
 
 		<div class="w-full flex justify-between">
 			<h1 class="text-xl font-bold">Transaction Logs</h1>
-			<a href="/stockTransaction/Dashboard/">
-				<Button class="text-btn-primary border-none w-fit hover:text-btn-primary">Back</Button>
-			</a>
+			<a href="/stockTransaction/Dashboard/" class="p-2 text-textColor-primary hover:bg-btn-hover hover:text-white rounded">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12" />
+                </svg>
+            </a>
 		</div>
 
 		<div class="p-2 flex flex-col gap-4">
-
-			<LogsTable client:load limit="10" />
-
-			<div class="flex justify-between items-center flex-shrink-0">
-				<button class="hover:bg-btn-primary text-textColor-secondary px-4 py-2 rounded font-medium transition-colors text-sm">
-					Previous
-				</button>
-				<span class="text-textColor-primary text-sm">Page 1 of 1</span>
-				<button class="hover:bg-btn-primary text-textColor-secondary px-4 py-2 rounded font-medium transition-colors text-sm">
-					Next
-				</button>
-			</div>
+			<LogsTable 
+				showPagination={true} 
+				currentPage={currentPage} 
+				itemsPerPage={itemsPerPage} 
+				client:load 
+			/>
 		</div>
 	</div>
 
 </Layout>
+
+<script>
+	// No-op script to enable client-side rendering
+</script>

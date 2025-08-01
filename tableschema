@@ -1,0 +1,47 @@
+
+-- ITEMS
+CREATE TABLE IF NOT EXISTS items (
+    id SERIAL PRIMARY KEY,
+    sku VARCHAR(100) NOT NULL UNIQUE,
+    name VARCHAR(150) NOT NULL,
+    category_id INT REFERENCES category(id),
+    image VARCHAR(255),
+    min_quantity INT DEFAULT 0,
+    max_quantity INT DEFAULT 0,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    status TEXT CHECK (status IN ('normal', 'low', 'out of stock')) DEFAULT 'normal',
+    description TEXT,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- SUPPLIERS
+CREATE TABLE IF NOT EXISTS suppliers (
+    id SERIAL PRIMARY KEY,
+    name VARCHAR(150) NOT NULL,
+    location VARCHAR(255),
+    contact VARCHAR(100),
+    email VARCHAR(100)
+);
+
+
+-- TRANSACTIONS
+CREATE TABLE IF NOT EXISTS transaction_types (
+    id SERIAL PRIMARY KEY,
+    name VARCHAR(100), -- ('Purchase Order', 'Purchase', 'Sales', 'Return-Out', 'Adjustment-In', etc),
+    direction VARCHAR (3) CHECK (direction IN ('in', 'out'))
+);
+
+CREATE TABLE IF NOT EXISTS transactions ( 
+    id SERIAL PRIMARY KEY, 
+    invoice_no VARCHAR(100) NOT NULL, 
+    item_id INT REFERENCES items(id), 
+    expiration_date DATE DEFAULT NULL, 
+    quantity INT NOT NULL, 
+    transaction_datetime TIMESTAMP NOT NULL,  
+    transaction_type_id INT REFERENCES transaction_types(id), 
+    supplier_id INT REFERENCES suppliers(id), 
+    status TEXT, 
+    destination TEXT, 
+    source VARCHAR(100) 
+);
+

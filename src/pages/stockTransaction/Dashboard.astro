@@ -1,10 +1,9 @@
 ---
 import Layout from '../../layouts/Layout.astro';
-import Button from '../../components/Button.astro';
 import StockInTable from '../../components/transactions/StockInTable.jsx';
 import StockOutTable from '../../components/transactions/StockOutTable.jsx';
 
-const limit = 3;
+const limit = 4;
 ---
 
 <!-- STOCK TRANSACTION DASHBOARD -->
@@ -16,7 +15,7 @@ const limit = 3;
 			<div class="w-full flex justify-between">
 				<h1 class="text-xl font-bold">Stock In Transactions</h1>
 				<a href="/stockTransaction/StockIn/" class="w-fit">
-					<Button class="text-btn-primary border-none w-fit hover:text-textColor-tertiary"> See All </Button>
+					<button class="text-btn-primary hover:text-purple-300 text-sm sm:text-base cursor-pointer">See All</button>
 				</a>
 			</div>
 			<div class="p-2">
@@ -29,7 +28,7 @@ const limit = 3;
 			<div class="w-full flex justify-between">
 				<h1 class="text-xl font-bold">Stock Out Transactions</h1>
 				<a href="/stockTransaction/StockOut/">
-					<Button class="text-btn-primary border-none w-fit hover:text-textColor-hover">See All</Button>
+					<button class="text-btn-primary hover:text-purple-300 text-sm sm:text-base cursor-pointer">See All</button>
 				</a>
 			</div>
 			<div class="p-2">
