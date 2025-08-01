@@ -336,7 +336,7 @@ const LowStockTable = ({ currentPage = 1 }) => {
                         <tbody>
                             {/* Render actual data rows */}
                             {lowStockData.map((item, index) => (
-                                <tr key={item.id} className={`border-b border-gray-800 hover:bg-gray-800/30 ${index === 9 ? 'border-b-0' : ''}`}>
+                                <tr key={item.id} className={`border-b border-gray-800 hover:bg-tbl-hover ${index === 9 ? 'border-b-0' : ''}`}>
                                     <td className="py-4 px-4">
                                         <input 
                                             type="checkbox" 

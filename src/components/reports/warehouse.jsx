@@ -173,7 +173,7 @@ const WarehouseTable = ({ currentPage = 1, itemsPerPage = 10 }) => {
                             {tableRows.map((warehouse, index) => (
                                 <tr 
                                     key={warehouse.id || `empty-${index}`}
-                                    className={`border-b border-gray-800 hover:bg-gray-800/30 h-[50px] ${warehouse.isVisible ? '' : 'invisible'} ${index === 9 ? 'border-b-0' : ''}`}
+                                    className={`border-b border-gray-800 hover:bg-tbl-hover h-[50px] ${warehouse.isVisible ? '' : 'invisible'} ${index === 9 ? 'border-b-0' : ''}`}
                                     style={{ height: '50px' }}
                                 >
                                     <td className="py-4 px-4 text-textColor-primary font-medium">{warehouse.name}</td>

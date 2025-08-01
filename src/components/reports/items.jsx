@@ -169,7 +169,7 @@ const InventoryTable = ({ currentPage = 1, itemsPerPage = 10 }) => {
                             {tableRows.map((item, index) => (
                                 <tr 
                                     key={item.id || `empty-${index}`}
-                                    className={`border-b border-gray-800 hover:bg-gray-800/30 h-[50px] ${item.isVisible ? '' : 'invisible'} ${index === 9 ? 'border-b-0' : ''}`}
+                                    className={`border-b border-gray-800 hover:bg-tbl-hover h-[50px] ${item.isVisible ? '' : 'invisible'} ${index === 9 ? 'border-b-0' : ''}`}
                                     style={{ height: '50px' }}
                                 >
                                     <td className="py-4 px-4 text-textColor-primary">{item.code}</td>
