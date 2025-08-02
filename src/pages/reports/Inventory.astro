@@ -2,8 +2,14 @@
 import Layout from '../../layouts/Layout.astro';
 import InventoryTable from '../../components/reports/items.jsx';
 
-// Items per page for client-side pagination
-const itemsPerPage = 10;
+// Get items per page from URL parameter, default to 10
+const url = Astro.url;
+const itemsPerPageParam = url.searchParams.get('itemsPerPage');
+const itemsPerPage = itemsPerPageParam ? parseInt(itemsPerPageParam) : 10;
+
+// Validate itemsPerPage is a valid option
+const validOptions = [5, 10, 25, 50, 100];
+const finalItemsPerPage = validOptions.includes(itemsPerPage) ? itemsPerPage : 10;
 ---
 
 <!-- REPORT DASHBOARD -->
@@ -31,7 +37,7 @@ const itemsPerPage = 10;
                     </a>
                 </div>
             </div>
-            <InventoryTable client:load itemsPerPage={itemsPerPage} />
+            <InventoryTable client:load itemsPerPage={finalItemsPerPage} />
             
             {/* Note: Pagination is now handled inside the React component */}
         </div>
