@@ -40,12 +40,13 @@ const currentPage = 1; // Default value, actual pagination handled client-side
             
             <!-- Center section with pagination and items count -->
             <div class="flex flex-col items-center gap-2">
-                <!-- Client-side Pagination Controls -->
+                <!-- Enhanced Client-side Pagination Controls -->
                 <div id="paginationControls" class="flex items-center gap-1">
                     <!-- Previous Button -->
                     <button 
                         id="prevPageBtn"
                         class="p-2 rounded-md transition-colors text-textColor-primary hover:bg-gray-700"
+                        title="Previous Page"
                     >
                         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5">
                             <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 19.5 8.25 12l7.5-7.5" />
@@ -53,18 +54,32 @@ const currentPage = 1; // Default value, actual pagination handled client-side
                     </button>
 
                     <!-- Page Numbers Container -->
-                    <div id="pageNumbersContainer" class="flex items-center gap-1">
+                    <div id="pageNumbers" class="flex items-center gap-1">
+                        <!-- Page numbers will be inserted here dynamically -->
                     </div>
 
                     <!-- Next Button -->
                     <button 
                         id="nextPageBtn"
                         class="p-2 rounded-md transition-colors text-textColor-primary hover:bg-gray-700"
+                        title="Next Page"
                     >
                         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5">
                             <path stroke-linecap="round" stroke-linejoin="round" d="m8.25 4.5 7.5 7.5-7.5 7.5" />
                         </svg>
                     </button>
+                    
+                    <!-- Last Page Button -->
+                    <button id="lastPageBtn" class="p-2 rounded-md text-textColor-primary hover:bg-gray-700 transition-colors" title="Last Page">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="m5.25 4.5 7.5 7.5-7.5 7.5m6-15 7.5 7.5-7.5 7.5" />
+                        </svg>
+                    </button>
+                </div>
+                
+                <!-- Pagination Info -->
+                <div id="paginationInfo" class="text-textColor-tertiary text-sm">
+                    Showing 1-10 of 0 low stock items
                 </div>
             </div>
             
@@ -196,7 +211,8 @@ const currentPage = 1; // Default value, actual pagination handled client-side
                 const paginationControls = document.getElementById('paginationControls');
                 const prevBtn = document.getElementById('prevPageBtn');
                 const nextBtn = document.getElementById('nextPageBtn');
-                const pageNumbersContainer = document.getElementById('pageNumbersContainer');
+                const lastBtn = document.getElementById('lastPageBtn');
+                const pageNumbersContainer = document.getElementById('pageNumbers');
                 
                 let isUpdating = false; // Prevent concurrent updates
 
@@ -228,6 +244,15 @@ const currentPage = 1; // Default value, actual pagination handled client-side
                         nextBtn.className = !hasNextPage 
                             ? 'p-2 rounded-md transition-colors text-gray-500 cursor-not-allowed'
                             : 'p-2 rounded-md transition-colors text-textColor-primary hover:bg-gray-700';
+
+                        // Update last page button state
+                        if (lastBtn) {
+                            const isLastPage = currentPage === totalPages;
+                            lastBtn.disabled = isLastPage;
+                            lastBtn.className = isLastPage 
+                                ? 'p-2 rounded-md transition-colors text-gray-500 cursor-not-allowed'
+                                : 'p-2 rounded-md transition-colors text-textColor-primary hover:bg-gray-700';
+                        }
 
                         // Generate page numbers
                         const generatePageNumbers = (currentPage, totalPages) => {
@@ -303,6 +328,7 @@ const currentPage = 1; // Default value, actual pagination handled client-side
                         // Set up navigation button handlers (remove existing listeners first)
                         const newPrevBtn = prevBtn.cloneNode(true);
                         const newNextBtn = nextBtn.cloneNode(true);
+                        const newLastBtn = lastBtn ? lastBtn.cloneNode(true) : null;
                         
                         if (!hasPrevPage) {
                             newPrevBtn.disabled = true;
@@ -323,9 +349,24 @@ const currentPage = 1; // Default value, actual pagination handled client-side
                                 goToNextPage();
                             });
                         }
+
+                        // Add last page button handler
+                        if (newLastBtn) {
+                            const isLastPage = currentPage === totalPages;
+                            if (!isLastPage) {
+                                newLastBtn.addEventListener('click', (e) => {
+                                    e.preventDefault();
+                                    e.stopPropagation();
+                                    goToPage(totalPages);
+                                });
+                            }
+                        }
                         
                         prevBtn.parentNode.replaceChild(newPrevBtn, prevBtn);
                         nextBtn.parentNode.replaceChild(newNextBtn, nextBtn);
+                        if (newLastBtn && lastBtn) {
+                            lastBtn.parentNode.replaceChild(newLastBtn, lastBtn);
+                        }
                         
                     } catch (error) {
                         console.error('Error updating pagination:', error);

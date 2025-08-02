@@ -24,7 +24,6 @@ export async function GET({ request }: { request: Request }) {
                         quantity
                     )
                 `)
-                .limit(20)
                 .order("name", { ascending: true });
 
             if (inventoryError) {
@@ -81,7 +80,6 @@ export async function GET({ request }: { request: Request }) {
                     name,
                     max_capacity
                 `)
-                .limit(20)
                 .order("name", { ascending: true });
 
             if (warehouseError) {
@@ -111,17 +109,17 @@ export async function GET({ request }: { request: Request }) {
                     const available = Math.max(0, maxCapacity - used);
                     const utilization = maxCapacity > 0 ? Math.round((used / maxCapacity) * 100) : 0;
 
-                    // Determine status based on utilization to match warehouse page table
+                    // Determine status based on utilization
                     let status = 'Available';
                     let statusColor = 'text-green-400';
                     
-                    if (utilization >= 95) {
+                    if (utilization >= 100) {
                         status = 'Full';
                         statusColor = 'text-red-400';
-                    } else if (utilization >= 85) {
+                    } else if (utilization >= 90) {
                         status = 'Critical';
                         statusColor = 'text-orange-400';
-                    } else if (utilization >= 70) {
+                    } else if (utilization >= 75) {
                         status = 'High';
                         statusColor = 'text-orange-400';
                     } else if (utilization >= 50) {
@@ -207,8 +205,7 @@ export async function GET({ request }: { request: Request }) {
                     }
                     return null;
                 })
-                .filter(item => item !== null) // Remove null items
-                .slice(0, 20); // Limit to 20 items for dashboard to allow "+X more" functionality
+                .filter(item => item !== null); // Remove null items
 
             result.lowstock = lowStockItems;
         }
