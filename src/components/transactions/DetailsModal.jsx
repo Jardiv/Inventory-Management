@@ -166,6 +166,10 @@ const DetailsModal = ({ transactionId, onClose }) => {
 										</span>
 									</div>
 								</div>
+								<div>
+									<p className="text-sm text-textColor-tertiary">Type</p>
+									<div className="mt-1">{transaction.type_name}</div>
+								</div>
 							</div>
 						</section>
 
@@ -183,6 +187,18 @@ const DetailsModal = ({ transactionId, onClose }) => {
 									<p className="text-sm text-textColor-tertiary">Quantity</p>
 									<p className="font-medium text-textColor-primary mt-1">{transaction.quantity} units</p>
 								</div>
+								{transaction.total_price && (
+									<div>
+										<p className="text-sm text-textColor-tertiary">Total Price</p>
+										<p className="font-medium text-textColor-primary mt-1">
+											{transaction.total_price.toLocaleString("en-US", {
+												style: "currency",
+												currency: "PHP",
+											})}
+										</p>
+									</div>
+								)}
+
 								<div>
 									<p className="text-sm text-textColor-tertiary">Expiry Date</p>
 									<p className="font-medium text-textColor-primary mt-1">

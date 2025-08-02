@@ -2,7 +2,7 @@ import { supabase } from "../../../utils/supabaseClient.ts";
 
 /**
  * Handles GET requests to fetch all transactions with complete details.
- * Supports optional query parameters: limit, offset, direction, status, sortBy, sortOrder, startDate, endDate
+ * Supports optional query parameters: limit, offset, direction, status, sortBy, sortOrder, startDate, endDate, search
  */
 export async function GET({ request }: { request: Request }) {
 	const url = new URL(request.url);
@@ -14,6 +14,7 @@ export async function GET({ request }: { request: Request }) {
 	const sortOrder = url.searchParams.get("sortOrder") || "desc";
 	const startDate = url.searchParams.get("startDate");
 	const endDate = url.searchParams.get("endDate");
+	const search = url.searchParams.get("search");
 	
 	const limit = parseLimit(rawLimit);
 	const offset = parseOffset(rawOffset);
@@ -22,7 +23,8 @@ export async function GET({ request }: { request: Request }) {
 		'invoice_no': 'invoice_no',
 		'transaction_datetime': 'transaction_datetime',
 		'quantity': 'quantity',
-		'status': 'status'
+		'status': 'status',
+		'type': 'transaction_type_id'
 	};
 
 	const dbSortKey = sortMap[sortBy] || 'transaction_datetime';
@@ -63,6 +65,11 @@ export async function GET({ request }: { request: Request }) {
 			countQuery = countQuery.lte("transaction_datetime", endDate);
 		}
 
+		if (search) {
+			countQuery = countQuery.or(`item_id.ilike.%${search}%,quantity.ilike.%${search}%,supplier_id.ilike.%${search}%,transaction_type_id.ilike.%${search}%,status.ilike.%${search}%`);
+			console.log("Search query:", countQuery);
+		}
+
 		const { count, error: countError } = await countQuery;
 
 		if (countError) {
@@ -84,7 +91,12 @@ export async function GET({ request }: { request: Request }) {
 				suppliers:supplier_id ( name )
 			`)
 			.in("transaction_type_id", typeIds)
-			.order(dbSortKey, { ascending: sortOrder === 'asc' });
+
+		if (sortBy === 'status' || sortBy === 'type') {
+			query = query.order(dbSortKey, { ascending: sortOrder === 'asc' }).order('transaction_datetime', { ascending: sortOrder === 'asc' });
+		} else {
+			query = query.order(dbSortKey, { ascending: sortOrder === 'asc' });
+		}
 
 		// Apply status filter if provided
 		if (status) {
@@ -99,6 +111,39 @@ export async function GET({ request }: { request: Request }) {
 			query = query.lte("transaction_datetime", endDate);
 		}
 
+		if (search) {
+			const searchNumber = Number(search);
+			const searchFilters = [
+				`invoice_no.ilike.%${search}%`,
+				`status.ilike.%${search}%`,
+				`items.name.ilike.%${search}%`,
+				`suppliers.name.ilike.%${search}%`,
+				`transaction_types.name.ilike.%${search}%`,
+			];
+
+			if (!isNaN(searchNumber)) {
+				searchFilters.push(`quantity.eq.${searchNumber}`);
+			}
+
+			query = query.or(searchFilters.join(","));
+		}
+
+		// const searchFields = [
+		// 	"invoice_no",
+		// 	"source",
+		// 	"destination",
+		// 	"status::text",
+		// 	"item_id::text",
+		// 	"supplier_id::text",
+		// 	"transaction_type_id::text"
+		// ];
+		// query = query.or(
+		// 	searchFields.map(f => `${f} ilike '%${search}%'`).join(",")
+		// );
+		// {"error":"operator does not exist: integer ~~* unknown"}
+		// query = query.or(`item_id.ilike.%${search}%,quantity.ilike.%${search}%,supplier_id.ilike.%${search}%,transaction_type_id.ilike.%${search}%,status.ilike.%${search}%`);
+
+
 		// Apply pagination
 		query = query.range(offset, offset + limit - 1);
 
@@ -107,7 +152,9 @@ export async function GET({ request }: { request: Request }) {
 		if (error) {
 			console.error("Database error:", error);
 			return jsonResponse({ error: error.message }, 500);
+			// {"error":"operator does not exist: integer ~~* unknown"} - always return 500 when searching
 		}
+		
 
 		// Transform the data
 		const transformedData = (data ?? []).map((tx) => ({
@@ -117,7 +164,6 @@ export async function GET({ request }: { request: Request }) {
 			quantity: tx.quantity,
 			transaction_datetime: formatDateTime(tx.transaction_datetime),
 			type_name: tx.transaction_types?.name ?? null,
-			transaction_type_name: tx.transaction_types?.name ?? null,
 			transaction_direction: tx.transaction_types?.direction ?? null,
 			supplier_name: tx.suppliers?.name ?? null,
 			status: tx.status,
@@ -149,6 +195,11 @@ export async function GET({ request }: { request: Request }) {
 		countQuery = countQuery.lte("transaction_datetime", endDate);
 	}
 
+	if (search) {
+		
+		countQuery = countQuery.or(`item_id.ilike.%${search}%,quantity.ilike.%${search}%,supplier_id.ilike.%${search}%,transaction_type_id.ilike.%${search}%,status.ilike.%${search}%`);
+	}
+
 	const { count, error: countError } = await countQuery;
 
 	if (countError) {
@@ -167,8 +218,13 @@ export async function GET({ request }: { request: Request }) {
 			items:item_id ( name ),
 			transaction_types:transaction_type_id ( name, direction ),
 			suppliers:supplier_id ( name )
-		`)
-		.order(dbSortKey, { ascending: sortOrder === 'asc' });
+		`);
+
+	if (sortBy === 'status' || sortBy === 'type') {
+		query = query.order(dbSortKey, { ascending: sortOrder === 'asc' }).order('transaction_datetime', { ascending: sortOrder === 'asc' });
+	} else {
+		query = query.order(dbSortKey, { ascending: sortOrder === 'asc' });
+	}
 
 	// Apply status filter if provided
 	if (status) {
@@ -181,6 +237,10 @@ export async function GET({ request }: { request: Request }) {
 
 	if (endDate) {
 		query = query.lte("transaction_datetime", endDate);
+	}
+
+	if (search) {
+		query = query.or(`item_id.ilike.%${search}%,quantity.ilike.%${search}%,supplier_id.ilike.%${search}%,transaction_type_id.ilike.%${search}%,status.ilike.%${search}%`);
 	}
 
 	// Apply pagination
@@ -202,7 +262,6 @@ export async function GET({ request }: { request: Request }) {
 		quantity: tx.quantity,
 		transaction_datetime: formatDateTime(tx.transaction_datetime),
 		type_name: tx.transaction_types?.name ?? null,
-		transaction_type_name: tx.transaction_types?.name ?? null,
 		transaction_direction: tx.transaction_types?.direction ?? null,
 		supplier_name: tx.suppliers?.name ?? null,
 		status: tx.status,
@@ -280,7 +339,6 @@ export async function getStockIn({ request }: { request: Request }) {
 		quantity: tx.quantity,
 		transaction_datetime: formatDateTime(tx.transaction_datetime),
 		type_name: tx.transaction_type?.name ?? null,
-		transaction_type_name: tx.transaction_type?.name ?? null,
 		transaction_direction: tx.transaction_type?.direction ?? null,
 		supplier_name: tx.supplier?.name ?? null,
 		status: tx.status,
@@ -358,7 +416,6 @@ export async function getStockOut({ request }: { request: Request }) {
 		quantity: tx.quantity,
 		transaction_datetime: formatDateTime(tx.transaction_datetime),
 		type_name: tx.transaction_type?.name ?? null,
-		transaction_type_name: tx.transaction_type?.name ?? null,
 		transaction_direction: tx.transaction_type?.direction ?? null,
 		supplier_name: tx.supplier?.name ?? null,
 		status: tx.status,

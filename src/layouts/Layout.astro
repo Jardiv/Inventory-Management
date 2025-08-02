@@ -30,7 +30,7 @@ import "/src/styles/global.css";
 		</script>
 	</head>
 
-	<body class="h-[100dvh] bg-background flex text-textColor-primary overflow-hidden">
+	<body class="h-[100dvh] w-[100dvw] bg-background flex text-textColor-primary overflow-hidden">
 		<Sidebar />
 		<div class="flex flex-col w-full">
 			<Header />
@@ -42,8 +42,7 @@ import "/src/styles/global.css";
 		<!-- <slot /> -->
 
 		<!-- NEON -->
-		<div
-			class="neon bg-[#BF00FF] dark:bg-[#8A00C4] rounded-full w-[500px] h-[500px] absolute blur-[600px] bottom-[-250px] right-[-250px] z-[-1]"></div>
+		<div class="neon pointer-events-none fixed bg-[#BF00FF] dark:bg-[#8A00C4] rounded-full w-[500px] h-[500px] blur-[600px] bottom-[-250px] right-[-10rem] z-[-1]"></div>
 
 		<!-- Include the theme management script -->
 		<script src="/scripts/script.js" is:inline></script>

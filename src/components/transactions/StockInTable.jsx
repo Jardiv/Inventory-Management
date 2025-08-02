@@ -22,12 +22,16 @@ const SkeletonRow = () => (
 		<td className="table-data">
 			<div className="skeleton-loading"></div>
 		</td>
+		<td className="table-data">
+			<div className="skeleton-loading"></div>
+		</td>
 	</tr>
 );
 
 // Blank row component to fill empty space in tables
 const BlankRow = () => (
 	<tr className="table-row">
+		<td className="table-data">&nbsp;</td>
 		<td className="table-data">&nbsp;</td>
 		<td className="table-data">&nbsp;</td>
 		<td className="table-data">&nbsp;</td>
@@ -43,8 +47,9 @@ const BlankRow = () => (
  * @param {boolean} showPagination - Whether to display pagination controls.
  * @param {number} currentPage - The current page number for pagination.
  * @param {number} itemsPerPage - Number of items to display per page when pagination is active.
+ * @param {boolean} isAbleToSort - Whether sorting is enabled.
  */
-export default function StockInTable({ limit, showPagination = false, currentPage = 1, itemsPerPage = 10 }) {
+export default function StockInTable({ isAbleToSort = true, limit, showPagination = false, currentPage = 1, itemsPerPage = 10 }) {
 	// State to store the fetched transactions
 	const [transactions, setTransactions] = useState([]);
 	// State to manage loading status
@@ -78,13 +83,20 @@ export default function StockInTable({ limit, showPagination = false, currentPag
 		return () => document.removeEventListener("dateRangeChanged", handleDateChange);
 	}, []); // Empty dependency array means this effect runs once on mount
 
-	// Effect hook to read sort parameters from URL on initial load
+	// Effect hook to read sort and date parameters from URL on initial load
 	useEffect(() => {
 		const params = new URLSearchParams(window.location.search);
 		const sortBy = params.get("sortBy");
 		const sortOrder = params.get("sortOrder");
+		const startDate = params.get("startDate");
+		const endDate = params.get("endDate");
+
 		if (sortBy && sortOrder) {
 			setSortConfig({ key: sortBy, direction: sortOrder }); // Set sort config from URL params
+		}
+
+		if (startDate || endDate) {
+			setDateRange({ startDate: startDate || "", endDate: endDate || "" });
 		}
 	}, []); // Empty dependency array means this effect runs once on mount
 
@@ -149,6 +161,7 @@ export default function StockInTable({ limit, showPagination = false, currentPag
 
 	// Function to handle sorting requests when a table header is clicked
 	const requestSort = (key) => {
+		if (!isAbleToSort) return;
 		let direction = "asc";
 		// If the same key is clicked again, toggle the sort direction
 		if (sortConfig.key === key && sortConfig.direction === "asc") {
@@ -159,7 +172,7 @@ export default function StockInTable({ limit, showPagination = false, currentPag
 
 	// Function to get the sort indicator (arrow) for table headers
 	const getSortIndicator = (key) => {
-		if (sortConfig.key !== key) return null; // No indicator if not the current sort key
+		if (!isAbleToSort || sortConfig.key !== key) return null; // No indicator if not the current sort key
 		return sortConfig.direction === "asc" ? " ↑" : " ↓"; // Return up or down arrow
 	};
 
@@ -210,18 +223,21 @@ export default function StockInTable({ limit, showPagination = false, currentPag
 				<thead className="py-20">
 					<tr>
 						{/* Table headers with sorting functionality */}
-						<th className="table-header cursor-pointer" onClick={() => requestSort("invoice_no")}>
+						<th className={`table-header ${isAbleToSort ? "cursor-pointer" : ""}`} onClick={() => requestSort("invoice_no")}>
 							Invoice no{getSortIndicator("invoice_no")}
 						</th>
-						<th className="table-header cursor-pointer" onClick={() => requestSort("transaction_datetime")}>
+						<th className={`table-header ${isAbleToSort ? "cursor-pointer" : ""}`} onClick={() => requestSort("transaction_datetime")}>
 							Date{getSortIndicator("transaction_datetime")}
 						</th>
 						<th className="table-header">Item</th>
-						<th className="table-header cursor-pointer" onClick={() => requestSort("quantity")}>
+						<th className={`table-header ${isAbleToSort ? "cursor-pointer" : ""}`} onClick={() => requestSort("quantity")}>
 							Amount{getSortIndicator("quantity")}
 						</th>
 						<th className="table-header">Supplier</th>
-						<th className="table-header text-center cursor-pointer" onClick={() => requestSort("status")}>
+						<th className={`table-header ${isAbleToSort ? "cursor-pointer" : ""}`} onClick={() => requestSort("type")}>
+							Type{getSortIndicator("type")}
+						</th>
+						<th className={`table-header text-center ${isAbleToSort ? "cursor-pointer" : ""}`} onClick={() => requestSort("status")}>
 							Status{getSortIndicator("status")}
 						</th>
 					</tr>
@@ -241,6 +257,7 @@ export default function StockInTable({ limit, showPagination = false, currentPag
 									<td className="table-data">{log.item_name}</td>
 									<td className="table-data">{log.quantity}</td>
 									<td className="table-data">{log.supplier_name}</td>
+									<td className="table-data">{log.type_name}</td>
 									<td className="table-data text-center">
 										{/* Display status with dynamic styling */}
 										<span

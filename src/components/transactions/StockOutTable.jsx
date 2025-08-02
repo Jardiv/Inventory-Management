@@ -36,7 +36,7 @@ const BlankRow = () => (
 	</tr>
 );
 
-export default function StockOutTable({ limit, showPagination = false, currentPage = 1, itemsPerPage = 10 }) {
+export default function StockOutTable({ isAbleToSort = true, limit, showPagination = false, currentPage = 1, itemsPerPage = 10 }) {
 	const [transactions, setTransactions] = useState([]);
 	const [loading, setLoading] = useState(true);
 	const [paginationData, setPaginationData] = useState({
@@ -64,8 +64,15 @@ export default function StockOutTable({ limit, showPagination = false, currentPa
 		const params = new URLSearchParams(window.location.search);
 		const sortBy = params.get("sortBy");
 		const sortOrder = params.get("sortOrder");
+		const startDate = params.get("startDate");
+		const endDate = params.get("endDate");
+
 		if (sortBy && sortOrder) {
 			setSortConfig({ key: sortBy, direction: sortOrder });
+		}
+
+		if (startDate || endDate) {
+			setDateRange({ startDate: startDate || "", endDate: endDate || "" });
 		}
 	}, []);
 
@@ -118,6 +125,7 @@ export default function StockOutTable({ limit, showPagination = false, currentPa
 	}, [limit, currentPage, itemsPerPage, showPagination, sortConfig, dateRange]);
 
 	const requestSort = (key) => {
+		if (!isAbleToSort) return;
 		let direction = "asc";
 		if (sortConfig.key === key && sortConfig.direction === "asc") {
 			direction = "desc";
@@ -126,7 +134,7 @@ export default function StockOutTable({ limit, showPagination = false, currentPa
 	};
 
 	const getSortIndicator = (key) => {
-		if (sortConfig.key !== key) return null;
+		if (!isAbleToSort || sortConfig.key !== key) return null;
 		return sortConfig.direction === "asc" ? " ↑" : " ↓";
 	};
 
@@ -170,18 +178,18 @@ export default function StockOutTable({ limit, showPagination = false, currentPa
 			<table className="stock-table">
 				<thead>
 					<tr>
-						<th className="table-header cursor-pointer" onClick={() => requestSort("invoice_no")}>
+						<th className={`table-header ${isAbleToSort ? "cursor-pointer" : ""}`} onClick={() => requestSort("invoice_no")}>
 							Invoice no{getSortIndicator("invoice_no")}
 						</th>
-						<th className="table-header cursor-pointer" onClick={() => requestSort("transaction_datetime")}>
+						<th className={`table-header ${isAbleToSort ? "cursor-pointer" : ""}`} onClick={() => requestSort("transaction_datetime")}>
 							Date{getSortIndicator("transaction_datetime")}
 						</th>
 						<th className="table-header">Item</th>
-						<th className="table-header cursor-pointer" onClick={() => requestSort("quantity")}>
+						<th className={`table-header ${isAbleToSort ? "cursor-pointer" : ""}`} onClick={() => requestSort("quantity")}>
 							Amount{getSortIndicator("quantity")}
 						</th>
 						<th className="table-header">Type</th>
-						<th className="table-header text-center cursor-pointer" onClick={() => requestSort("status")}>
+						<th className={`table-header text-center ${isAbleToSort ? "cursor-pointer" : ""}`} onClick={() => requestSort("status")}>
 							Status{getSortIndicator("status")}
 						</th>
 					</tr>
@@ -197,7 +205,7 @@ export default function StockOutTable({ limit, showPagination = false, currentPa
 									<td className="table-data">{log.transaction_datetime}</td>
 									<td className="table-data">{log.item_name}</td>
 									<td className="table-data">{log.quantity}</td>
-									<td className="table-data">{log.transaction_type_name}</td>
+									<td className="table-data">{log.type_name}</td>
 									<td className="table-data text-center">
 										<span
 											className={`inline-block w-[6rem] px-3 py-1 text-sm font-semibold rounded-full ${

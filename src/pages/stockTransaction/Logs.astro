@@ -12,26 +12,36 @@ const itemsPerPage = 10;
 	<DateTimeInput />
 
 	<div class="flex flex-col gap-1 w-full bg-primary p-4 mt-4 rounded-lg">
-
 		<div class="w-full flex justify-between">
 			<h1 class="text-xl font-bold">Transaction Logs</h1>
-			<a href="/stockTransaction/Dashboard/" class="p-2 text-textColor-primary hover:bg-btn-hover hover:text-white rounded">
-                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5">
-                    <path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12" />
-                </svg>
-            </a>
+
+			<div class="flex gap-2 items-center">
+				<button class="p-2 text-textColor-primary hover:bg-btn-hover hover:text-white rounded">
+					<svg
+						id="filterIcon"
+						xmlns="http://www.w3.org/2000/svg"
+						fill="none"
+						stroke="currentColor"
+						stroke-width="2"
+						class="w-5 h-5"
+						viewBox="0 0 24 24">
+						<line x1="3" y1="6" x2="21" y2="6" />
+						<line x1="6" y1="12" x2="18" y2="12" />
+						<line x1="9" y1="18" x2="15" y2="18" />
+					</svg>
+				</button>
+				<a href="/stockTransaction/Dashboard/" class="p-2 text-textColor-primary hover:bg-btn-hover hover:text-white rounded">
+					<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5">
+						<path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12" />
+					</svg>
+				</a>
+			</div>
 		</div>
 
 		<div class="p-2 flex flex-col gap-4">
-			<LogsTable 
-				showPagination={true} 
-				currentPage={currentPage} 
-				itemsPerPage={itemsPerPage} 
-				client:load 
-			/>
+			<LogsTable showPagination="{true}" currentPage="{currentPage}" itemsPerPage="{itemsPerPage}" client:load />
 		</div>
 	</div>
-
 </Layout>
 
 <script>

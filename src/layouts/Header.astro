@@ -35,3 +35,18 @@
 		</button>
 	</div>
 </header>
+
+<script>
+	document.addEventListener('DOMContentLoaded', () => {
+		const searchbar = document.getElementById('searchbar');
+		searchbar.addEventListener('keydown', (e) => {
+			if (e.key === 'Enter') {
+				const query = searchbar.value.trim();
+				if (query) {
+					window.location.href = `/stockTransaction/Logs?search=${encodeURIComponent(query)}`;
+				}
+			}
+		});
+	});
+</script>
+

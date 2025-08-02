@@ -22,7 +22,9 @@ export const GET: APIRoute = async ({ url }) => {
         expiration_date,
         destination,
         source,
+        total_price,
         items ( name ),
+        transaction_types ( name ),
         suppliers ( name, contact, location )
       `)
       .eq('id', transactionId)
@@ -46,7 +48,9 @@ export const GET: APIRoute = async ({ url }) => {
       supplier_contact: data.suppliers?.contact ?? 'N/A',
       supplier_location: data.suppliers?.location ?? 'N/A',
       item_name: data.items?.name ?? 'N/A',
+      type_name: data.transaction_types?.name ?? 'N/A',
       quantity: data.quantity,
+      total_price: data.total_price,
       expiry_date: data.expiration_date,
       remarks: data.destination || 'No remarks'
     };
