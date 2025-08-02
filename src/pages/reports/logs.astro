@@ -1,39 +1,140 @@
 ---
 import Layout from '../../layouts/Layout.astro';
-import DateTimeInput from '../../components/transactions/DateTimeInput.astro';
-import LogsTable from '../../components/transactions/LogsTable.jsx';
-
-// Get current page from URL parameters
-const currentPage = parseInt(Astro.url.searchParams.get('page') || '1');
-const itemsPerPage = 10;
+import PurchaseOrderLogs from '../../components/reports/logs.jsx';
 ---
 
 <Layout>
-	<DateTimeInput />
+    <!-- Body -->
+    <div class="w-full h-full flex flex-col">
+        <div class="bg-primary flex-1 rounded-lg p-3 sm:p-6 flex flex-col min-h-0">
+            <div class="flex justify-between items-center mb-4">
+                <h2 class="text-textColor-primary text-xl font-semibold">Purchase Order History Logs</h2>
+                <div class="flex items-center gap-2">
+                    <!-- Filter Button -->
+                    <button id="filterBtn" class="p-2 text-textColor-primary hover:bg-btn-hover hover:text-white rounded transition-colors">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M12 3c2.755 0 5.455.232 8.083.678.533.09.917.556.917 1.096v1.044a2.25 2.25 0 01-.659 1.591l-5.432 5.432a2.25 2.25 0 00-.659 1.591v2.927a2.25 2.25 0 01-1.244 2.013L9.75 21v-6.568a2.25 2.25 0 00-.659-1.591L3.659 7.409A2.25 2.25 0 013 5.818V4.774c0-.54.384-1.006.917-1.096A48.32 48.32 0 0112 3z" />
+                        </svg>
+                    </button>
+                    
+                    <!-- Back Button -->
+                    <a href="/reports/Dashboard" class="p-2 text-textColor-primary hover:bg-btn-hover hover:text-white rounded">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12" />
+                        </svg>
+                    </a>
+                </div>
+            </div>
+            
+            <!-- Filter Modal (Hidden by default) -->
+            <div id="filterModal" class="fixed inset-0 bg-black/60 items-center justify-center z-50 hidden">
+                <div class="bg-primary rounded-lg p-6 w-[500px] relative">
+                    <div class="flex justify-between items-center mb-4">
+                        <h3 class="text-textColor-primary text-lg font-semibold">Advanced Filters</h3>
+                        <button id="closeFilterBtn" class="p-2 text-textColor-primary hover:bg-btn-hover hover:text-white rounded">
+                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12" />
+                            </svg>
+                        </button>
+                    </div>
+                    
+                    <div class="space-y-4">
+                        <!-- Date Range -->
+                        <div>
+                            <label class="block text-textColor-primary text-sm font-medium mb-2">Date Range:</label>
+                            <div class="flex items-center gap-3">
+                                <input type="date" id="dateStart" class="flex-1 px-3 py-2 bg-background text-textColor-primary rounded border border-textColor-tertiary focus:border-blue-500 text-sm">
+                                <span class="text-textColor-tertiary">to</span>
+                                <input type="date" id="dateEnd" class="flex-1 px-3 py-2 bg-background text-textColor-primary rounded border border-textColor-tertiary focus:border-blue-500 text-sm">
+                            </div>
+                        </div>
+                        
+                        <!-- Status Filter -->
+                        <div>
+                            <label class="block text-textColor-primary text-sm font-medium mb-2">Status:</label>
+                            <select id="statusFilter" class="w-full px-3 py-2 bg-background text-textColor-primary rounded border border-textColor-tertiary focus:border-blue-500 text-sm">
+                                <option value="">All Status</option>
+                                <option value="pending">Pending</option>
+                                <option value="approved">Approved</option>
+                                <option value="completed">Completed</option>
+                                <option value="cancelled">Cancelled</option>
+                            </select>
+                        </div>
+                        
+                        <!-- Supplier Filter -->
+                        <div>
+                            <label class="block text-textColor-primary text-sm font-medium mb-2">Supplier:</label>
+                            <select id="supplierFilter" class="w-full px-3 py-2 bg-background text-textColor-primary rounded border border-textColor-tertiary focus:border-blue-500 text-sm">
+                                <option value="">All Suppliers</option>
+                                <option value="abc-suppliers">ABC Suppliers Inc.</option>
+                                <option value="xyz-corp">XYZ Corporation</option>
+                                <option value="global-supply">Global Supply Co.</option>
+                            </select>
+                        </div>
+                        
+                        <!-- Amount Range -->
+                        <div>
+                            <label class="block text-textColor-primary text-sm font-medium mb-2">Amount Range:</label>
+                            <div class="flex items-center gap-3">
+                                <input type="number" id="amountMin" placeholder="Min amount" class="flex-1 px-3 py-2 bg-background text-textColor-primary rounded border border-textColor-tertiary focus:border-blue-500 text-sm">
+                                <span class="text-textColor-tertiary">to</span>
+                                <input type="number" id="amountMax" placeholder="Max amount" class="flex-1 px-3 py-2 bg-background text-textColor-primary rounded border border-textColor-tertiary focus:border-blue-500 text-sm">
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="flex gap-3 mt-6">
+                        <button id="clearFiltersBtn" class="flex-1 bg-background hover:bg-textColor-tertiary text-textColor-primary px-4 py-2 rounded font-medium transition-colors">
+                            Clear All
+                        </button>
+                        <button id="applyFiltersBtn" class="flex-1 bg-btn-primary hover:bg-btn-hover text-white px-4 py-2 rounded font-medium transition-colors">
+                            Apply Filters
+                        </button>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="h-full overflow-y-auto">
+                <PurchaseOrderLogs client:load />
+            </div>
+            
+            <!-- Pagination -->
+            <div id="paginationContainer" class="flex justify-between items-center pt-6 border-1gs border-gray-800 flex-shrink-0 hidden">
+                <div id="paginationInfo" class="text-textColor-tertiary text-sm">
+                    Showing 1-10 of 0 purchase orders
+                </div>
+                
+                <div class="flex items-center gap-1">
+                    <!-- Previous Button -->
+                    <button id="prevPageBtn" class="p-2 rounded-md text-textColor-primary hover:bg-gray-700 transition-colors" title="Previous Page">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 19.5 8.25 12l7.5-7.5" />
+                        </svg>
+                    </button>
 
-	<div class="flex flex-col gap-1 w-full bg-primary p-4 mt-4 rounded-lg">
+                    <!-- Page Numbers Container -->
+                    <div id="pageNumbers" class="flex items-center gap-1">
+                        <!-- Page numbers will be inserted here dynamically -->
+                    </div>
 
-		<div class="w-full flex justify-between">
-			<h1 class="text-xl font-bold">Transaction Logs</h1>
-			<a href="/stockTransaction/Dashboard/" class="p-2 text-textColor-primary hover:bg-btn-hover hover:text-white rounded">
-                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5">
-                    <path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12" />
-                </svg>
-            </a>
-		</div>
+                    <!-- Next Button -->
+                    <button id="nextPageBtn" class="p-2 rounded-md text-textColor-primary hover:bg-gray-700 transition-colors" title="Next Page">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="m8.25 4.5 7.5 7.5-7.5 7.5" />
+                        </svg>
+                    </button>
+                    
+                    <!-- Last Page Button -->
+                    <button id="lastPageBtn" class="p-2 rounded-md text-textColor-primary hover:bg-gray-700 transition-colors" title="Last Page">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="m5.25 4.5 7.5 7.5-7.5 7.5m6-15 7.5 7.5-7.5 7.5" />
+                        </svg>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
 
-		<div class="p-2 flex flex-col gap-4">
-			<LogsTable 
-				showPagination={true} 
-				currentPage={currentPage} 
-				itemsPerPage={itemsPerPage} 
-				client:load 
-			/>
-		</div>
-	</div>
-
+    <script is:inline src="/scripts/reports/logs.js"></script>
+    
 </Layout>
-
-<script>
-	// No-op script to enable client-side rendering
-</script>

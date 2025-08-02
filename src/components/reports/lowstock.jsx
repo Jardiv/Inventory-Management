@@ -391,26 +391,52 @@ const LowStockTable = ({ currentPage = 1 }) => {
         setClientCurrentPage(page);
         // Dispatch event to notify Astro page of pagination change
         setTimeout(() => {
-            window.dispatchEvent(new CustomEvent('lowStockPaginationUpdate'));
+            const paginationData = {
+                currentPage: page,
+                totalPages,
+                totalItems,
+                startIndex: ((page - 1) * itemsPerPage) + 1,
+                endIndex: Math.min(page * itemsPerPage, totalItems),
+                itemsPerPage
+            };
+            window.dispatchEvent(new CustomEvent('lowStockPaginationUpdate', { detail: paginationData }));
         }, 50);
     };
 
     const goToPreviousPage = () => {
         if (clientCurrentPage > 1) {
-            setClientCurrentPage(clientCurrentPage - 1);
+            const newPage = clientCurrentPage - 1;
+            setClientCurrentPage(newPage);
             // Dispatch event to notify Astro page of pagination change
             setTimeout(() => {
-                window.dispatchEvent(new CustomEvent('lowStockPaginationUpdate'));
+                const paginationData = {
+                    currentPage: newPage,
+                    totalPages,
+                    totalItems,
+                    startIndex: ((newPage - 1) * itemsPerPage) + 1,
+                    endIndex: Math.min(newPage * itemsPerPage, totalItems),
+                    itemsPerPage
+                };
+                window.dispatchEvent(new CustomEvent('lowStockPaginationUpdate', { detail: paginationData }));
             }, 50);
         }
     };
 
     const goToNextPage = () => {
         if (clientCurrentPage < totalPages) {
-            setClientCurrentPage(clientCurrentPage + 1);
+            const newPage = clientCurrentPage + 1;
+            setClientCurrentPage(newPage);
             // Dispatch event to notify Astro page of pagination change
             setTimeout(() => {
-                window.dispatchEvent(new CustomEvent('lowStockPaginationUpdate'));
+                const paginationData = {
+                    currentPage: newPage,
+                    totalPages,
+                    totalItems,
+                    startIndex: ((newPage - 1) * itemsPerPage) + 1,
+                    endIndex: Math.min(newPage * itemsPerPage, totalItems),
+                    itemsPerPage
+                };
+                window.dispatchEvent(new CustomEvent('lowStockPaginationUpdate', { detail: paginationData }));
             }, 50);
         }
     };
@@ -432,7 +458,15 @@ const LowStockTable = ({ currentPage = 1 }) => {
         
         // Dispatch event to notify Astro page of pagination data update
         setTimeout(() => {
-            window.dispatchEvent(new CustomEvent('lowStockPaginationUpdate'));
+            const paginationData = {
+                currentPage: clientCurrentPage,
+                totalPages,
+                totalItems,
+                startIndex: ((clientCurrentPage - 1) * itemsPerPage) + 1,
+                endIndex: Math.min(clientCurrentPage * itemsPerPage, totalItems),
+                itemsPerPage
+            };
+            window.dispatchEvent(new CustomEvent('lowStockPaginationUpdate', { detail: paginationData }));
         }, 100);
     }, [clientCurrentPage, totalPages, totalItems, goToPage, goToPreviousPage, goToNextPage]);
 
@@ -446,12 +480,21 @@ const LowStockTable = ({ currentPage = 1 }) => {
             toggleFilterModal(true);
         };
         
+        const handleChangePage = (event) => {
+            const { page } = event.detail;
+            if (page && page !== clientCurrentPage) {
+                setClientCurrentPage(page);
+            }
+        };
+        
         window.addEventListener('openFilterModal', handleOpenFilterModal);
+        window.addEventListener('lowStockChangePage', handleChangePage);
         
         return () => {
             window.removeEventListener('openFilterModal', handleOpenFilterModal);
+            window.removeEventListener('lowStockChangePage', handleChangePage);
         };
-    }, []);
+    }, [clientCurrentPage]);
 
     // Handle sorting after data is loaded
     useEffect(() => {
@@ -503,11 +546,11 @@ const LowStockTable = ({ currentPage = 1 }) => {
 
     if (loading) {
         return (
-            <div className="h-full overflow-y-auto">
+            <div className="flex-1 overflow-hidden flex flex-col h-full">
                 {/* Skeleton Table */}
-                <div>
+                <div className="flex-1 overflow-auto">
                     <table className="w-full text-sm">
-                        <thead>
+                        <thead className="sticky top-0 bg-primary z-10">
                             <tr className="text-textColor-primary border-b border-gray-700">
                                 <th className="text-left py-3 px-4 font-medium w-[5%]">
                                     <input type="checkbox" className="rounded bg-gray-700 border-gray-600 pointer-events-none" disabled />
@@ -601,7 +644,7 @@ const LowStockTable = ({ currentPage = 1 }) => {
 
     if (error) {
         return (
-            <div className="h-full overflow-y-auto">
+            <div className="flex-1 overflow-hidden flex flex-col h-full">
                 <div className="text-center py-8">
                     <div className="text-red-400 mb-2">
                         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth="1.5" stroke="currentColor" className="w-12 h-12 mx-auto mb-4">
@@ -623,7 +666,7 @@ const LowStockTable = ({ currentPage = 1 }) => {
 
     if (lowStockData.length === 0) {
         return (
-            <div className="h-full overflow-y-auto">
+            <div className="flex-1 overflow-hidden flex flex-col h-full">
                 <div className="text-center py-8">
                     <div className="text-green-400 mb-2">
                         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth="1.5" stroke="currentColor" className="w-12 h-12 mx-auto mb-4">
@@ -639,11 +682,11 @@ const LowStockTable = ({ currentPage = 1 }) => {
 
     return (
         <>
-            <div className="h-full overflow-y-auto">
+            <div className="flex-1 overflow-hidden flex flex-col h-full">
                 {/* Low Stock Table */}
-                <div>
+                <div className="flex-1 overflow-auto">
                     <table className="w-full text-sm">
-                        <thead>
+                        <thead className="sticky top-0 bg-primary z-10">
                             <tr className="text-textColor-primary border-b border-gray-700">
                                 <th className="text-left py-3 px-4 font-medium w-[5%]">
                                     <input 

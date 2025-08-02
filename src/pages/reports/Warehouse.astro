@@ -9,7 +9,7 @@ const itemsPerPage = 10;
 <!-- WAREHOUSE CAPACITY REPORT -->
 <Layout>
     <!-- Body -->
-    <div class="w-full h-screen flex flex-col p-4">
+    <div class="w-full h-full flex flex-col">
         <div class="bg-primary flex-1 rounded-lg p-6 flex flex-col min-h-0">
             <div class="flex justify-between items-center mb-6">
                 <h2 class="text-textColor-primary text-xl font-semibold">Warehouse Capacity Status</h2>
@@ -35,38 +35,51 @@ const itemsPerPage = 10;
             <!-- Warehouse Table -->
             <WarehouseTable client:load itemsPerPage={itemsPerPage} />
             
+            <!-- Pagination -->
+            <div id="paginationContainer" class="justify-between items-center pt-6 border-t border-gray-700 flex-shrink-0 hidden">
+                <div id="paginationInfo" class="text-textColor-tertiary text-sm">
+                    Showing 1-10 of 0 warehouse locations
+                </div>
+                
+                <div class="flex items-center gap-1">
+                    <!-- First Page Button -->
+                    <button id="firstPageBtn" class="p-2 rounded-md text-textColor-primary hover:bg-gray-700 transition-colors" title="First Page">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="m18.75 4.5-7.5 7.5 7.5 7.5m-6-15L5.25 12l7.5 7.5" />
+                        </svg>
+                    </button>
+
+                    <!-- Previous Button -->
+                    <button id="prevPageBtn" class="p-2 rounded-md text-textColor-primary hover:bg-gray-700 transition-colors" title="Previous Page">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 19.5 8.25 12l7.5-7.5" />
+                        </svg>
+                    </button>
+
+                    <!-- Page Numbers Container -->
+                    <div id="pageNumbers" class="flex items-center gap-1">
+                        <!-- Page numbers will be inserted here dynamically -->
+                    </div>
+
+                    <!-- Next Button -->
+                    <button id="nextPageBtn" class="p-2 rounded-md text-textColor-primary hover:bg-gray-700 transition-colors" title="Next Page">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="m8.25 4.5 7.5 7.5-7.5 7.5" />
+                        </svg>
+                    </button>
+                    
+                    <!-- Last Page Button -->
+                    <button id="lastPageBtn" class="p-2 rounded-md text-textColor-primary hover:bg-gray-700 transition-colors" title="Last Page">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="m5.25 4.5 7.5 7.5-7.5 7.5m6-15 7.5 7.5-7.5 7.5" />
+                        </svg>
+                    </button>
+                </div>
+            </div>
+            
             {/* Note: Pagination is now handled inside the React component */}
         </div>
     </div>
+    <script is:inline src="/scripts/reports/warehouse.js"></script>
 </Layout>
 
-<script>
-    // Connect the filter button to the React component's filter modal
-    document.addEventListener('DOMContentLoaded', function() {
-        const filterBtn = document.getElementById('filterBtn');
-        
-        if (filterBtn) {
-            // Handle filter button click
-            filterBtn.addEventListener('click', function() {
-                // Dispatch a custom event that the React component can listen to
-                window.dispatchEvent(new CustomEvent('openFilterModal'));
-            });
-            
-            // Listen for modal state changes from React component
-            window.addEventListener('filterModalStateChange', function(event) {
-                const customEvent = event as CustomEvent;
-                const isOpen = customEvent.detail.isOpen;
-                
-                if (isOpen) {
-                    // Add active state when modal is open
-                    filterBtn.classList.remove('text-textColor-primary', 'hover:bg-btn-hover', 'hover:text-white');
-                    filterBtn.classList.add('bg-btn-primary', 'text-white');
-                } else {
-                    // Remove active state when modal is closed
-                    filterBtn.classList.remove('bg-btn-primary', 'text-white');
-                    filterBtn.classList.add('text-textColor-primary', 'hover:bg-btn-hover', 'hover:text-white');
-                }
-            });
-        }
-    });
-</script>
