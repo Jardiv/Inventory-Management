@@ -36,12 +36,19 @@ const itemsPerPage = 10;
             <WarehouseTable client:load itemsPerPage={itemsPerPage} />
             
             <!-- Pagination -->
-            <div id="paginationContainer" class="flex justify-between items-center pt-6 border-t border-gray-700 flex-shrink-0 hidden">
+            <div id="paginationContainer" class="justify-between items-center pt-6 border-t border-gray-700 flex-shrink-0 hidden">
                 <div id="paginationInfo" class="text-textColor-tertiary text-sm">
                     Showing 1-10 of 0 warehouse locations
                 </div>
                 
                 <div class="flex items-center gap-1">
+                    <!-- First Page Button -->
+                    <button id="firstPageBtn" class="p-2 rounded-md text-textColor-primary hover:bg-gray-700 transition-colors" title="First Page">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="m18.75 4.5-7.5 7.5 7.5 7.5m-6-15L5.25 12l7.5 7.5" />
+                        </svg>
+                    </button>
+
                     <!-- Previous Button -->
                     <button id="prevPageBtn" class="p-2 rounded-md text-textColor-primary hover:bg-gray-700 transition-colors" title="Previous Page">
                         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5">
@@ -73,210 +80,6 @@ const itemsPerPage = 10;
             {/* Note: Pagination is now handled inside the React component */}
         </div>
     </div>
+    <script is:inline src="/scripts/reports/warehouse.js"></script>
 </Layout>
 
-<script>
-    // Connect the filter button to the React component's filter modal
-    document.addEventListener('DOMContentLoaded', function() {
-        const filterBtn = document.getElementById('filterBtn');
-        
-        if (filterBtn) {
-            // Handle filter button click
-            filterBtn.addEventListener('click', function() {
-                // Dispatch a custom event that the React component can listen to
-                window.dispatchEvent(new CustomEvent('openFilterModal'));
-            });
-            
-            // Listen for modal state changes from React component
-            window.addEventListener('filterModalStateChange', function(event) {
-                const customEvent = event as CustomEvent;
-                const isOpen = customEvent.detail.isOpen;
-                
-                if (isOpen) {
-                    // Add active state when modal is open
-                    filterBtn.classList.remove('text-textColor-primary', 'hover:bg-btn-hover', 'hover:text-white');
-                    filterBtn.classList.add('bg-btn-primary', 'text-white');
-                } else {
-                    // Remove active state when modal is closed
-                    filterBtn.classList.remove('bg-btn-primary', 'text-white');
-                    filterBtn.classList.add('text-textColor-primary', 'hover:bg-btn-hover', 'hover:text-white');
-                }
-            });
-        }
-    });
-
-    // Pagination functionality
-    let currentPaginationData = {
-        currentPage: 1,
-        totalPages: 1,
-        totalItems: 0,
-        startIndex: 1,
-        endIndex: 0,
-        itemsPerPage: 10
-    };
-
-    // Listen for pagination updates from React component
-    window.addEventListener('warehousePaginationUpdate', (event) => {
-        currentPaginationData = event.detail;
-        updatePaginationDisplay();
-    });
-
-    function updatePaginationDisplay() {
-        const paginationContainer = document.getElementById('paginationContainer');
-        const paginationInfo = document.getElementById('paginationInfo');
-        const pageNumbers = document.getElementById('pageNumbers');
-        const prevPageBtn = document.getElementById('prevPageBtn');
-        const nextPageBtn = document.getElementById('nextPageBtn');
-        const lastPageBtn = document.getElementById('lastPageBtn');
-
-        if (!paginationContainer || !paginationInfo || !pageNumbers || !prevPageBtn || !nextPageBtn || !lastPageBtn) return;
-
-        // Show pagination if there are items
-        if (currentPaginationData.totalItems > 0) {
-            paginationContainer.classList.remove('hidden');
-            paginationContainer.classList.add('flex');
-        } else {
-            paginationContainer.classList.add('hidden');
-            paginationContainer.classList.remove('flex');
-            return;
-        }
-
-        // Update info text
-        paginationInfo.textContent = `Showing ${currentPaginationData.startIndex}-${currentPaginationData.endIndex} of ${currentPaginationData.totalItems} warehouse locations`;
-
-        // Update previous button state
-        if (currentPaginationData.currentPage === 1) {
-            prevPageBtn.classList.add('text-gray-500', 'cursor-not-allowed');
-            prevPageBtn.classList.remove('text-textColor-primary', 'hover:bg-gray-700');
-            prevPageBtn.disabled = true;
-        } else {
-            prevPageBtn.classList.remove('text-gray-500', 'cursor-not-allowed');
-            prevPageBtn.classList.add('text-textColor-primary', 'hover:bg-gray-700');
-            prevPageBtn.disabled = false;
-        }
-
-        // Update next button state
-        if (currentPaginationData.currentPage === currentPaginationData.totalPages) {
-            nextPageBtn.classList.add('text-gray-500', 'cursor-not-allowed');
-            nextPageBtn.classList.remove('text-textColor-primary', 'hover:bg-gray-700');
-            nextPageBtn.disabled = true;
-        } else {
-            nextPageBtn.classList.remove('text-gray-500', 'cursor-not-allowed');
-            nextPageBtn.classList.add('text-textColor-primary', 'hover:bg-gray-700');
-            nextPageBtn.disabled = false;
-        }
-
-        // Update last page button state
-        if (currentPaginationData.currentPage === currentPaginationData.totalPages) {
-            lastPageBtn.classList.add('text-gray-500', 'cursor-not-allowed');
-            lastPageBtn.classList.remove('text-textColor-primary', 'hover:bg-gray-700');
-            lastPageBtn.disabled = true;
-        } else {
-            lastPageBtn.classList.remove('text-gray-500', 'cursor-not-allowed');
-            lastPageBtn.classList.add('text-textColor-primary', 'hover:bg-gray-700');
-            lastPageBtn.disabled = false;
-        }
-
-        // Generate page numbers with ellipsis and first/last page access
-        pageNumbers.innerHTML = '';
-        const totalPages = currentPaginationData.totalPages;
-        const currentPage = currentPaginationData.currentPage;
-        
-        if (totalPages <= 7) {
-            // Show all pages if 7 or fewer
-            for (let i = 1; i <= totalPages; i++) {
-                createPageButton(i, currentPage === i);
-            }
-        } else {
-            // Always show first page
-            createPageButton(1, currentPage === 1);
-            
-            if (currentPage > 4) {
-                // Show ellipsis after first page if current page is far from start
-                createEllipsis();
-            }
-            
-            // Calculate the range around current page
-            let startPage = Math.max(2, currentPage - 1);
-            let endPage = Math.min(totalPages - 1, currentPage + 1);
-            
-            // Adjust range to always show 3 pages in the middle (when possible)
-            if (currentPage <= 4) {
-                endPage = Math.min(totalPages - 1, 5);
-            }
-            if (currentPage >= totalPages - 3) {
-                startPage = Math.max(2, totalPages - 4);
-            }
-            
-            // Show pages around current page
-            for (let i = startPage; i <= endPage; i++) {
-                createPageButton(i, currentPage === i);
-            }
-            
-            if (currentPage < totalPages - 3) {
-                // Show ellipsis before last page if current page is far from end
-                createEllipsis();
-            }
-            
-            // Always show last page
-            if (totalPages > 1) {
-                createPageButton(totalPages, currentPage === totalPages);
-            }
-        }
-    }
-
-    function createPageButton(pageNumber, isActive) {
-        const pageBtn = document.createElement('button');
-        pageBtn.textContent = pageNumber;
-        pageBtn.className = `px-3 py-2 rounded-md text-sm font-medium transition-colors ${
-            isActive
-                ? 'bg-btn-primary text-white'
-                : 'text-textColor-primary hover:bg-gray-700 hover:text-white'
-        }`;
-        pageBtn.addEventListener('click', () => changePage(pageNumber));
-        document.getElementById('pageNumbers').appendChild(pageBtn);
-    }
-
-    function createEllipsis() {
-        const ellipsis = document.createElement('span');
-        ellipsis.textContent = '...';
-        ellipsis.className = 'px-2 py-2 text-textColor-tertiary text-sm';
-        document.getElementById('pageNumbers').appendChild(ellipsis);
-    }
-
-    function changePage(page) {
-        const changePageEvent = new CustomEvent('warehouseChangePage', {
-            detail: { page: page }
-        });
-        window.dispatchEvent(changePageEvent);
-    }
-
-    // Add event listeners for navigation buttons
-    const prevPageBtn = document.getElementById('prevPageBtn');
-    const nextPageBtn = document.getElementById('nextPageBtn');
-    const lastPageBtn = document.getElementById('lastPageBtn');
-    
-    if (prevPageBtn) {
-        prevPageBtn.addEventListener('click', () => {
-            if (currentPaginationData.currentPage > 1) {
-                changePage(currentPaginationData.currentPage - 1);
-            }
-        });
-    }
-    
-    if (nextPageBtn) {
-        nextPageBtn.addEventListener('click', () => {
-            if (currentPaginationData.currentPage < currentPaginationData.totalPages) {
-                changePage(currentPaginationData.currentPage + 1);
-            }
-        });
-    }
-    
-    if (lastPageBtn) {
-        lastPageBtn.addEventListener('click', () => {
-            if (currentPaginationData.currentPage < currentPaginationData.totalPages) {
-                changePage(currentPaginationData.totalPages);
-            }
-        });
-    }
-</script>

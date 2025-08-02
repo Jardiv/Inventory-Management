@@ -28,10 +28,6 @@ const DashboardSummary = ({ section }) => {
                 return 'text-red bg-red/10'; // Uses CSS custom property --color-red
             case 'Critical':
                 return 'text-orange bg-orange/10'; // Uses CSS custom property --color-orange
-            case 'High':
-                return 'text-orange bg-orange/10'; // Uses CSS custom property --color-orange
-            case 'Medium':
-                return 'text-blue bg-blue/10'; // Uses CSS custom property --color-blue
             default:
                 return 'text-textColor-tertiary bg-textColor-tertiary/10'; // Fallback to tertiary text color
         }

@@ -396,19 +396,19 @@ const PurchaseOrderLogs = () => {
             ) : (
               currentLogs.map((log) => (
                 <tr key={log.id} className="border-b border-gray-800 hover:bg-tbl-hover transition-colors">
-                  <td className="px-4 py-3 text-textColor-secondary text-sm font-medium">
+                  <td className="px-4 py-3 text-textColor-primary text-sm font-medium">
                     {log.poNumber}
                   </td>
-                  <td className="px-4 py-3 text-textColor-secondary text-sm">
+                  <td className="px-4 py-3 text-textColor-primary text-sm">
                     {log.dateCreated}
                   </td>
-                  <td className="px-4 py-3 text-textColor-secondary text-sm">
+                  <td className="px-4 py-3 text-textColor-primary text-sm">
                     {log.supplier}
                   </td>
-                  <td className="px-4 py-3 text-textColor-secondary text-sm">
+                  <td className="px-4 py-3 text-textColor-primary text-sm">
                     {log.totalQuantity} pcs
                   </td>
-                  <td className="px-4 py-3 text-textColor-secondary text-sm font-medium">
+                  <td className="px-4 py-3 text-textColor-primary text-sm font-medium">
                     {log.totalAmount}
                   </td>
                   <td className="px-4 py-3">
@@ -416,14 +416,14 @@ const PurchaseOrderLogs = () => {
                       {log.status}
                     </span>
                   </td>
-                  <td className="px-4 py-3 text-textColor-secondary text-sm">
+                  <td className="px-4 py-3 text-textColor-primary text-sm">
                     {log.createdBy}
                   </td>
                   <td className="px-4 py-3">
                     <div className="flex items-center gap-2">
                       <button
                         onClick={() => handleViewDetails(log)}
-                        className="p-1 text-blue-400 hover:text-blue-300 transition-colors"
+                        className="p-1 text-btn-primary hover:text-textColor-primary transition-colors"
                         title="View Details"
                       >
                         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth="1.5" stroke="currentColor" className="w-4 h-4">
@@ -433,7 +433,7 @@ const PurchaseOrderLogs = () => {
                       </button>
                       <button
                         onClick={() => handleDownloadPDF(log)}
-                        className="p-1 text-green-400 hover:text-green-300 transition-colors"
+                        className="p-1 text-green hover:text-textColor-primary transition-colors"
                         title="Download PDF"
                       >
                         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth="1.5" stroke="currentColor" className="w-4 h-4">

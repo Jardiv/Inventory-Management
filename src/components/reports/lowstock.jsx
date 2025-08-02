@@ -391,26 +391,52 @@ const LowStockTable = ({ currentPage = 1 }) => {
         setClientCurrentPage(page);
         // Dispatch event to notify Astro page of pagination change
         setTimeout(() => {
-            window.dispatchEvent(new CustomEvent('lowStockPaginationUpdate'));
+            const paginationData = {
+                currentPage: page,
+                totalPages,
+                totalItems,
+                startIndex: ((page - 1) * itemsPerPage) + 1,
+                endIndex: Math.min(page * itemsPerPage, totalItems),
+                itemsPerPage
+            };
+            window.dispatchEvent(new CustomEvent('lowStockPaginationUpdate', { detail: paginationData }));
         }, 50);
     };
 
     const goToPreviousPage = () => {
         if (clientCurrentPage > 1) {
-            setClientCurrentPage(clientCurrentPage - 1);
+            const newPage = clientCurrentPage - 1;
+            setClientCurrentPage(newPage);
             // Dispatch event to notify Astro page of pagination change
             setTimeout(() => {
-                window.dispatchEvent(new CustomEvent('lowStockPaginationUpdate'));
+                const paginationData = {
+                    currentPage: newPage,
+                    totalPages,
+                    totalItems,
+                    startIndex: ((newPage - 1) * itemsPerPage) + 1,
+                    endIndex: Math.min(newPage * itemsPerPage, totalItems),
+                    itemsPerPage
+                };
+                window.dispatchEvent(new CustomEvent('lowStockPaginationUpdate', { detail: paginationData }));
             }, 50);
         }
     };
 
     const goToNextPage = () => {
         if (clientCurrentPage < totalPages) {
-            setClientCurrentPage(clientCurrentPage + 1);
+            const newPage = clientCurrentPage + 1;
+            setClientCurrentPage(newPage);
             // Dispatch event to notify Astro page of pagination change
             setTimeout(() => {
-                window.dispatchEvent(new CustomEvent('lowStockPaginationUpdate'));
+                const paginationData = {
+                    currentPage: newPage,
+                    totalPages,
+                    totalItems,
+                    startIndex: ((newPage - 1) * itemsPerPage) + 1,
+                    endIndex: Math.min(newPage * itemsPerPage, totalItems),
+                    itemsPerPage
+                };
+                window.dispatchEvent(new CustomEvent('lowStockPaginationUpdate', { detail: paginationData }));
             }, 50);
         }
     };
@@ -432,7 +458,15 @@ const LowStockTable = ({ currentPage = 1 }) => {
         
         // Dispatch event to notify Astro page of pagination data update
         setTimeout(() => {
-            window.dispatchEvent(new CustomEvent('lowStockPaginationUpdate'));
+            const paginationData = {
+                currentPage: clientCurrentPage,
+                totalPages,
+                totalItems,
+                startIndex: ((clientCurrentPage - 1) * itemsPerPage) + 1,
+                endIndex: Math.min(clientCurrentPage * itemsPerPage, totalItems),
+                itemsPerPage
+            };
+            window.dispatchEvent(new CustomEvent('lowStockPaginationUpdate', { detail: paginationData }));
         }, 100);
     }, [clientCurrentPage, totalPages, totalItems, goToPage, goToPreviousPage, goToNextPage]);
 
@@ -446,12 +480,21 @@ const LowStockTable = ({ currentPage = 1 }) => {
             toggleFilterModal(true);
         };
         
+        const handleChangePage = (event) => {
+            const { page } = event.detail;
+            if (page && page !== clientCurrentPage) {
+                setClientCurrentPage(page);
+            }
+        };
+        
         window.addEventListener('openFilterModal', handleOpenFilterModal);
+        window.addEventListener('lowStockChangePage', handleChangePage);
         
         return () => {
             window.removeEventListener('openFilterModal', handleOpenFilterModal);
+            window.removeEventListener('lowStockChangePage', handleChangePage);
         };
-    }, []);
+    }, [clientCurrentPage]);
 
     // Handle sorting after data is loaded
     useEffect(() => {
