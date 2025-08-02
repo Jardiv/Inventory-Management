@@ -546,11 +546,11 @@ const LowStockTable = ({ currentPage = 1 }) => {
 
     if (loading) {
         return (
-            <div className="h-full overflow-y-auto">
+            <div className="flex-1 overflow-hidden flex flex-col h-full">
                 {/* Skeleton Table */}
-                <div>
+                <div className="flex-1 overflow-auto">
                     <table className="w-full text-sm">
-                        <thead>
+                        <thead className="sticky top-0 bg-primary z-10">
                             <tr className="text-textColor-primary border-b border-gray-700">
                                 <th className="text-left py-3 px-4 font-medium w-[5%]">
                                     <input type="checkbox" className="rounded bg-gray-700 border-gray-600 pointer-events-none" disabled />
@@ -644,7 +644,7 @@ const LowStockTable = ({ currentPage = 1 }) => {
 
     if (error) {
         return (
-            <div className="h-full overflow-y-auto">
+            <div className="flex-1 overflow-hidden flex flex-col h-full">
                 <div className="text-center py-8">
                     <div className="text-red-400 mb-2">
                         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth="1.5" stroke="currentColor" className="w-12 h-12 mx-auto mb-4">
@@ -666,7 +666,7 @@ const LowStockTable = ({ currentPage = 1 }) => {
 
     if (lowStockData.length === 0) {
         return (
-            <div className="h-full overflow-y-auto">
+            <div className="flex-1 overflow-hidden flex flex-col h-full">
                 <div className="text-center py-8">
                     <div className="text-green-400 mb-2">
                         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth="1.5" stroke="currentColor" className="w-12 h-12 mx-auto mb-4">
@@ -682,11 +682,11 @@ const LowStockTable = ({ currentPage = 1 }) => {
 
     return (
         <>
-            <div className="h-full overflow-y-auto">
+            <div className="flex-1 overflow-hidden flex flex-col h-full">
                 {/* Low Stock Table */}
-                <div>
+                <div className="flex-1 overflow-auto">
                     <table className="w-full text-sm">
-                        <thead>
+                        <thead className="sticky top-0 bg-primary z-10">
                             <tr className="text-textColor-primary border-b border-gray-700">
                                 <th className="text-left py-3 px-4 font-medium w-[5%]">
                                     <input 
