@@ -1,5 +1,6 @@
 ---
 import Layout from '../../layouts/Layout.astro';
+import PurchaseOrderLogs from '../../components/reports/logs.jsx';
 ---
 
 <Layout>
@@ -42,16 +43,16 @@ import Layout from '../../layouts/Layout.astro';
                     <div>
                         <label class="block text-textColor-primary text-sm font-medium mb-2">Date Range:</label>
                         <div class="flex items-center gap-3">
-                            <input type="date" class="flex-1 px-3 py-2 bg-background text-textColor-primary rounded border border-textColor-tertiary focus:border-blue-500 text-sm">
+                            <input type="date" id="dateStart" class="flex-1 px-3 py-2 bg-background text-textColor-primary rounded border border-textColor-tertiary focus:border-blue-500 text-sm">
                             <span class="text-textColor-tertiary">to</span>
-                            <input type="date" class="flex-1 px-3 py-2 bg-background text-textColor-primary rounded border border-textColor-tertiary focus:border-blue-500 text-sm">
+                            <input type="date" id="dateEnd" class="flex-1 px-3 py-2 bg-background text-textColor-primary rounded border border-textColor-tertiary focus:border-blue-500 text-sm">
                         </div>
                     </div>
                     
                     <!-- Status Filter -->
                     <div>
                         <label class="block text-textColor-primary text-sm font-medium mb-2">Status:</label>
-                        <select class="w-full px-3 py-2 bg-background text-textColor-primary rounded border border-textColor-tertiary focus:border-blue-500 text-sm">
+                        <select id="statusFilter" class="w-full px-3 py-2 bg-background text-textColor-primary rounded border border-textColor-tertiary focus:border-blue-500 text-sm">
                             <option value="">All Status</option>
                             <option value="pending">Pending</option>
                             <option value="approved">Approved</option>
@@ -63,7 +64,7 @@ import Layout from '../../layouts/Layout.astro';
                     <!-- Supplier Filter -->
                     <div>
                         <label class="block text-textColor-primary text-sm font-medium mb-2">Supplier:</label>
-                        <select class="w-full px-3 py-2 bg-background text-textColor-primary rounded border border-textColor-tertiary focus:border-blue-500 text-sm">
+                        <select id="supplierFilter" class="w-full px-3 py-2 bg-background text-textColor-primary rounded border border-textColor-tertiary focus:border-blue-500 text-sm">
                             <option value="">All Suppliers</option>
                             <option value="abc-suppliers">ABC Suppliers Inc.</option>
                             <option value="xyz-corp">XYZ Corporation</option>
@@ -75,9 +76,9 @@ import Layout from '../../layouts/Layout.astro';
                     <div>
                         <label class="block text-textColor-primary text-sm font-medium mb-2">Amount Range:</label>
                         <div class="flex items-center gap-3">
-                            <input type="number" placeholder="Min amount" class="flex-1 px-3 py-2 bg-background text-textColor-primary rounded border border-textColor-tertiary focus:border-blue-500 text-sm">
+                            <input type="number" id="amountMin" placeholder="Min amount" class="flex-1 px-3 py-2 bg-background text-textColor-primary rounded border border-textColor-tertiary focus:border-blue-500 text-sm">
                             <span class="text-textColor-tertiary">to</span>
-                            <input type="number" placeholder="Max amount" class="flex-1 px-3 py-2 bg-background text-textColor-primary rounded border border-textColor-tertiary focus:border-blue-500 text-sm">
+                            <input type="number" id="amountMax" placeholder="Max amount" class="flex-1 px-3 py-2 bg-background text-textColor-primary rounded border border-textColor-tertiary focus:border-blue-500 text-sm">
                         </div>
                     </div>
                 </div>
@@ -94,212 +95,39 @@ import Layout from '../../layouts/Layout.astro';
         </div>
         
         <div class="h-full overflow-y-auto">
-            <!-- Purchase Order Logs Table -->
-            <div class="overflow-x-auto">
-                <table class="w-full text-left">
-                    <thead class="sticky top-0 bg-background">
-                        <tr class="border-b border-gray-700">
-                            <th class="px-4 py-3 text-textColor-primary font-medium text-sm">
-                                <button class="flex items-center gap-1 hover:text-blue-400 transition-colors sortable-header" data-sort="po-number">
-                                    PO Number
-                                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-3 h-3 sort-icon">
-                                        <path stroke-linecap="round" stroke-linejoin="round" d="M8.25 15L12 18.75 15.75 15m-7.5-6L12 5.25 15.75 9" />
-                                    </svg>
-                                </button>
-                            </th>
-                            <th class="px-4 py-3 text-textColor-primary font-medium text-sm">
-                                <button class="flex items-center gap-1 hover:text-blue-400 transition-colors sortable-header" data-sort="date">
-                                    Date Created
-                                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-3 h-3 sort-icon">
-                                        <path stroke-linecap="round" stroke-linejoin="round" d="M8.25 15L12 18.75 15.75 15m-7.5-6L12 5.25 15.75 9" />
-                                    </svg>
-                                </button>
-                            </th>
-                            <th class="px-4 py-3 text-textColor-primary font-medium text-sm">
-                                <button class="flex items-center gap-1 hover:text-blue-400 transition-colors sortable-header" data-sort="supplier">
-                                    Supplier
-                                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-3 h-3 sort-icon">
-                                        <path stroke-linecap="round" stroke-linejoin="round" d="M8.25 15L12 18.75 15.75 15m-7.5-6L12 5.25 15.75 9" />
-                                    </svg>
-                                </button>
-                            </th>
-                            <th class="px-4 py-3 text-textColor-primary font-medium text-sm">
-                                <button class="flex items-center gap-1 hover:text-blue-400 transition-colors sortable-header" data-sort="quantity">
-                                    Order Quantity
-                                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-3 h-3 sort-icon">
-                                        <path stroke-linecap="round" stroke-linejoin="round" d="M8.25 15L12 18.75 15.75 15m-7.5-6L12 5.25 15.75 9" />
-                                    </svg>
-                                </button>
-                            </th>
-                            <th class="px-4 py-3 text-textColor-primary font-medium text-sm">
-                                <button class="flex items-center gap-1 hover:text-blue-400 transition-colors sortable-header" data-sort="amount">
-                                    Total Amount
-                                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-3 h-3 sort-icon">
-                                        <path stroke-linecap="round" stroke-linejoin="round" d="M8.25 15L12 18.75 15.75 15m-7.5-6L12 5.25 15.75 9" />
-                                    </svg>
-                                </button>
-                            </th>
-                            <th class="px-4 py-3 text-textColor-primary font-medium text-sm">
-                                <button class="flex items-center gap-1 hover:text-blue-400 transition-colors sortable-header" data-sort="status">
-                                    Status
-                                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-3 h-3 sort-icon">
-                                        <path stroke-linecap="round" stroke-linejoin="round" d="M8.25 15L12 18.75 15.75 15m-7.5-6L12 5.25 15.75 9" />
-                                    </svg>
-                                </button>
-                            </th>
-                            <th class="px-4 py-3 text-textColor-primary font-medium text-sm">
-                                <button class="flex items-center gap-1 hover:text-blue-400 transition-colors sortable-header" data-sort="created-by">
-                                    Created By
-                                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-3 h-3 sort-icon">
-                                        <path stroke-linecap="round" stroke-linejoin="round" d="M8.25 15L12 18.75 15.75 15m-7.5-6L12 5.25 15.75 15m-7.5-6L12 5.25 15.75 9" />
-                                    </svg>
-                                </button>
-                            </th>
-                            <th class="px-4 py-3 text-textColor-primary font-medium text-sm">Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <!-- Sample Row 1 -->
-                        <tr class="border-b border-gray-700 hover:bg-tbl-hover transition-colors">
-                            <td class="px-4 py-3 text-textColor-secondary font-mono text-sm">PO-2025-001</td>
-                            <td class="px-4 py-3 text-textColor-secondary text-sm">Jan 15, 2025</td>
-                            <td class="px-4 py-3 text-textColor-secondary text-sm">ABC Suppliers Inc.</td>
-                            <td class="px-4 py-3 text-textColor-secondary text-sm">150 pcs (5 items)</td>
-                            <td class="px-4 py-3 text-textColor-secondary text-sm">$2,750.00</td>
-                            <td class="px-4 py-3">
-                                <span class="px-2 py-1 bg-green/10 text-green rounded-full text-xs font-medium">Completed</span>
-                            </td>
-                            <td class="px-4 py-3 text-textColor-secondary text-sm">Admin User</td>
-                            <td class="px-4 py-3">
-                                <div class="flex gap-2">
-                                    <button class="p-1 text-blue-400 hover:text-blue-300 rounded" title="View Details">
-                                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-4 h-4">
-                                            <path stroke-linecap="round" stroke-linejoin="round" d="M2.036 12.322a1.012 1.012 0 010-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178z" />
-                                            <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                                        </svg>
-                                    </button>
-                                    <button class="p-1 text-gray-400 hover:text-gray-300 rounded" title="Download PDF">
-                                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-4 h-4">
-                                            <path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5M16.5 12L12 16.5m0 0L7.5 12m4.5 4.5V3" />
-                                        </svg>
-                                    </button>
-                                </div>
-                            </td>
-                        </tr>
-                        
-                        <!-- Sample Row 2 -->
-                        <tr class="border-b border-gray-700 hover:bg-tbl-hover transition-colors">
-                            <td class="px-4 py-3 text-textColor-secondary font-mono text-sm">PO-2025-002</td>
-                            <td class="px-4 py-3 text-textColor-secondary text-sm">Jan 18, 2025</td>
-                            <td class="px-4 py-3 text-textColor-secondary text-sm">XYZ Corporation</td>
-                            <td class="px-4 py-3 text-textColor-secondary text-sm">75 pcs (3 items)</td>
-                            <td class="px-4 py-3 text-textColor-secondary text-sm">$1,890.00</td>
-                            <td class="px-4 py-3">
-                                <span class="px-2 py-1 bg-yellow/10 text-yellow rounded-full text-xs font-medium">Pending</span>
-                            </td>
-                            <td class="px-4 py-3 text-textColor-secondary text-sm">Manager User</td>
-                            <td class="px-4 py-3">
-                                <div class="flex gap-2">
-                                    <button class="p-1 text-blue-400 hover:text-blue-300 rounded" title="View Details">
-                                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-4 h-4">
-                                            <path stroke-linecap="round" stroke-linejoin="round" d="M2.036 12.322a1.012 1.012 0 010-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178z" />
-                                            <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                                        </svg>
-                                    </button>
-                                    <button class="p-1 text-gray-400 hover:text-gray-300 rounded" title="Download PDF">
-                                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-4 h-4">
-                                            <path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5M16.5 12L12 16.5m0 0L7.5 12m4.5 4.5V3" />
-                                        </svg>
-                                    </button>
-                                </div>
-                            </td>
-                        </tr>
-                        
-                        <!-- Sample Row 3 -->
-                        <tr class="border-b border-gray-700 hover:bg-tbl-hover transition-colors">
-                            <td class="px-4 py-3 text-textColor-secondary font-mono text-sm">PO-2025-003</td>
-                            <td class="px-4 py-3 text-textColor-secondary text-sm">Jan 20, 2025</td>
-                            <td class="px-4 py-3 text-textColor-secondary text-sm">Global Supply Co.</td>
-                            <td class="px-4 py-3 text-textColor-secondary text-sm">200 pcs (8 items)</td>
-                            <td class="px-4 py-3 text-textColor-secondary text-sm">$4,250.00</td>
-                            <td class="px-4 py-3">
-                                <span class="px-2 py-1 bg-blue/10 text-blue rounded-full text-xs font-medium">Approved</span>
-                            </td>
-                            <td class="px-4 py-3 text-textColor-secondary text-sm">Admin User</td>
-                            <td class="px-4 py-3">
-                                <div class="flex gap-2">
-                                    <button class="p-1 text-blue-400 hover:text-blue-300 rounded" title="View Details">
-                                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-4 h-4">
-                                            <path stroke-linecap="round" stroke-linejoin="round" d="M2.036 12.322a1.012 1.012 0 010-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178z" />
-                                            <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                                        </svg>
-                                    </button>
-                                    <button class="p-1 text-gray-400 hover:text-gray-300 rounded" title="Download PDF">
-                                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-4 h-4">
-                                            <path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5M16.5 12L12 16.5m0 0L7.5 12m4.5 4.5V3" />
-                                        </svg>
-                                    </button>
-                                </div>
-                            </td>
-                        </tr>
-                        
-                        <!-- Sample Row 4 -->
-                        <tr class="border-b border-gray-700 hover:bg-tbl-hover transition-colors">
-                            <td class="px-4 py-3 text-textColor-secondary font-mono text-sm">PO-2025-004</td>
-                            <td class="px-4 py-3 text-textColor-secondary text-sm">Jan 22, 2025</td>
-                            <td class="px-4 py-3 text-textColor-secondary text-sm">ABC Suppliers Inc.</td>
-                            <td class="px-4 py-3 text-textColor-secondary text-sm">50 pcs (2 items)</td>
-                            <td class="px-4 py-3 text-textColor-secondary text-sm">$1,120.00</td>
-                            <td class="px-4 py-3">
-                                <span class="px-2 py-1 bg-red/10 text-red rounded-full text-xs font-medium">Cancelled</span>
-                            </td>
-                            <td class="px-4 py-3 text-textColor-secondary text-sm">Manager User</td>
-                            <td class="px-4 py-3">
-                                <div class="flex gap-2">
-                                    <button class="p-1 text-blue-400 hover:text-blue-300 rounded" title="View Details">
-                                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-4 h-4">
-                                            <path stroke-linecap="round" stroke-linejoin="round" d="M2.036 12.322a1.012 1.012 0 010-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178z" />
-                                            <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                                        </svg>
-                                    </button>
-                                    <button class="p-1 text-gray-400 hover:text-gray-300 rounded" title="Download PDF">
-                                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-4 h-4">
-                                            <path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5M16.5 12L12 16.5m0 0L7.5 12m4.5 4.5V3" />
-                                        </svg>
-                                    </button>
-                                </div>
-                            </td>
-                        </tr>
-                    </tbody>
-                </table>
-            </div>
+            <PurchaseOrderLogs client:load />
         </div>
         
         <!-- Pagination -->
-        <div class="flex justify-between items-center pt-6 border-t border-gray-700 flex-shrink-0">
-            <div class="text-textColor-tertiary text-sm">
-                Showing 1-4 of 25 purchase orders
+        <div id="paginationContainer" class="flex justify-between items-center pt-6 border-t border-gray-700 flex-shrink-0 hidden">
+            <div id="paginationInfo" class="text-textColor-tertiary text-sm">
+                Showing 1-10 of 0 purchase orders
             </div>
             
             <div class="flex items-center gap-1">
                 <!-- Previous Button -->
-                <button class="p-2 rounded-md text-gray-500 cursor-not-allowed">
+                <button id="prevPageBtn" class="p-2 rounded-md text-textColor-primary hover:bg-gray-700 transition-colors" title="Previous Page">
                     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5">
                         <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 19.5 8.25 12l7.5-7.5" />
                     </svg>
                 </button>
 
-                <!-- Page Numbers -->
-                <button class="px-3 py-2 rounded-md text-sm font-medium bg-btn-primary text-white">1</button>
-                <button class="px-3 py-2 rounded-md text-sm font-medium text-textColor-primary hover:bg-gray-700 hover:text-white transition-colors">2</button>
-                <button class="px-3 py-2 rounded-md text-sm font-medium text-textColor-primary hover:bg-gray-700 hover:text-white transition-colors">3</button>
-                <span class="px-3 py-2 text-gray-500">...</span>
-                <button class="px-3 py-2 rounded-md text-sm font-medium text-textColor-primary hover:bg-gray-700 hover:text-white transition-colors">7</button>
+                <!-- Page Numbers Container -->
+                <div id="pageNumbers" class="flex items-center gap-1">
+                    <!-- Page numbers will be inserted here dynamically -->
+                </div>
 
                 <!-- Next Button -->
-                <button class="p-2 rounded-md text-textColor-primary hover:bg-gray-700 transition-colors">
+                <button id="nextPageBtn" class="p-2 rounded-md text-textColor-primary hover:bg-gray-700 transition-colors" title="Next Page">
                     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5">
                         <path stroke-linecap="round" stroke-linejoin="round" d="m8.25 4.5 7.5 7.5-7.5 7.5" />
+                    </svg>
+                </button>
+                
+                <!-- Last Page Button -->
+                <button id="lastPageBtn" class="p-2 rounded-md text-textColor-primary hover:bg-gray-700 transition-colors" title="Last Page">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="m5.25 4.5 7.5 7.5-7.5 7.5m6-15 7.5 7.5-7.5 7.5" />
                     </svg>
                 </button>
             </div>
@@ -314,134 +142,245 @@ import Layout from '../../layouts/Layout.astro';
         const applyFiltersBtn = document.getElementById('applyFiltersBtn');
         const clearFiltersBtn = document.getElementById('clearFiltersBtn');
 
-        filterBtn.addEventListener('click', () => {
-            filterModal.classList.remove('hidden');
-            filterModal.classList.add('flex');
-        });
+        if (filterBtn && filterModal && closeFilterBtn && applyFiltersBtn && clearFiltersBtn) {
+            filterBtn.addEventListener('click', () => {
+                filterModal.classList.remove('hidden');
+                filterModal.classList.add('flex');
+            });
 
-        closeFilterBtn.addEventListener('click', () => {
-            filterModal.classList.add('hidden');
-            filterModal.classList.remove('flex');
-        });
-
-        // Close modal when clicking outside
-        filterModal.addEventListener('click', (e) => {
-            if (e.target === filterModal) {
+            closeFilterBtn.addEventListener('click', () => {
                 filterModal.classList.add('hidden');
                 filterModal.classList.remove('flex');
-            }
-        });
+            });
 
-        applyFiltersBtn.addEventListener('click', () => {
-            // Apply filter logic here
-            console.log('Applying filters...');
-            filterModal.classList.add('hidden');
-            filterModal.classList.remove('flex');
-        });
-
-        clearFiltersBtn.addEventListener('click', () => {
-            // Clear all form inputs
-            const inputs = filterModal.querySelectorAll('input, select');
-            inputs.forEach(input => {
-                if (input.type === 'date' || input.type === 'number') {
-                    input.value = '';
-                } else {
-                    input.selectedIndex = 0;
+            // Close modal when clicking outside
+            filterModal.addEventListener('click', (e) => {
+                if (e.target === filterModal) {
+                    filterModal.classList.add('hidden');
+                    filterModal.classList.remove('flex');
                 }
             });
-        });
 
-        // Sorting functionality
-        let currentSort = { column: null, direction: 'asc' };
-        
-        const sortableHeaders = document.querySelectorAll('.sortable-header');
-        
-        sortableHeaders.forEach(header => {
-            header.addEventListener('click', () => {
-                const column = header.dataset.sort;
-                const sortIcon = header.querySelector('.sort-icon');
-                
-                // Reset all other sort icons
-                sortableHeaders.forEach(h => {
-                    if (h !== header) {
-                        const icon = h.querySelector('.sort-icon');
-                        icon.innerHTML = '<path stroke-linecap="round" stroke-linejoin="round" d="M8.25 15L12 18.75 15.75 15m-7.5-6L12 5.25 15.75 9" />';
-                        h.classList.remove('text-blue-400');
+            applyFiltersBtn.addEventListener('click', () => {
+                // Get filter values
+                const dateStart = document.getElementById('dateStart')?.value || '';
+                const dateEnd = document.getElementById('dateEnd')?.value || '';
+                const status = document.getElementById('statusFilter')?.value || '';
+                const supplier = document.getElementById('supplierFilter')?.value || '';
+                const amountMin = document.getElementById('amountMin')?.value || '';
+                const amountMax = document.getElementById('amountMax')?.value || '';
+
+                // Send custom event to React component with filter data
+                const filterEvent = new CustomEvent('applyFilters', {
+                    detail: {
+                        dateRange: { start: dateStart, end: dateEnd },
+                        status: status,
+                        supplier: supplier,
+                        amountRange: { min: amountMin, max: amountMax }
                     }
                 });
-                
-                // Toggle sort direction
-                if (currentSort.column === column) {
-                    currentSort.direction = currentSort.direction === 'asc' ? 'desc' : 'asc';
-                } else {
-                    currentSort.column = column;
-                    currentSort.direction = 'asc';
-                }
-                
-                // Update sort icon
-                header.classList.add('text-blue-400');
-                if (currentSort.direction === 'asc') {
-                    sortIcon.innerHTML = '<path stroke-linecap="round" stroke-linejoin="round" d="M8.25 15L12 18.75 15.75 15" />';
-                } else {
-                    sortIcon.innerHTML = '<path stroke-linecap="round" stroke-linejoin="round" d="M8.25 9L12 5.25 15.75 9" />';
-                }
-                
-                // Apply sorting logic here
-                console.log(`Sorting by ${column} in ${currentSort.direction} order`);
-                sortTable(column, currentSort.direction);
+                window.dispatchEvent(filterEvent);
+
+                // Close modal
+                filterModal.classList.add('hidden');
+                filterModal.classList.remove('flex');
             });
+
+            clearFiltersBtn.addEventListener('click', () => {
+                // Clear all form inputs
+                const dateStart = document.getElementById('dateStart');
+                const dateEnd = document.getElementById('dateEnd');
+                const statusFilter = document.getElementById('statusFilter');
+                const supplierFilter = document.getElementById('supplierFilter');
+                const amountMin = document.getElementById('amountMin');
+                const amountMax = document.getElementById('amountMax');
+
+                if (dateStart) dateStart.value = '';
+                if (dateEnd) dateEnd.value = '';
+                if (statusFilter) statusFilter.selectedIndex = 0;
+                if (supplierFilter) supplierFilter.selectedIndex = 0;
+                if (amountMin) amountMin.value = '';
+                if (amountMax) amountMax.value = '';
+
+                // Send clear filters event to React component
+                const clearEvent = new CustomEvent('clearFilters');
+                window.dispatchEvent(clearEvent);
+            });
+        }
+
+        // Pagination functionality
+        let currentPaginationData = {
+            currentPage: 1,
+            totalPages: 1,
+            totalItems: 0,
+            startIndex: 1,
+            endIndex: 0,
+            itemsPerPage: 10
+        };
+
+        // Listen for pagination updates from React component
+        window.addEventListener('paginationUpdate', (event) => {
+            currentPaginationData = event.detail;
+            updatePaginationDisplay();
         });
-        
-        function sortTable(column: string, direction: string) {
-            const tbody = document.querySelector('tbody');
-            if (!tbody) return;
+
+        function updatePaginationDisplay() {
+            const paginationContainer = document.getElementById('paginationContainer');
+            const paginationInfo = document.getElementById('paginationInfo');
+            const pageNumbers = document.getElementById('pageNumbers');
+            const prevPageBtn = document.getElementById('prevPageBtn');
+            const nextPageBtn = document.getElementById('nextPageBtn');
+            const lastPageBtn = document.getElementById('lastPageBtn');
+
+            if (!paginationContainer || !paginationInfo || !pageNumbers || !prevPageBtn || !nextPageBtn || !lastPageBtn) return;
+
+            // Show pagination if there are items
+            if (currentPaginationData.totalItems > 0) {
+                paginationContainer.classList.remove('hidden');
+                paginationContainer.classList.add('flex');
+            } else {
+                paginationContainer.classList.add('hidden');
+                paginationContainer.classList.remove('flex');
+                return;
+            }
+
+            // Update info text
+            paginationInfo.textContent = `Showing ${currentPaginationData.startIndex}-${currentPaginationData.endIndex} of ${currentPaginationData.totalItems} purchase orders`;
+
+            // Update previous button state
+            if (currentPaginationData.currentPage === 1) {
+                prevPageBtn.classList.add('text-gray-500', 'cursor-not-allowed');
+                prevPageBtn.classList.remove('text-textColor-primary', 'hover:bg-gray-700');
+                prevPageBtn.disabled = true;
+            } else {
+                prevPageBtn.classList.remove('text-gray-500', 'cursor-not-allowed');
+                prevPageBtn.classList.add('text-textColor-primary', 'hover:bg-gray-700');
+                prevPageBtn.disabled = false;
+            }
+
+            // Update next button state
+            if (currentPaginationData.currentPage === currentPaginationData.totalPages) {
+                nextPageBtn.classList.add('text-gray-500', 'cursor-not-allowed');
+                nextPageBtn.classList.remove('text-textColor-primary', 'hover:bg-gray-700');
+                nextPageBtn.disabled = true;
+            } else {
+                nextPageBtn.classList.remove('text-gray-500', 'cursor-not-allowed');
+                nextPageBtn.classList.add('text-textColor-primary', 'hover:bg-gray-700');
+                nextPageBtn.disabled = false;
+            }
+
+            // Update last page button state
+            if (currentPaginationData.currentPage === currentPaginationData.totalPages) {
+                lastPageBtn.classList.add('text-gray-500', 'cursor-not-allowed');
+                lastPageBtn.classList.remove('text-textColor-primary', 'hover:bg-gray-700');
+                lastPageBtn.disabled = true;
+            } else {
+                lastPageBtn.classList.remove('text-gray-500', 'cursor-not-allowed');
+                lastPageBtn.classList.add('text-textColor-primary', 'hover:bg-gray-700');
+                lastPageBtn.disabled = false;
+            }
+
+            // Generate page numbers with ellipsis and first/last page access
+            pageNumbers.innerHTML = '';
+            const totalPages = currentPaginationData.totalPages;
+            const currentPage = currentPaginationData.currentPage;
             
-            const rows = Array.from(tbody.querySelectorAll('tr'));
-            
-            rows.sort((a, b) => {
-                let aValue: any, bValue: any;
+            if (totalPages <= 7) {
+                // Show all pages if 7 or fewer
+                for (let i = 1; i <= totalPages; i++) {
+                    createPageButton(i, currentPage === i);
+                }
+            } else {
+                // Always show first page
+                createPageButton(1, currentPage === 1);
                 
-                switch (column) {
-                    case 'po-number':
-                        aValue = a.cells[0]?.textContent?.trim() || '';
-                        bValue = b.cells[0]?.textContent?.trim() || '';
-                        break;
-                    case 'date':
-                        aValue = new Date(a.cells[1]?.textContent?.trim() || '');
-                        bValue = new Date(b.cells[1]?.textContent?.trim() || '');
-                        break;
-                    case 'supplier':
-                        aValue = (a.cells[2]?.textContent?.trim() || '').toLowerCase();
-                        bValue = (b.cells[2]?.textContent?.trim() || '').toLowerCase();
-                        break;
-                    case 'quantity':
-                        // Extract numeric quantity from "150 pcs (5 items)" format
-                        aValue = parseInt((a.cells[3]?.textContent?.trim() || '0').match(/\d+/)?.[0] || '0');
-                        bValue = parseInt((b.cells[3]?.textContent?.trim() || '0').match(/\d+/)?.[0] || '0');
-                        break;
-                    case 'amount':
-                        aValue = parseFloat((a.cells[4]?.textContent?.trim() || '0').replace(/[$,]/g, ''));
-                        bValue = parseFloat((b.cells[4]?.textContent?.trim() || '0').replace(/[$,]/g, ''));
-                        break;
-                    case 'status':
-                        aValue = (a.cells[5]?.textContent?.trim() || '').toLowerCase();
-                        bValue = (b.cells[5]?.textContent?.trim() || '').toLowerCase();
-                        break;
-                    case 'created-by':
-                        aValue = (a.cells[6]?.textContent?.trim() || '').toLowerCase();
-                        bValue = (b.cells[6]?.textContent?.trim() || '').toLowerCase();
-                        break;
-                    default:
-                        return 0;
+                if (currentPage > 4) {
+                    // Show ellipsis after first page if current page is far from start
+                    createEllipsis();
                 }
                 
-                if (aValue < bValue) return direction === 'asc' ? -1 : 1;
-                if (aValue > bValue) return direction === 'asc' ? 1 : -1;
-                return 0;
+                // Calculate the range around current page
+                let startPage = Math.max(2, currentPage - 1);
+                let endPage = Math.min(totalPages - 1, currentPage + 1);
+                
+                // Adjust range to always show 3 pages in the middle (when possible)
+                if (currentPage <= 4) {
+                    endPage = Math.min(totalPages - 1, 5);
+                }
+                if (currentPage >= totalPages - 3) {
+                    startPage = Math.max(2, totalPages - 4);
+                }
+                
+                // Show pages around current page
+                for (let i = startPage; i <= endPage; i++) {
+                    createPageButton(i, currentPage === i);
+                }
+                
+                if (currentPage < totalPages - 3) {
+                    // Show ellipsis before last page if current page is far from end
+                    createEllipsis();
+                }
+                
+                // Always show last page
+                if (totalPages > 1) {
+                    createPageButton(totalPages, currentPage === totalPages);
+                }
+            }
+        }
+
+        function createPageButton(pageNumber, isActive) {
+            const pageBtn = document.createElement('button');
+            pageBtn.textContent = pageNumber;
+            pageBtn.className = `px-3 py-2 rounded-md text-sm font-medium transition-colors ${
+                isActive
+                    ? 'bg-btn-primary text-white'
+                    : 'text-textColor-primary hover:bg-gray-700 hover:text-white'
+            }`;
+            pageBtn.addEventListener('click', () => changePage(pageNumber));
+            document.getElementById('pageNumbers').appendChild(pageBtn);
+        }
+
+        function createEllipsis() {
+            const ellipsis = document.createElement('span');
+            ellipsis.textContent = '...';
+            ellipsis.className = 'px-2 py-2 text-textColor-tertiary text-sm';
+            document.getElementById('pageNumbers').appendChild(ellipsis);
+        }
+
+        function changePage(page) {
+            const changePageEvent = new CustomEvent('changePage', {
+                detail: { page: page }
             });
-            
-            // Re-append sorted rows
-            rows.forEach(row => tbody.appendChild(row));
+            window.dispatchEvent(changePageEvent);
+        }
+
+        // Add event listeners for navigation buttons
+        const prevPageBtn = document.getElementById('prevPageBtn');
+        const nextPageBtn = document.getElementById('nextPageBtn');
+        const lastPageBtn = document.getElementById('lastPageBtn');
+        
+        if (prevPageBtn) {
+            prevPageBtn.addEventListener('click', () => {
+                if (currentPaginationData.currentPage > 1) {
+                    changePage(currentPaginationData.currentPage - 1);
+                }
+            });
+        }
+        
+        if (nextPageBtn) {
+            nextPageBtn.addEventListener('click', () => {
+                if (currentPaginationData.currentPage < currentPaginationData.totalPages) {
+                    changePage(currentPaginationData.currentPage + 1);
+                }
+            });
+        }
+        
+        if (lastPageBtn) {
+            lastPageBtn.addEventListener('click', () => {
+                if (currentPaginationData.currentPage < currentPaginationData.totalPages) {
+                    changePage(currentPaginationData.totalPages);
+                }
+            });
         }
     </script>
 </Layout>
