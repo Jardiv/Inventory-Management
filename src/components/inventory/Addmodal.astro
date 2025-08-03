@@ -1,3 +1,5 @@
+---
+---
 <!-- ✅ Add Modal -->
 <div id="addModal" class="hidden fixed inset-0 bg-black/60 flex items-center justify-center z-50">
   <div class="bg-primary text-textColor-primary rounded-lg w-[460px] p-6 space-y-5 relative">
@@ -13,61 +15,160 @@
     <div class="flex items-center space-x-3">
       <label for="itemName" class="w-40 text-base font-semibold">Item Name:</label>
       <input type="text" id="itemName" placeholder="ABC"
-        class="flex-1 bg-primary text-textColor-primary text-sm border border-neutral-700 rounded px-3 py-2 focus:outline-none focus:ring-1 focus:ring-green-500" />
+        class="flex-1 bg-primary text-textColor-primary text-sm border border-neutral-700 rounded px-3 py-2" />
     </div>
 
     <!-- Category -->
     <div class="flex items-center space-x-3">
       <label for="category" class="w-40 text-base font-semibold">Category:</label>
       <select id="category"
-        class="flex-1 bg-primary text-textColor-primary text-sm border border-neutral-700 rounded px-3 py-2 focus:outline-none focus:ring-1 focus:ring-green-500">
-        <option value="category1">Category 1</option>
-        <option value="category2">Category 2</option>
-        <option value="category3">Category 3</option>
-        <option value="category4">Category 4</option>
+        class="flex-1 bg-primary text-textColor-primary text-sm border border-neutral-700 rounded px-3 py-2">
+        <option value="">Loading categories...</option>
       </select>
     </div>
 
     <!-- Description -->
     <div class="flex items-start space-x-3">
-      <label for="description" class="w-40 text-base font-semibold pt-2">
-        Description: <br>
-        <span class="text-sm font-normal text-textColor-primary">(Optional)</span>
-      </label>
-      <textarea id="description" rows="2" placeholder="Say anything..."
-        class="flex-1 bg-primary text-textColor-primary text-sm border border-neutral-700 rounded px-3 py-2 resize-none focus:outline-none focus:ring-1 focus:ring-green-500"></textarea>
+      <label for="description" class="w-40 text-base font-semibold pt-2">Description:</label>
+      <textarea id="description" rows="2" placeholder="Optional"
+        class="flex-1 bg-primary text-textColor-primary text-sm border border-neutral-700 rounded px-3 py-2 resize-none"></textarea>
     </div>
 
     <!-- Min Quantity -->
     <div class="flex items-center space-x-3">
       <label for="minQty" class="w-40 text-base font-semibold">Minimum Quantity:</label>
-      <input type="number" id="minQty" placeholder="10"
-        class="flex-1 bg-primary text-textColor-primary text-sm border border-neutral-700 rounded px-3 py-2 focus:outline-none focus:ring-1 focus:ring-green-500" />
+      <input type="number" id="minQty" placeholder="10" min="0"
+        class="flex-1 bg-primary text-textColor-primary text-sm border border-neutral-700 rounded px-3 py-2" />
     </div>
 
     <!-- Max Quantity -->
     <div class="flex items-center space-x-3">
       <label for="maxQty" class="w-40 text-base font-semibold">Maximum Quantity:</label>
-      <input type="number" id="maxQty" placeholder="100"
-        class="flex-1 bg-primary text-textColor-primary text-sm border border-neutral-700 rounded px-3 py-2 focus:outline-none focus:ring-1 focus:ring-green-500" />
+      <input type="number" id="maxQty" placeholder="100" min="0"
+        class="flex-1 bg-primary text-textColor-primary text-sm border border-neutral-700 rounded px-3 py-2" />
     </div>
 
-    <!-- Auto Re-order Switch -->
+    <!-- Unit Price -->
+    <div class="flex items-center space-x-3">
+      <label for="unitPrice" class="w-40 text-base font-semibold">Unit Price:</label>
+      <input type="number" id="unitPrice" placeholder="0.00" step="0.01" min="0.01"
+        class="flex-1 bg-primary text-textColor-primary text-sm border border-neutral-700 rounded px-3 py-2" />
+    </div>
+
+    <!-- Auto Re-order -->
     <div class="flex items-center space-x-3">
       <label for="autoReorder" class="w-40 text-base font-semibold">Auto Re-order:</label>
       <label class="relative inline-flex items-center cursor-pointer">
         <input type="checkbox" id="autoReorder" class="sr-only peer" checked>
-        <div class="w-11 h-6 bg-gray-700 rounded-full peer peer-checked:bg-green-500 peer-focus:ring-2 peer-focus:ring-green-500 transition-all"></div>
+        <div class="w-11 h-6 bg-gray-700 rounded-full peer peer-checked:bg-green-500 transition-all"></div>
         <div class="absolute left-0.5 top-0.5 w-5 h-5 bg-white rounded-full transition-all peer-checked:translate-x-full"></div>
       </label>
     </div>
 
     <!-- Buttons -->
     <div class="flex justify-end space-x-3 pt-4">
-      <button id="cancelAddBtn"
-        class="bg-red-600 text-white text-sm px-5 py-2 rounded hover:bg-red-700 transition">Cancel</button>
-      <button id="confirmAddBtn"
-        class="bg-green-600 text-white text-sm px-5 py-2 rounded hover:bg-green-700 transition">Confirm</button>
+      <button id="cancelAddBtn" class="bg-red-600 text-white text-sm px-5 py-2 rounded">Cancel</button>
+      <button id="confirmAddBtn" class="bg-green-600 text-white text-sm px-5 py-2 rounded">Confirm</button>
     </div>
   </div>
 </div>
+
+<!-- ✅ Add Script -->
+<script type="module">
+  import { supabase } from "/src/utils/supabaseClient";
+
+  document.addEventListener("DOMContentLoaded", () => {
+    const modal = document.getElementById("addModal");
+    const openBtn = document.getElementById("open-add-modal");
+    const closeBtn = document.getElementById("close-add-modal");
+    const cancelBtn = document.getElementById("cancelAddBtn");
+    const confirmBtn = document.getElementById("confirmAddBtn");
+    const categorySelect = document.getElementById("category");
+
+    if (!modal || !openBtn || !closeBtn || !cancelBtn || !confirmBtn || !categorySelect) return;
+
+    openBtn.addEventListener("click", () => modal.classList.remove("hidden"));
+    const closeModal = () => { modal.classList.add("hidden"); clearInputs(); };
+    closeBtn.addEventListener("click", closeModal);
+    cancelBtn.addEventListener("click", closeModal);
+
+    const clearInputs = () => {
+      document.getElementById("itemName").value = "";
+      categorySelect.selectedIndex = 0;
+      document.getElementById("description").value = "";
+      document.getElementById("minQty").value = "";
+      document.getElementById("maxQty").value = "";
+      document.getElementById("unitPrice").value = "";
+      document.getElementById("autoReorder").checked = true;
+    };
+
+    // Load categories
+    async function loadCategories() {
+      const { data, error } = await supabase.from("category").select("*");
+      categorySelect.innerHTML = "";
+
+      if (error || !data?.length) {
+        categorySelect.innerHTML = `<option value="">Failed to load categories</option>`;
+        return;
+      }
+
+      categorySelect.innerHTML = `<option value="">Select Category</option>`;
+      data.forEach((cat) => {
+        const opt = document.createElement("option");
+        opt.value = cat.id;
+        opt.textContent = cat.name;
+        categorySelect.appendChild(opt);
+      });
+    }
+    loadCategories();
+
+    // Confirm add
+    confirmBtn.addEventListener("click", async () => {
+      const name = document.getElementById("itemName").value.trim();
+      const category = categorySelect.value;
+      const description = document.getElementById("description").value.trim();
+      const minQty = parseInt(document.getElementById("minQty").value);
+      const maxQty = parseInt(document.getElementById("maxQty").value);
+      const unitPrice = parseFloat(document.getElementById("unitPrice").value);
+      const autoReorder = document.getElementById("autoReorder").checked;
+      const sku = `SKU-${Date.now()}`;
+
+      if (!name || !category || isNaN(minQty) || isNaN(maxQty) || isNaN(unitPrice)) {
+        alert("Please fill out all required fields.");
+        return;
+      }
+
+      const { data: itemData, error: itemError } = await supabase
+        .from("items")
+        .insert([{
+          sku,
+          name,
+          description,
+          category_id: parseInt(category),
+          min_quantity: minQty,
+          max_quantity: maxQty,
+          unit_price: unitPrice,
+          status: "normal", // ✅ valid status
+        }])
+        .select();
+
+      if (itemError) {
+        alert("Failed to add product:\n" + itemError.message);
+        return;
+      }
+
+      const insertedItem = itemData?.[0];
+      if (autoReorder && insertedItem?.id) {
+        await supabase.from("auto_reorder").insert([{
+          item_id: insertedItem.id,
+          auto_reorder: true,
+          supplier_id: null
+        }]);
+      }
+
+      alert("Product added successfully!");
+      closeModal();
+      location.reload();
+    });
+  });
+</script>
