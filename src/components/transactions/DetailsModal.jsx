@@ -165,10 +165,10 @@ const DetailsModal = ({ transactionId, onClose }) => {
 									<p className="text-sm text-textColor-tertiary">Type</p>
 									<p className="font-medium text-textColor-primary mt-1">{transaction.type_name}</p>
 								</div>
-								<div>
+								{/* <div>
 									<p className="text-sm text-textColor-tertiary">Direction</p>
 									<p className="font-medium text-textColor-primary mt-1 capitalize">{transaction.direction}</p>
-								</div>
+								</div> */}
 								<div>
 									<p className="text-sm text-textColor-tertiary">Status</p>
 									<div className="mt-1">
@@ -227,45 +227,46 @@ const DetailsModal = ({ transactionId, onClose }) => {
 						</section>
 
 						{/* Supplier Details */}
-						<section>
-							<h3 className="text-lg font-semibold text-textColor-primary border-b border-border_color pb-2 mb-4">
-								Supplier & Other Details
-							</h3>
-							<div className="grid grid-cols-1 md:grid-cols-3 gap-x-8 gap-y-4">
-								<div>
-									<p className="text-sm text-textColor-tertiary">Supplier</p>
-									<p className="font-medium text-textColor-primary mt-1">{transaction.supplier_name}</p>
+						{transaction.supplier_name != "N/A" && transaction.supplier_contact != "N/A" && transaction.supplier_location != "N/A" && (
+							<section>
+								<h3 className="text-lg font-semibold text-textColor-primary border-b border-border_color pb-2 mb-4">
+									Supplier & Other Details
+								</h3>
+								<div className="grid grid-cols-1 md:grid-cols-3 gap-x-8 gap-y-4">
+									<div>
+										<p className="text-sm text-textColor-tertiary">Supplier</p>
+										<p className="font-medium text-textColor-primary mt-1">{transaction.supplier_name}</p>
+									</div>
+									<div>
+										<p className="text-sm text-textColor-tertiary">Contact No</p>
+										<p className="font-medium text-textColor-primary mt-1">{transaction.supplier_contact}</p>
+									</div>
+									<div>
+										<p className="text-sm text-textColor-tertiary">Location</p>
+										<p className="font-medium text-textColor-primary mt-1">{transaction.supplier_location}</p>
+									</div>
 								</div>
-								<div>
-									<p className="text-sm text-textColor-tertiary">Contact No</p>
-									<p className="font-medium text-textColor-primary mt-1">{transaction.supplier_contact}</p>
-								</div>
-								<div>
-									<p className="text-sm text-textColor-tertiary">Location</p>
-									<p className="font-medium text-textColor-primary mt-1">{transaction.supplier_location}</p>
-								</div>
-							</div>
-						</section>
+							</section>
+						)}
 
 						{/* Location Details */}
-						<section>
-							<h3 className="text-lg font-semibold text-textColor-primary border-b border-border_color pb-2 mb-4">Location Info</h3>
-							<div className="grid grid-cols-1 md:grid-cols-3 gap-x-8 gap-y-4">
-								<div>
-									<p className="text-sm text-textColor-tertiary">Source</p>
-									<p className="font-medium text-textColor-primary mt-1">{transaction.source || "N/A"}</p>
+						{transaction.source && transaction.destination && (
+							<section>
+								<h3 className="text-lg font-semibold text-textColor-primary border-b border-border_color pb-2 mb-4">Location Info</h3>
+								<div className="grid grid-cols-1 md:grid-cols-3 gap-x-8 gap-y-4">
+									<div>
+										<p className="text-sm text-textColor-tertiary">Source</p>
+										<p className="font-medium text-textColor-primary mt-1">{transaction.source || "N/A"}</p>
+									</div>
+									<div>
+										<p className="text-sm text-textColor-tertiary">Destination</p>
+										<p className="font-medium text-textColor-primary mt-1">{transaction.destination || "N/A"}</p>
+									</div>
 								</div>
-								<div>
-									<p className="text-sm text-textColor-tertiary">Destination</p>
-									<p className="font-medium text-textColor-primary mt-1">{transaction.remarks}</p>
-								</div>
-							</div>
-						</section>
-						
+							</section>
+						)}
 					</div>
 				) : (
-
-					
 					// <div className="space-y-8">
 					// 	{/* Primary Details */}
 					// 	<section>

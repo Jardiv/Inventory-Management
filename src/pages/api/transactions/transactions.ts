@@ -128,22 +128,6 @@ export async function GET({ request }: { request: Request }) {
 			query = query.or(searchFilters.join(","));
 		}
 
-		// const searchFields = [
-		// 	"invoice_no",
-		// 	"source",
-		// 	"destination",
-		// 	"status::text",
-		// 	"item_id::text",
-		// 	"supplier_id::text",
-		// 	"transaction_type_id::text"
-		// ];
-		// query = query.or(
-		// 	searchFields.map(f => `${f} ilike '%${search}%'`).join(",")
-		// );
-		// {"error":"operator does not exist: integer ~~* unknown"}
-		// query = query.or(`item_id.ilike.%${search}%,quantity.ilike.%${search}%,supplier_id.ilike.%${search}%,transaction_type_id.ilike.%${search}%,status.ilike.%${search}%`);
-
-
 		// Apply pagination
 		query = query.range(offset, offset + limit - 1);
 
@@ -152,7 +136,6 @@ export async function GET({ request }: { request: Request }) {
 		if (error) {
 			console.error("Database error:", error);
 			return jsonResponse({ error: error.message }, 500);
-			// {"error":"operator does not exist: integer ~~* unknown"} - always return 500 when searching
 		}
 		
 

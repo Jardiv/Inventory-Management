@@ -191,10 +191,10 @@ export default function StockInTable({ isAbleToSort = true, limit, showPaginatio
 						<th className={`table-header ${isAbleToSort ? "cursor-pointer" : ""}`} onClick={() => requestSort("transaction_datetime")}>
 							Date{getSortIndicator("transaction_datetime")}
 						</th>
-						<th className="table-header">Item</th>
+						{/* <th className="table-header">Item</th>
 						<th className={`table-header ${isAbleToSort ? "cursor-pointer" : ""}`} onClick={() => requestSort("quantity")}>
 							Amount{getSortIndicator("quantity")}
-						</th>
+						</th> */}
 						<th className="table-header">Supplier</th>
 						<th className={`table-header ${isAbleToSort ? "cursor-pointer" : ""}`} onClick={() => requestSort("type")}>
 							Type{getSortIndicator("type")}
@@ -216,8 +216,8 @@ export default function StockInTable({ isAbleToSort = true, limit, showPaginatio
 								<tr key={log.id} className="table-row item" onClick={() => handleRowClick(log.id)}>
 									<td className="table-data">{log.invoice_no}</td>
 									<td className="table-data">{log.transaction_datetime}</td>
-									<td className="table-data">{log.item_name}</td>
-									<td className="table-data">{log.quantity}</td>
+									{/* <td className="table-data">{log.item_name}</td>
+									<td className="table-data">{log.quantity}</td> */}
 									<td className="table-data">{log.supplier_name}</td>
 									<td className="table-data">{log.type_name}</td>
 									<td className="table-data text-center">

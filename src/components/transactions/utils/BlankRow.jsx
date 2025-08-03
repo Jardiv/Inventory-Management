@@ -6,7 +6,7 @@ export const BlankRow = () => (
 		<td className="table-data">&nbsp;</td>
 		<td className="table-data">&nbsp;</td>
 		<td className="table-data">&nbsp;</td>
-		<td className="table-data">&nbsp;</td>
-		<td className="table-data">&nbsp;</td>
+		{/* <td className="table-data">&nbsp;</td>
+		<td className="table-data">&nbsp;</td> */}
 	</tr>
 );

@@ -16,11 +16,11 @@ export const SkeletonRow = () => (
 		<td className="table-data">
 			<div className="skeleton-loading"></div>
 		</td>
-		<td className="table-data">
+		{/* <td className="table-data">
 			<div className="skeleton-loading"></div>
 		</td>
 		<td className="table-data">
 			<div className="skeleton-loading"></div>
-		</td>
+		</td> */}
 	</tr>
 );
