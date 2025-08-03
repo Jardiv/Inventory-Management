@@ -1,0 +1,183 @@
+---
+import Layout from '../../../layouts/Layout.astro';
+import Editmodal from '../../../components/inventory/Editmodal.astro';
+import { supabase } from '../../../utils/supabaseClient.ts';
+
+const { sku } = Astro.params;
+
+const { data, error } = await supabase
+  .from('items')
+  .select(`
+    sku,
+    name,
+    description,
+    unit_price,
+    status,
+    created_at,
+    min_quantity,
+    max_quantity,
+    category ( name ),
+    auto_reorder ( suppliers ( name ) )
+  `)
+  .eq('sku', sku)
+  .single();
+
+if (error) throw new Error(`Product not found: ${sku}`);
+
+const product = {
+  code: data.sku,
+  name: data.name,
+  description: data.description ?? "No description available.",
+  category: data.category?.name ?? "Uncategorized",
+  supplier: data.auto_reorder?.suppliers?.[0]?.name ?? "None",
+  price: data.unit_price?.toFixed(2) ?? "0.00",
+  status: data.status ?? "Unknown",
+  created_at: new Date(data.created_at).toLocaleDateString(),
+  minQuantity: data.min_quantity ?? null,
+  maxQuantity: data.max_quantity ?? null,
+  reorder: data.auto_reorder ? "Yes" : "No",
+};
+---
+
+<Layout>
+  <Editmodal product={product} />
+  <section class="w-full bg-primary px-2 py-6 text-textColor-primary rounded-sm h-[700px] overflow-y-auto">
+    <div class="bg-primary p-5 rounded-lg space-y-8">
+      <div class="flex justify-between items-center">
+        <h1 class="text-3xl font-bold">Product Overview</h1>
+        <a href="/inventory/ProductInventoryTBL/" class="text-btn-primary text-sm font-medium hover:underline">Back</a>
+      </div>
+
+      <div class="flex space-x-6 border-b border-border_color pb-2 text-sm">
+        <a href={`/inventory/product/${sku}`} class="text-violet-600 font-semibold border-b-2 border-violet-600 pb-2">Overview</a>
+        <a href={`/inventory/product/${sku}/stock`} class="pb-2 hover:text-violet-600">Stock Information</a>
+        <a href={`/inventory/product/${sku}/purchHist`} class="pb-2 hover:text-violet-600">Purchase History</a>
+      </div>
+
+      <div id="tab-content" class="pt-8 min-h-[300px] overflow-y-auto">
+        <div class="bg-primary p-2 rounded space-y-1">
+          <div data-tab-content="overview" class="tab-section block space-y-6">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-12">
+              <div class="space-y-8">
+                <div>
+                  <h2 class="text-2xl font-semibold border-b border-border_color mb-3 pb-1">Primary Details</h2>
+                  <p><strong>Item Name:</strong> {product.name}</p>
+                  <p><strong>Item Code:</strong> {product.code}</p>
+                  <p><strong>Unit Price:</strong> ₱{product.price}</p>
+                </div>
+                <div>
+                  <h2 class="text-2xl font-semibold border-b border-border_color mb-3 pb-1">Auto Re-order Status</h2>
+                  <p>
+                    <strong>Status:</strong>
+                    <span class={product.reorder === 'Yes' ? 'text-green-400' : 'text-red-400'}>
+                      {product.reorder}
+                    </span>
+                  </p>
+                </div>
+                <div>
+                  <h2 class="text-2xl font-semibold border-b border-border_color mb-3 pb-1">Description</h2>
+                  <p>{product.description}</p>
+                </div>
+              </div>
+              <div class="space-y-8">
+                <div>
+                  <h2 class="text-2xl font-semibold border-b border-border_color mb-3 pb-1">Category Details</h2>
+                  <p><strong>Category:</strong> {product.category}</p>
+                </div>
+                <div>
+                  <h2 class="text-2xl font-semibold border-b border-border_color mb-3 pb-1">Quantity Details</h2>
+                  <p><strong>Minimum Quantity:</strong> {product.minQuantity ?? 'N/A'}</p>
+                  <p><strong>Maximum Quantity:</strong> {product.maxQuantity ?? 'N/A'}</p>
+                </div>
+              </div>
+            </div>
+
+            <div class="flex justify-end gap-4 pt-8 border-t border-border_color mt-8">
+              <!-- Edit Button -->
+              <button
+                class="bg-btn-primary hover:bg-purple-700 text-white font-semibold px-6 py-2 rounded transition-colors"
+                onclick={`openEditModal('${product.code}')`}>
+                Edit
+              </button>
+
+              <!-- Delete Button -->
+              <button
+                class="delete-btn bg-red-600 hover:bg-red-700 text-white font-semibold px-6 py-2 rounded transition-colors"
+                data-sku={product.code}>
+                Delete
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+  </section>
+</Layout>
+
+<!-- ✅ Script to handle deletion -->
+<script type="module">
+  import { supabase } from '/src/utils/supabaseClient';
+
+  document.addEventListener("DOMContentLoaded", () => {
+    const deleteButtons = document.querySelectorAll(".delete-btn");
+
+    deleteButtons.forEach((btn) => {
+      btn.addEventListener("click", async () => {
+        const sku = btn.dataset.sku;
+        if (!sku) {
+          alert("SKU not found. Cannot delete product.");
+          return;
+        }
+
+        const confirmDelete = confirm(`Are you sure you want to permanently delete product with SKU: ${sku}?`);
+        if (!confirmDelete) return;
+
+        try {
+          // Get the item ID using the SKU
+          const { data: itemData, error: fetchError } = await supabase
+            .from("items")
+            .select("id")
+            .eq("sku", sku)
+            .single();
+
+          if (fetchError || !itemData) {
+            console.error("Failed to find item:", fetchError);
+            alert("Item not found.");
+            return;
+          }
+
+          const itemId = itemData.id;
+
+          // Delete related entries in auto_reorder (or other dependent tables)
+          const { error: autoReorderError } = await supabase
+            .from("auto_reorder")
+            .delete()
+            .eq("item_id", itemId);
+
+          if (autoReorderError) {
+            console.error("Failed to delete from auto_reorder:", autoReorderError);
+            alert("Failed to delete related auto_reorder entry:\n" + autoReorderError.message);
+            return;
+          }
+
+          // Now delete the item itself
+          const { error: deleteError } = await supabase
+            .from("items")
+            .delete()
+            .eq("sku", sku);
+
+          if (deleteError) {
+            console.error("Delete failed:", deleteError);
+            alert("Failed to delete product:\n" + deleteError.message);
+          } else {
+            alert("Product deleted successfully.");
+            window.location.href = "/inventory/ProductInventoryTBL/";
+          }
+
+        } catch (err) {
+          console.error("Unexpected error:", err);
+          alert("Unexpected error occurred.");
+        }
+      });
+    });
+  });
+</script>

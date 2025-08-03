@@ -6,12 +6,16 @@ const TransferList = () => {
   const [showTransferModal, setShowTransferModal] = useState(false);
   const [showAddItemsModal, setShowAddItemsModal] = useState(false);
   const [filterOpen, setFilterOpen] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1); // update from API
+  const [totalCount, setTotalCount] = useState(0);
 
   useEffect(() => {
     const fetchTransfers = async () => {
       try {
-        const res = await fetch('/api/tracking/transfers?page=1&limit=10');
+        const res = await fetch(`/api/tracking/transfers?page=${currentPage}&limit=10`);
         const result = await res.json();
+
         if (res.ok) {
           const formatted = result.data.map((t) => ({
             id: t.id,
@@ -21,7 +25,10 @@ const TransferList = () => {
             from: t.from_warehouse?.name || "N/A",
             to: t.to_warehouse?.name || "N/A",
           }));
+
           setTransfers(formatted);
+          setTotalCount(result.total); // ✅ moved here
+          setTotalPages(Math.ceil(result.total / 10));
         } else {
           console.error("Error loading transfers:", result.error);
         }
@@ -33,7 +40,7 @@ const TransferList = () => {
     };
 
     fetchTransfers();
-  }, []);
+  }, [currentPage]);
 
   const emptyRows = Math.max(11 - transfers.length, 0);
   return (
@@ -91,16 +98,20 @@ const TransferList = () => {
           <div className="min-w-[150px]">To</div>
         </div>
         <div className="divide-y divide-border_color">
-          {transfers.map(t => (
-            <div key={t.id} className="grid grid-cols-6 text-center text-lg py-4 font-normal">
-              <div>{t.id}</div>
-              <div>{t.name}</div>
-              <div>{t.qty}</div>
-              <div>{t.date}</div>
-              <div>{t.from}</div>
-              <div>{t.to}</div>
-            </div>
-          ))}
+          {loading ? (
+            <div className="text-center py-8 text-lg">Loading transfers...</div>
+          ) : (
+            transfers.map(t => (
+              <div key={t.id} className="grid grid-cols-6 text-center text-lg py-4 font-normal">
+                <div>{t.id}</div>
+                <div>{t.name}</div>
+                <div>{t.qty}</div>
+                <div>{t.date}</div>
+                <div>{t.from}</div>
+                <div>{t.to}</div>
+              </div>
+            ))
+          )}
           {Array.from({ length: emptyRows > 0 ? emptyRows : 0 }).map((_, idx) => (
             <div key={`empty-${idx}`} className="grid grid-cols-6 text-center text-lg py-4 font-normal opacity-50">
               <div>&nbsp;</div><div>&nbsp;</div><div>&nbsp;</div><div>&nbsp;</div><div>&nbsp;</div><div>&nbsp;</div>
@@ -111,18 +122,29 @@ const TransferList = () => {
 
       {/* Pagination */}
       <div className="flex justify-between items-center border-t border-border_color pt-4 mt-4 text-sm text-gray-700">
-        <div>Showing <span className="font-medium">1</span>-<span className="font-medium">10</span> of <span className="font-medium">45</span> products</div>
+        <div>
+          Showing <span className="font-medium">{(currentPage - 1) * 10 + 1}</span>–
+          <span className="font-medium">{Math.min(currentPage * 10, totalCount)}</span> of
+          <span className="font-medium"> {totalCount} </span> transfers
+        </div>
         <nav className="flex items-center gap-1">
-          <a href="?page=1" className="px-2 py-1 text-gray-500 hover:text-gray-700">
+          <button onClick={() => setCurrentPage((p) => Math.max(p - 1, 1))} className="px-2 py-1 text-gray-500 hover:text-gray-700">
             <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2"><path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" /></svg>
-          </a>
-          <a href="?page=1" className="px-3 py-1.5 bg-[#8A00C4] text-white rounded-lg font-medium">1</a>
-          <a href="?page=2" className="px-3 py-1.5 text-gray-700 hover:bg-gray-100 rounded-lg">2</a>
-          <span className="px-2 py-1 text-gray-500">...</span>
-          <a href="?page=5" className="px-3 py-1.5 text-gray-700 hover:bg-gray-100 rounded-lg">5</a>
-          <a href="?page=2" className="px-2 py-1 text-gray-500 hover:text-gray-700">
+          </button>
+
+          {Array.from({ length: totalPages }).map((_, i) => (
+            <button
+              key={i}
+              onClick={() => setCurrentPage(i + 1)}
+              className={`px-3 py-1.5 rounded-lg font-medium ${currentPage === i + 1 ? 'bg-[#8A00C4] text-white' : 'text-gray-700 hover:bg-gray-100'}`}
+            >
+              {i + 1}
+            </button>
+          ))}
+
+          <button onClick={() => setCurrentPage((p) => Math.min(p + 1, totalPages))} className="px-2 py-1 text-gray-500 hover:text-gray-700">
             <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2"><path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" /></svg>
-          </a>
+          </button>
         </nav>
       </div>
 

@@ -8,6 +8,7 @@ export const GET: APIRoute = async ({ request }) => {
   const limit = parseInt(url.searchParams.get("limit") || "10", 10);
   const offset = (page - 1) * limit;
 
+  // 1. Get paginated data
   const { data, error } = await supabase
     .from("transfers")
     .select(`
@@ -31,16 +32,19 @@ export const GET: APIRoute = async ({ request }) => {
     `)
     .range(offset, offset + limit - 1);
 
+  // 2. Get total count (for pagination)
+  const { count, error: countError } = await supabase
+    .from("transfers")
+    .select("*", { count: "exact", head: true });
 
-
-
-  if (error) {
-    return new Response(JSON.stringify({ error: error.message }), {
+  if (error || countError) {
+    return new Response(JSON.stringify({ error: error?.message || countError?.message }), {
       status: 500,
     });
   }
 
-  return new Response(JSON.stringify({ data }), {
+  // 3. Return both data and total count
+  return new Response(JSON.stringify({ data, total: count }), {
     status: 200,
     headers: {
       "Content-Type": "application/json",
