@@ -81,13 +81,13 @@ export default function ProductInventoryPreview({ limit = 10, paginated = true }
   const getStatusStyle = (status) => {
     switch (status.toUpperCase()) {
       case "OK":
-        return "text-green bg-green/10";
+        return "text-green bg-primary";
       case "LOW":
-        return "text-orange bg-orange/10";
+        return "text-orange bg-primary";
       case "OUT OF STOCK":
-        return "text-red bg-red/10";
+        return "text-red bg-primary";
       default:
-        return "text-textColor-tertiary bg-textColor-tertiary/10";
+        return "text-green bg-primary";
     }
   };
 
@@ -144,7 +144,7 @@ export default function ProductInventoryPreview({ limit = 10, paginated = true }
   };
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-0">
       {/* Table Headers */}
       <div className="grid grid-cols-6 items-center border-b border-border_color pb-2 font-semibold text-sm text-textColor-primary uppercase">
         <span>Item Code</span>
@@ -165,7 +165,7 @@ export default function ProductInventoryPreview({ limit = 10, paginated = true }
           <a
             href={`/inventory/product/${product.code}`}
             key={product.code}
-            className="grid grid-cols-6 items-center border-b border-border_color py-2 text-sm hover:bg-btn-hover rounded transition cursor-pointer"
+            className="grid grid-cols-6 items-center border-b border-border_color px-3 py-3 text-sm hover:bg-btn-hover rounded transition cursor-pointer"
           >
             <span>{product.code}</span>
             <span className="text-left">{product.name}</span>
@@ -175,7 +175,7 @@ export default function ProductInventoryPreview({ limit = 10, paginated = true }
             <span
               className={`px-3 py-1 text-xs font-semibold rounded-full w-fit ${getStatusStyle(product.status)}`}
             >
-              {product.status}
+              {product.status.replace(/\b\w/g, (l) => l.toUpperCase())}
             </span>
           </a>
         ))
