@@ -1,0 +1,88 @@
+---
+import Layout from '../../../../layouts/Layout.astro';
+import { supabase } from '../../../../utils/supabaseClient.ts';
+
+const { sku } = Astro.params;
+
+// Get item ID by SKU
+const { data: itemData, error: itemError } = await supabase
+.from('items')
+.select('id')
+.eq('sku', sku)
+.single();
+
+if (itemError || !itemData) throw new Error("Item not found");
+
+const itemId = itemData.id;
+
+// Fetch stock entries for the item
+const { data: stockData, error: stockError } = await supabase
+.from('warehouse_items')
+.select('quantity, warehouse_id, warehouse ( name )')
+.eq('item_id', itemId)
+.eq('status', 'stored');
+
+if (stockError) throw new Error("Failed to fetch stock data");
+
+// Calculate total stock
+const totalStock = stockData.reduce((sum, entry) => sum + (entry.quantity || 0), 0);
+
+// Grouped stock by warehouse
+const warehouseBreakdown = stockData.map(entry => ({
+name: entry.warehouse?.name ?? 'Unknown Warehouse',
+quantity: entry.quantity ?? 0
+}));
+---
+<Layout>
+    <section class="w-full bg-primary px-2 py-6 text-textColor-primary rounded-sm h-[700px] overflow-y-auto">
+        <div class="bg-primary p-5 rounded-lg space-y-8">
+            <div class="flex justify-between items-center">
+                <h1 class="text-3xl font-bold">Stock Information</h1>
+                <a href="/inventory/ProductInventoryTBL/"
+                    class="text-btn-primary text-sm font-medium hover:underline">Back</a>
+            </div>
+
+            <div class="flex space-x-6 border-b border-border_color pb-2 text-sm">
+                <a href={`/inventory/product/${sku}`} class="pb-2 hover:text-violet-600">Overview</a>
+                <a href={`/inventory/product/${sku}/stock`}
+                    class="text-violet-600 font-semibold border-b-2 border-violet-600 pb-2">Stock Information</a>
+                <a href={`/inventory/product/${sku}/purchHist`} class="pb-2 hover:text-violet-600">Purchase History</a>
+            </div>
+
+            <div class="pt-8 min-h-[300px] overflow-y-auto">
+                <div class="bg-primary p-2 rounded space-y-6">
+                    <h2 class="text-2xl font-semibold border-b border-border_color pb-2 mb-4">Stock Details</h2>
+
+                    {warehouseBreakdown.length > 0 ? (
+                    <>
+                        <!-- Warehouse Names Row -->
+                        <div class="flex flex-wrap">
+                            <div class="w-40 font-bold">Warehouse Name:</div>
+                            {warehouseBreakdown.map(entry => (
+                            <div class="flex-1 text-center font-semibold" style="min-width: 10px;">{entry.name}</div>
+                            ))}
+                        </div>
+
+                        <!-- Current Stock Row -->
+                        <div class="flex flex-wrap">
+                            <div class="w-40 font-bold">Current Stock:</div>
+                            {warehouseBreakdown.map(entry => (
+                            <div class="flex-1 text-center font-semibold" style="min-width: 10px;">{entry.quantity}
+                            </div>
+                            ))}
+                        </div>
+                    </>
+                    ) : (
+                    <p class="text-gray-400 italic">No stock data available for this product.</p>
+                    )}
+                </div>
+            </div>
+
+            <!-- Total Stock at the very bottom -->
+            <div class="flex items-center gap-2 text-2xl font-semibold pt-4 border-t border-border_color">
+                <h2>Total Stock:</h2>
+                <span>{totalStock}</span>
+            </div>
+        </div>
+    </section>
+</Layout>

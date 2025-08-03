@@ -1,0 +1,148 @@
+---
+import Layout from '../../../../layouts/Layout.astro';
+import { supabase } from '../../../../utils/supabaseClient.ts';
+
+const { sku } = Astro.params;
+
+// Step 1: Get item ID
+const { data: itemData, error: itemError } = await supabase
+  .from('items')
+  .select('id')
+  .eq('sku', sku)
+  .single();
+
+if (itemError || !itemData) throw new Error("Item not found");
+const itemId = itemData.id;
+
+// Step 2: Get most recent 'in' transaction to get supplier ID
+const { data: latestPurchaseData, error: latestPurchaseError } = await supabase
+  .from('transactions')
+  .select(`
+    id,
+    supplier_id,
+    supplier ( name, contact_number, location ),
+    transaction_datetime,
+    transaction_type ( direction )
+  `)
+  .eq('item_id', itemId)
+  .order('transaction_datetime', { ascending: false });
+
+let supplierId = null;
+let supplierName = 'Pending';
+let supplierContact = 'Pending';
+let supplierLocation = 'Pending';
+
+if (!latestPurchaseError && latestPurchaseData?.length > 0) {
+  const mostRecent = latestPurchaseData.find(
+    (entry) => entry.transaction_type?.direction === 'in'
+  );
+  if (mostRecent?.supplier_id) {
+    supplierId = mostRecent.supplier_id;
+    supplierName = mostRecent.supplier?.name ?? 'Pending';
+    supplierContact = mostRecent.supplier?.contact_number ?? 'Pending';
+    supplierLocation = mostRecent.supplier?.location ?? 'Pending';
+  }
+}
+
+// Step 3: Fetch all 'in' transactions for that item and supplier
+let purchaseData = [];
+if (supplierId) {
+  const { data: matchedTransactions, error: matchedError } = await supabase
+    .from('transactions')
+    .select(`
+      transaction_datetime,
+      transaction_type ( direction )
+    `)
+    .eq('item_id', itemId)
+    .eq('supplier_id', supplierId)
+    .order('transaction_datetime', { ascending: false });
+
+  if (!matchedError) {
+    purchaseData = matchedTransactions.filter(
+      (t) => t.transaction_type?.direction === 'in'
+    );
+  }
+}
+---
+
+<Layout>
+  <section class="w-full bg-primary px-2 py-6 text-textColor-primary rounded-sm h-[700px] overflow-y-auto">
+    <div class="bg-primary p-5 rounded-lg space-y-8">
+      <!-- Top Bar -->
+      <div class="flex justify-between items-center">
+        <h1 class="text-3xl font-bold">Purchase History</h1>
+        <a href="/inventory/ProductInventoryTBL/" class="text-btn-primary text-sm font-medium hover:underline">
+          Back
+        </a>
+      </div>
+
+      <!-- Navigation Tabs -->
+      <div class="flex space-x-6 border-b border-border_color pb-2 text-sm">
+        <a href={`/inventory/product/${sku}`} class="pb-2 hover:text-violet-600">Overview</a>
+        <a href={`/inventory/product/${sku}/stock`} class="pb-2 hover:text-violet-600">Stock Information</a>
+        <a href={`/inventory/product/${sku}/purchHist`}
+          class="text-violet-600 font-semibold border-b-2 border-violet-600 pb-2">
+          Purchase History
+        </a>
+      </div>
+
+      <!-- Content -->
+      <div class="pt-8 min-h-[300px]">
+        <div class="flex flex-col lg:flex-row gap-6">
+          
+          <!-- Supplier Details Card -->
+          <div class="lg:w-1/2 bg-secondary p-6 rounded shadow space-y-4">
+            <h2 class="text-xl font-semibold border-b border-border_color pb-2">Supplier Details</h2>
+
+            <div class="flex gap-4">
+              <strong class="w-32 text-right">Supplier:</strong>
+              <span>{supplierName}</span>
+            </div>
+            <div class="flex gap-4">
+              <strong class="w-32 text-right">Contact No:</strong>
+              <span>{supplierContact}</span>
+            </div>
+            <div class="flex gap-4">
+              <strong class="w-32 text-right">Location:</strong>
+              <span>{supplierLocation}</span>
+            </div>
+          </div>
+
+          <!-- Purchase Table Card -->
+          <div class="lg:w-1/2 bg-secondary p-6 rounded shadow">
+            <h2 class="text-xl font-semibold border-b border-border_color pb-2 mb-4">Recent Purchases</h2>
+
+            {purchaseData && purchaseData.length > 0 ? (
+              <table class="w-full text-left text-sm">
+                <thead class="border-b border-border_color text-textColor-primary">
+                  <tr>
+                    <th class="py-2">Ref no</th>
+                    <th class="py-2">Date</th>
+                    <th class="py-2">Type</th>
+                    <th class="py-2">Status</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {purchaseData.map((p, idx) => (
+                    <tr class="border-b border-border_color">
+                      <td class="py-2">{438653467 + idx}</td>
+                      <td class="py-2">
+                        {p.transaction_datetime
+                          ? new Date(p.transaction_datetime).toLocaleDateString()
+                          : 'Pending'}
+                      </td>
+                      <td class="py-2">Purchase</td>
+                      <td class="py-2">Completed</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            ) : (
+              <p class="text-sm">No purchase records available.</p>
+            )}
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+</Layout>

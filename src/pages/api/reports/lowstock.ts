@@ -19,6 +19,7 @@ export const GET: APIRoute = async ({ url }) => {
         name,
         min_quantity,
         max_quantity,
+        unit_price,
         warehouse_items (
           quantity
         )
@@ -44,8 +45,24 @@ export const GET: APIRoute = async ({ url }) => {
           totalQuantity = item.warehouse_items[0].quantity || 0;
         }
         
-        // Calculate suggested order quantity (max_quantity - current quantity)
-        const suggestedOrder = Math.max(0, (item.max_quantity || 0) - totalQuantity);
+        // Calculate suggested order quantity using intelligent formula
+        // Formula: Bring stock up to max_quantity level
+        // If max_quantity is not set, suggest bringing it to 2x min_quantity as a reasonable buffer
+        let suggestedOrder = 0;
+        const maxQty = item.max_quantity || 0;
+        const minQty = item.min_quantity || 0;
+        
+        if (maxQty > 0) {
+          // Use max_quantity as target if available
+          suggestedOrder = Math.max(0, maxQty - totalQuantity);
+        } else if (minQty > 0) {
+          // If no max_quantity, suggest ordering to 2x minimum as a reasonable buffer
+          const targetQuantity = minQty * 2;
+          suggestedOrder = Math.max(0, targetQuantity - totalQuantity);
+        } else {
+          // Fallback: suggest a minimum order of 10 units if no min/max is set
+          suggestedOrder = Math.max(0, 10 - totalQuantity);
+        }
         
         // Determine status (same logic as items.ts)
         let status = 'In Stock';
@@ -62,6 +79,7 @@ export const GET: APIRoute = async ({ url }) => {
           quantity: totalQuantity,
           minimum: item.min_quantity,
           toOrder: suggestedOrder,
+          unitPrice: item.unit_price || 10.00, // Default unit price if not available
           status: status
         };
       })
@@ -70,28 +88,22 @@ export const GET: APIRoute = async ({ url }) => {
 
     console.log(`Total items: ${allItems.length}, Low stock items: ${allLowStockItems.length}`);
     
-    // If no low stock items found, let's create some test data for debugging
+    // If no low stock items found, return empty result
     if (allLowStockItems.length === 0) {
-      console.log('No low stock items found, creating test data...');
-      // Return some sample low stock data for testing
-      const testData = [
-        { id: 999, sku: 'TEST001', name: 'Test Low Stock Item 1', quantity: 2, minimum: 5, toOrder: 8, status: 'Low' },
-        { id: 998, sku: 'TEST002', name: 'Test Out of Stock Item', quantity: 0, minimum: 3, toOrder: 10, status: 'Out of stock' },
-        { id: 997, sku: 'TEST003', name: 'Test Low Stock Item 2', quantity: 1, minimum: 4, toOrder: 7, status: 'Low' },
-      ];
+      console.log('No low stock items found.');
       
       return new Response(JSON.stringify({
         success: true,
-        data: testData,
+        data: [],
         pagination: {
           currentPage: 1,
-          totalPages: 1,
-          totalItems: testData.length,
+          totalPages: 0,
+          totalItems: 0,
           itemsPerPage: limit,
           hasNextPage: false,
           hasPrevPage: false
         },
-        debug: { totalItemsInDb: allItems.length, lowStockFound: 0, testDataReturned: true }
+        debug: { totalItemsInDb: allItems.length, lowStockFound: 0 }
       }), {
         status: 200,
         headers: { 'Content-Type': 'application/json' }

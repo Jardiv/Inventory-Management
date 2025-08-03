@@ -439,19 +439,34 @@ class LowStockManager {
     generatePurchaseOrder() {
         let selectedCount = 0;
         
-        if (window.lowStockTable && typeof window.lowStockTable.getSelectedCount === 'function') {
+        // Debug: Check if React component is available
+        console.log('window.lowStockTable available:', !!window.lowStockTable);
+        console.log('generatePurchaseOrderSummary function available:', !!(window.lowStockTable?.generatePurchaseOrderSummary));
+        
+        if (window.lowStockTable && typeof window.lowStockTable.generatePurchaseOrderSummary === 'function') {
             selectedCount = window.lowStockTable.getSelectedCount();
+            console.log('Selected count from React component:', selectedCount);
+            
+            if (selectedCount === 0) {
+                alert('Please select at least one item to generate a purchase order.');
+                return;
+            }
+            
+            // Call the React component's purchase order summary function
+            window.lowStockTable.generatePurchaseOrderSummary();
         } else {
+            // Fallback to DOM counting and direct success modal
             selectedCount = document.querySelectorAll('.item-checkbox:checked').length;
+            console.log('Selected count from DOM fallback:', selectedCount);
+            
+            if (selectedCount === 0) {
+                alert('Please select at least one item to generate a purchase order.');
+                return;
+            }
+            
+            console.log('Generating purchase order for', selectedCount, 'items (fallback method)');
+            this.openSuccessModal();
         }
-        
-        if (selectedCount === 0) {
-            alert('Please select at least one item to generate a purchase order.');
-            return;
-        }
-        
-        console.log('Generating purchase order for', selectedCount, 'items');
-        this.openSuccessModal();
     }
 
     // Fallback functions for non-React implementation

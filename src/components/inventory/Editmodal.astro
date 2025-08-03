@@ -1,78 +1,171 @@
-<!-- ✅ Edit Modal -->
-<div id="editModal" class="hidden fixed inset-0 bg-black/60 flex items-center justify-center z-50">
-  <div class="bg-primary text-textColor-primary rounded-lg w-[460px] p-6 space-y-5 relative">
+---
+const { product } = Astro.props;
+---
 
-    <!-- Modal Header -->
-    <div class="flex justify-between items-center">
+<!-- ✅ Edit Modal -->
+<div id="editModal" class="hidden fixed inset-0 bg-black/60 flex items-center justify-center z-50"
+  data-category-name={product.category} data-sku={product.code}>
+  <div class="bg-primary text-textColor-primary rounded-lg w-[460px] p-6 space-y-5 relative">
+    <!-- Header -->
+    <div class="flex justify-between items-center mb-1">
       <h2 class="text-xl font-bold">Edit Product</h2>
-      <button id="close-edit-modal" class="text-2xl font-bold text-textColor-primary hover:text-red-500 transition">&times;</button>
+      <button id="close-edit-modal" class="text-textColor-primary text-2xl font-bold">&times;</button>
     </div>
 
-    <p class="text-sm">Edit existing product details below.</p>
+    <p class="text-sm text-textColor-primary">Edit existing product details.</p>
 
-    <!-- Form Fields -->
-    <form class="space-y-4">
+    <!-- Item Name -->
+    <div class="flex items-center space-x-3">
+      <label for="editName" class="w-40 text-base font-semibold">Item Name:</label>
+      <input type="text" id="editName" value={product.name}
+        class="flex-1 bg-primary text-textColor-primary text-sm border border-neutral-700 rounded px-3 py-2" />
+    </div>
 
-      <!-- Item Name -->
-      <div class="flex items-center space-x-3">
-        <label for="editItemName" class="w-40 text-base font-semibold">Item Name:</label>
-        <input type="text" id="editItemName" placeholder="ABC"
-          class="flex-1 text-sm px-3 py-2 bg-primary border border-neutral-700 rounded focus:outline-none focus:ring-1 focus:ring-green-500" />
-      </div>
+    <!-- Category -->
+    <div class="flex items-center space-x-3">
+      <label for="editCategory" class="w-40 text-base font-semibold">Category:</label>
+      <select id="editCategory"
+        class="flex-1 bg-primary text-textColor-primary text-sm border border-neutral-700 rounded px-3 py-2">
+        <option value="">Loading categories...</option>
+      </select>
+    </div>
 
-      <!-- Category -->
-      <div class="flex items-center space-x-3">
-        <label for="editCategory" class="w-40 text-base font-semibold">Category:</label>
-        <select id="editCategory"
-          class="flex-1 text-sm px-3 py-2 bg-primary border border-neutral-700 rounded focus:outline-none focus:ring-1 focus:ring-green-500">
-          <option value="category1">Category 1</option>
-          <option value="category2">Category 2</option>
-          <option value="category3">Category 3</option>
-          <option value="category4">Category 4</option>
-        </select>
-      </div>
+    <!-- Description -->
+    <div class="flex items-start space-x-3">
+      <label for="editDescription" class="w-40 text-base font-semibold pt-2">Description:</label>
+      <textarea id="editDescription" rows="2"
+        class="flex-1 bg-primary text-textColor-primary text-sm border border-neutral-700 rounded px-3 py-2 resize-none">{product.description}</textarea>
+    </div>
 
-      <!-- Description -->
-      <div class="flex items-start space-x-3">
-        <label for="editDescription" class="w-40 text-base font-semibold pt-2">
-          Description: <br>
-          <span class="text-sm font-normal">(Optional)</span>
-        </label>
-        <textarea id="editDescription" rows="2" placeholder="Say anything..."
-          class="flex-1 text-sm px-3 py-2 bg-primary border border-neutral-700 rounded resize-none focus:outline-none focus:ring-1 focus:ring-green-500"></textarea>
-      </div>
+    <!-- Min Quantity -->
+    <div class="flex items-center space-x-3">
+      <label for="editMinQty" class="w-40 text-base font-semibold">Minimum Quantity:</label>
+      <input type="number" id="editMinQty" value={product.minQuantity ?? 0}
+        class="flex-1 bg-primary text-textColor-primary text-sm border border-neutral-700 rounded px-3 py-2" />
+    </div>
 
-      <!-- Min Quantity -->
-      <div class="flex items-center space-x-3">
-        <label for="editMinQty" class="w-40 text-base font-semibold">Minimum Quantity:</label>
-        <input type="number" id="editMinQty" placeholder="10"
-          class="flex-1 text-sm px-3 py-2 bg-primary border border-neutral-700 rounded focus:outline-none focus:ring-1 focus:ring-green-500" />
-      </div>
+    <!-- Max Quantity -->
+    <div class="flex items-center space-x-3">
+      <label for="editMaxQty" class="w-40 text-base font-semibold">Maximum Quantity:</label>
+      <input type="number" id="editMaxQty" value={product.maxQuantity ?? 0}
+        class="flex-1 bg-primary text-textColor-primary text-sm border border-neutral-700 rounded px-3 py-2" />
+    </div>
 
-      <!-- Max Quantity -->
-      <div class="flex items-center space-x-3">
-        <label for="editMaxQty" class="w-40 text-base font-semibold">Maximum Quantity:</label>
-        <input type="number" id="editMaxQty" placeholder="100"
-          class="flex-1 text-sm px-3 py-2 bg-primary border border-neutral-700 rounded focus:outline-none focus:ring-1 focus:ring-green-500" />
-      </div>
+    <!-- Unit Price -->
+    <div class="flex items-center space-x-3">
+      <label for="editUnitPrice" class="w-40 text-base font-semibold">Unit Price:</label>
+      <input type="number" id="editUnitPrice" value={product.price} step="0.01" min="0.01"
+        class="flex-1 bg-primary text-textColor-primary text-sm border border-neutral-700 rounded px-3 py-2" />
+    </div>
 
-      <!-- Auto Re-order -->
-      <div class="flex items-center space-x-3">
-        <label for="editAutoReorder" class="w-40 text-base font-semibold">Auto Re-order:</label>
-        <label class="relative inline-flex items-center cursor-pointer">
-          <input type="checkbox" id="editAutoReorder" class="sr-only peer" checked />
-          <div class="w-11 h-6 bg-gray-700 rounded-full peer-checked:bg-green-500 transition peer-focus:ring-2 peer-focus:ring-green-500"></div>
-          <div class="absolute left-0.5 top-0.5 w-5 h-5 bg-white rounded-full transition peer-checked:translate-x-full"></div>
-        </label>
-      </div>
+    <!-- Auto Re-order -->
+    <div class="flex items-center space-x-3">
+      <label for="editAutoReorder" class="w-40 text-base font-semibold">Auto Re-order:</label>
+      <label class="relative inline-flex items-center cursor-pointer">
+        <input type="checkbox" id="editAutoReorder" class="sr-only peer" checked>
+        <div class="w-11 h-6 bg-gray-700 rounded-full peer peer-checked:bg-green-500 transition-all"></div>
+        <div class="absolute left-0.5 top-0.5 w-5 h-5 bg-white rounded-full transition-all peer-checked:translate-x-full"></div>
+      </label>
+    </div>
 
-      <!-- Modal Buttons -->
-      <div class="flex justify-end space-x-3 pt-4">
-        <button type="button" id="cancelEditBtn"
-          class="bg-red-600 text-white text-sm px-5 py-2 rounded hover:bg-red-700 transition">Cancel</button>
-        <button type="submit" id="confirmEditBtn"
-          class="bg-green-600 text-white text-sm px-5 py-2 rounded hover:bg-green-700 transition">Confirm</button>
-      </div>
-    </form>
+    <!-- Buttons -->
+    <div class="flex justify-end space-x-3 pt-4">
+      <button id="cancelEditBtn" class="bg-red-600 text-white text-sm px-5 py-2 rounded">Cancel</button>
+      <button id="confirmEditBtn" class="bg-green-600 text-white text-sm px-5 py-2 rounded">Update</button>
+    </div>
   </div>
 </div>
+
+<!-- ✅ Edit Script -->
+<script type="module">
+  import { supabase } from "/src/utils/supabaseClient";
+
+  document.addEventListener("DOMContentLoaded", () => {
+    const modal = document.getElementById("editModal");
+    const openBtn = window.openEditModal; // defined outside
+    const closeBtn = document.getElementById("close-edit-modal");
+    const cancelBtn = document.getElementById("cancelEditBtn");
+    const confirmBtn = document.getElementById("confirmEditBtn");
+    const categorySelect = document.getElementById("editCategory");
+
+    const productSku = modal.dataset.sku;
+    const productCategoryName = modal.dataset.categoryName;
+
+    const openEditModal = () => modal.classList.remove("hidden");
+    const closeEditModal = () => modal.classList.add("hidden");
+
+    // Open modal externally
+    window.openEditModal = openEditModal;
+    closeBtn.addEventListener("click", closeEditModal);
+    cancelBtn.addEventListener("click", closeEditModal);
+
+    // Load categories
+    async function loadCategories() {
+      const { data, error } = await supabase.from("category").select("*");
+      categorySelect.innerHTML = "";
+
+      if (error || !data?.length) {
+        categorySelect.innerHTML = `<option value="">Failed to load categories</option>`;
+        return;
+      }
+
+      categorySelect.innerHTML = `<option value="">Select Category</option>`;
+      data.forEach((cat) => {
+        const opt = document.createElement("option");
+        opt.value = cat.id;
+        opt.textContent = cat.name;
+        if (cat.name === productCategoryName) opt.selected = true;
+        categorySelect.appendChild(opt);
+      });
+    }
+    loadCategories();
+
+    // Confirm update
+    confirmBtn.addEventListener("click", async () => {
+      const name = document.getElementById("editName").value.trim();
+      const category = categorySelect.value;
+      const description = document.getElementById("editDescription").value.trim();
+      const minQty = parseInt(document.getElementById("editMinQty").value);
+      const maxQty = parseInt(document.getElementById("editMaxQty").value);
+      const unitPrice = parseFloat(document.getElementById("editUnitPrice").value);
+      const autoReorder = document.getElementById("editAutoReorder").checked;
+
+      if (!name || !category || isNaN(minQty) || isNaN(maxQty) || isNaN(unitPrice)) {
+        alert("Please fill out all required fields.");
+        return;
+      }
+
+      const { data: itemData, error: updateError } = await supabase
+        .from("items")
+        .update({
+          name,
+          description,
+          category_id: parseInt(category),
+          min_quantity: minQty,
+          max_quantity: maxQty,
+          unit_price: unitPrice,
+          updated_at: new Date().toISOString(),
+        })
+        .eq("sku", productSku)
+        .select();
+
+      if (updateError) {
+        alert("Failed to update product:\n" + updateError.message);
+        return;
+      }
+
+      // Handle auto_reorder table (optional update logic here)
+      if (itemData?.[0]?.id && autoReorder) {
+        await supabase.from("auto_reorder").upsert([{
+          item_id: itemData[0].id,
+          auto_reorder: true,
+          supplier_id: null
+        }], { onConflict: ['item_id'] });
+      }
+
+      alert("Product updated successfully!");
+      closeEditModal();
+      location.reload();
+    });
+  });
+</script>

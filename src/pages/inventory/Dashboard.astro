@@ -2,37 +2,20 @@
 import Layout from '../../layouts/Layout.astro';
 import Addmodal from '../../components/inventory/Addmodal.astro';
 import Filter from '../../components/inventory/Filter.astro';
-import { products } from '../../components/inventory/productInvenDATA.jsx';
+import QuickSummary from '../../components/inventory/QuickSummary.jsx';
+import ProductInventoryPreview from '../../components/inventory/productInvenDATA.jsx';
+
 ---
 
 <Layout>
   <Addmodal />
 
-
-
   <!-- INVENTORY OVERVIEW -->
   <section id="overviewSection">
     <!-- Inventory Summary -->
-    <div class="bg-primary p-6 rounded-lg mb-6 ">
+    <div class="bg-primary p-6 rounded-lg mb-6">  
       <h2 class="text-xl font-semibold mb-4">Quick Summary</h2>
-      <div class="grid grid-cols-4 gap-6 text-center">
-        <div>
-          <p class="text-textColor-primary text-sm">Total Products</p>
-          <p class="text-lg font-bold">100</p>
-        </div>
-        <div>
-          <p class="text-textColor-primary text-sm">Categories</p>
-          <p class="text-lg font-bold">5</p>
-        </div>
-        <div>
-          <p class="text-textColor-primary text-sm">Low Stock Products</p>
-          <p class="text-lg font-bold">23</p>
-        </div>
-        <div>
-          <p class="text-textColor-primary text-sm">Out of Stock Products</p>
-          <p class="text-lg font-bold">6</p>
-        </div>
-      </div>
+      <QuickSummary client:load />
     </div>
 
     <!-- Product Table Preview -->
@@ -41,8 +24,6 @@ import { products } from '../../components/inventory/productInvenDATA.jsx';
     <div class="flex items-center gap-3">
       <h2 class="text-xl font-semibold">Product Inventory</h2>
     </div>
-
-    <!-- Action Buttons -->
     <div class="flex items-center gap-2">
       <Filter />
       <a href="/inventory/ProductInventoryTBL/">
@@ -51,32 +32,11 @@ import { products } from '../../components/inventory/productInvenDATA.jsx';
     </div>
   </div>
 
-  <!-- 🟣 Table Header -->
-  <div class="grid grid-cols-4 items-center border-b border-border_color pb-2 font-semibold text-sm text-textColor-primary uppercase">
-    <span>Item Code</span>
-    <span class="text-left">Item Name</span>
-    <span class="text-left">Category</span>
-    <span class="text-left">Supplier</span>
+  <!-- Dynamic Table via API -->
+<ProductInventoryPreview client:load limit={6} paginated={false} />
 
-  </div>
-
-  <!-- 🟣 Table Body -->
-  {products.slice(0, 9).map(product => (
-    <div class="grid grid-cols-4 items-center border-b border-border_color py-2 text-sm">
-      <span>{product.code}</span>
-      <span class="text-left">{product.name}</span>
-      <span class="text-left">{product.category}</span>
-      <span class="text-left">{product.unit}</span>
-
-      </span>
-    </div>
-  ))}
 </div>
-
   </section>
-
-  </main>
-  </div>
 
   <script src="/scripts/inventory/inventory.js" is:inline></script>
 </Layout>

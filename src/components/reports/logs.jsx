@@ -439,14 +439,12 @@ const PurchaseOrderLogs = () => {
             <table className="w-full text-left">
               <thead className="sticky top-0 bg-primary">
                 <tr className="border-b border-gray-700">
-                  <th className="px-4 py-3 text-textColor-primary font-medium text-sm">Purchase Order #</th>
+                  <th className="px-4 py-3 text-textColor-primary font-medium text-sm">Invoice No.</th>
                   <th className="px-4 py-3 text-textColor-primary font-medium text-sm">Date Created</th>
-                  <th className="px-4 py-3 text-textColor-primary font-medium text-sm">Supplier</th>
                   <th className="px-4 py-3 text-textColor-primary font-medium text-sm">Total Quantity</th>
                   <th className="px-4 py-3 text-textColor-primary font-medium text-sm">Total Amount</th>
                   <th className="px-4 py-3 text-textColor-primary font-medium text-sm">Status</th>
                   <th className="px-4 py-3 text-textColor-primary font-medium text-sm">Created By</th>
-                  <th className="px-4 py-3 text-textColor-primary font-medium text-sm">Actions</th>
                 </tr>
               </thead>
               <tbody>
@@ -459,9 +457,6 @@ const PurchaseOrderLogs = () => {
                       <div className="animate-pulse bg-gray-700 h-4 w-24 rounded"></div>
                     </td>
                     <td className="px-4 py-3">
-                      <div className="animate-pulse bg-gray-700 h-4 w-32 rounded"></div>
-                    </td>
-                    <td className="px-4 py-3">
                       <div className="animate-pulse bg-gray-700 h-4 w-16 rounded"></div>
                     </td>
                     <td className="px-4 py-3">
@@ -472,12 +467,6 @@ const PurchaseOrderLogs = () => {
                     </td>
                     <td className="px-4 py-3">
                       <div className="animate-pulse bg-gray-700 h-4 w-24 rounded"></div>
-                    </td>
-                    <td className="px-4 py-3">
-                      <div className="flex items-center gap-2">
-                        <div className="animate-pulse bg-gray-700 h-6 w-6 rounded"></div>
-                        <div className="animate-pulse bg-gray-700 h-6 w-6 rounded"></div>
-                      </div>
                     </td>
                   </tr>
                 ))}
@@ -520,14 +509,12 @@ const PurchaseOrderLogs = () => {
               <table className="w-full text-left">
                 <thead className="sticky top-0 bg-primary">
                   <tr className="border-b border-gray-700">
-                    <th className="px-4 py-3 text-textColor-primary font-medium text-sm">Purchase Order #</th>
+                    <th className="px-4 py-3 text-textColor-primary font-medium text-sm">Invoice No.</th>
                     <th className="px-4 py-3 text-textColor-primary font-medium text-sm">Date Created</th>
-                    <th className="px-4 py-3 text-textColor-primary font-medium text-sm">Supplier</th>
                     <th className="px-4 py-3 text-textColor-primary font-medium text-sm">Total Quantity</th>
                     <th className="px-4 py-3 text-textColor-primary font-medium text-sm">Total Amount</th>
                     <th className="px-4 py-3 text-textColor-primary font-medium text-sm">Status</th>
                     <th className="px-4 py-3 text-textColor-primary font-medium text-sm">Created By</th>
-                    <th className="px-4 py-3 text-textColor-primary font-medium text-sm">Actions</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -540,9 +527,6 @@ const PurchaseOrderLogs = () => {
                         <div className="animate-pulse bg-gray-700 h-4 w-24 rounded"></div>
                       </td>
                       <td className="px-4 py-3">
-                        <div className="animate-pulse bg-gray-700 h-4 w-32 rounded"></div>
-                      </td>
-                      <td className="px-4 py-3">
                         <div className="animate-pulse bg-gray-700 h-4 w-16 rounded"></div>
                       </td>
                       <td className="px-4 py-3">
@@ -553,12 +537,6 @@ const PurchaseOrderLogs = () => {
                       </td>
                       <td className="px-4 py-3">
                         <div className="animate-pulse bg-gray-700 h-4 w-24 rounded"></div>
-                      </td>
-                      <td className="px-4 py-3">
-                        <div className="flex items-center gap-2">
-                          <div className="animate-pulse bg-gray-700 h-6 w-6 rounded"></div>
-                          <div className="animate-pulse bg-gray-700 h-6 w-6 rounded"></div>
-                        </div>
                       </td>
                     </tr>
                   ))}
@@ -603,7 +581,7 @@ const PurchaseOrderLogs = () => {
                           sortConfig.column === 'poNumber' ? 'text-btn-primary' : ''
                         }`}
                       >
-                        Purchase Order #
+                        Invoice No.
                         {getSortIcon('poNumber')}
                       </button>
                     </th>
@@ -616,17 +594,6 @@ const PurchaseOrderLogs = () => {
                       >
                         Date Created
                         {getSortIcon('dateCreated')}
-                      </button>
-                    </th>
-                    <th className="px-4 py-3 text-textColor-primary font-medium text-sm">
-                      <button
-                        onClick={() => handleSort('supplier')}
-                        className={`flex items-center gap-2 hover:text-btn-primary transition-colors ${
-                          sortConfig.column === 'supplier' ? 'text-btn-primary' : ''
-                        }`}
-                      >
-                        Supplier
-                        {getSortIcon('supplier')}
                       </button>
                     </th>
                     <th className="px-4 py-3 text-textColor-primary font-medium text-sm">
@@ -673,13 +640,12 @@ const PurchaseOrderLogs = () => {
                         {getSortIcon('createdBy')}
                       </button>
                     </th>
-                    <th className="px-4 py-3 text-textColor-primary font-medium text-sm">Actions</th>
                   </tr>
                 </thead>
                 <tbody>
                   {currentLogs.length === 0 ? (
                     <tr>
-                      <td colSpan="8" className="px-4 py-8 text-center text-textColor-tertiary">
+                      <td colSpan="6" className="px-4 py-8 text-center text-textColor-tertiary">
                         No purchase order logs found
                       </td>
                     </tr>
@@ -697,9 +663,6 @@ const PurchaseOrderLogs = () => {
                           {log.dateCreated}
                         </td>
                         <td className="px-4 py-3 text-textColor-primary text-sm">
-                          {log.supplier}
-                        </td>
-                        <td className="px-4 py-3 text-textColor-primary text-sm">
                           {log.totalQuantity} pcs
                         </td>
                         <td className="px-4 py-3 text-textColor-primary text-sm font-medium">
@@ -712,29 +675,6 @@ const PurchaseOrderLogs = () => {
                         </td>
                         <td className="px-4 py-3 text-textColor-primary text-sm">
                           {log.createdBy}
-                        </td>
-                        <td className="px-4 py-3">
-                          <div className="flex items-center gap-2">
-                            <button
-                              onClick={() => handleViewDetails(log)}
-                              className="p-1 text-btn-primary hover:text-textColor-primary transition-colors"
-                              title="View Details"
-                            >
-                              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth="1.5" stroke="currentColor" className="w-4 h-4">
-                                <path strokeLinecap="round" strokeLinejoin="round" d="M2.036 12.322a1.012 1.012 0 0 1 0-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178Z" />
-                                <path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" />
-                              </svg>
-                            </button>
-                            <button
-                              onClick={() => handleDownloadPDF(log)}
-                              className="p-1 text-green hover:text-textColor-primary transition-colors"
-                              title="Download PDF"
-                            >
-                              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth="1.5" stroke="currentColor" className="w-4 h-4">
-                                <path strokeLinecap="round" strokeLinejoin="round" d="M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5M16.5 12 12 16.5m0 0L7.5 12m4.5 4.5V3" />
-                              </svg>
-                            </button>
-                          </div>
                         </td>
                       </tr>
                     ))
@@ -776,7 +716,7 @@ const PurchaseOrderLogs = () => {
               >
                 {generateDropdownOptions().map(option => (
                   <option key={option} value={option}>
-                    {option === filteredLogs.length ? `All (${option})` : option}
+                    {option === filteredLogs.length ? `All` : option}
                   </option>
                 ))}
               </select>
