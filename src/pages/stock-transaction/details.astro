@@ -1,0 +1,163 @@
+---
+import Layout from '../../layouts/Layout.astro';
+import { URL } from 'node:url';
+
+const url = new URL(Astro.request.url);
+const transactionId = url.searchParams.get("id");
+const isShow = url.searchParams.get("showSupplier");
+const showSupplierDetails = isShow !== 'false';
+
+let transaction = null;
+let loading = true;
+
+if (transactionId) {
+  try {
+    const response = await fetch(`${Astro.url.origin}/api/transactions/details?id=${transactionId}`);
+    if (response.ok) {
+      transaction = await response.json();
+    }
+  } catch (error) {
+    console.error('Error fetching transaction details:', error);
+  } finally {
+    loading = false;
+  }
+}
+---
+
+<Layout>
+	<div class="bg-primary px-6 py-4 rounded-lg h-full overflow-auto">
+		<div class="flex justify-between h-header">
+			<div>
+				<h1 class="font-semibold text-2xl">Transaction Details</h1>
+				<p class="text-border_color">Detailed breakdown of the transaction.</p>
+			</div>
+			<a href="/stockTransaction/Dashboard/" class="p-2 text-textColor-primary hover:bg-btn-hover hover:text-white rounded">
+				<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5">
+					<path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12" />
+				</svg>
+			</a>
+		</div>
+
+		{loading ? (
+			<div class="grid grid-cols-5 gap-4 h-120 animate-pulse">
+				<div class="col-span-3 py-4">
+					<div class="h-6 bg-border_color rounded w-1/3 mb-4"></div>
+					<div class="bg-background border-[0.5px] border-border_color px-4 py-2 overflow-x-auto h-full flex flex-col justify-between">
+						<div class="space-y-4">
+							<div class="h-4 bg-border_color rounded w-full"></div>
+							<div class="h-4 bg-border_color rounded w-full"></div>
+							<div class="h-4 bg-border_color rounded w-full"></div>
+							<div class="h-4 bg-border_color rounded w-full"></div>
+						</div>
+					</div>
+				</div>
+				<div class="gap-20 px-8 col-span-2">
+					<div class="flex flex-col">
+						<div class="h-6 bg-border_color rounded w-1/3 mb-4"></div>
+						<div class="space-y-4">
+							<div class="h-4 bg-border_color rounded w-full"></div>
+							<div class="h-4 bg-border_color rounded w-full"></div>
+							<div class="h-4 bg-border_color rounded w-full"></div>
+						</div>
+					</div>
+					{showSupplierDetails && (
+						<div class="flex flex-col mt-12">
+							<div class="h-6 bg-border_color rounded w-1/3 mb-4"></div>
+							<div class="space-y-4">
+								<div class="h-4 bg-border_color rounded w-full"></div>
+								<div class="h-4 bg-border_color rounded w-full"></div>
+								<div class="h-4 bg-border_color rounded w-full"></div>
+							</div>
+						</div>
+					)}
+				</div>
+			</div>
+		) : transaction ? (
+			<div class="grid grid-cols-5 gap-4 h-120">
+				<div class="col-span-3 py-4">
+					<h2 class="text-lg font-semibold mb-2">Item Details</h2>
+					<div class="bg-background border-[0.5px] border-border_color px-4 py-2 overflow-x-auto h-full flex flex-col justify-between">
+						<table class="w-full text-left table-fixed">
+							<thead>
+								<tr class="border-b-[0.5px]">
+									<th class="w-[33%]">Item</th>
+									<th class="">Quantity</th>
+									<th class="">Expiry Date</th>
+									<th class="">Unit Price</th>
+									<th class="">Total</th>
+								</tr>
+							</thead>
+							<tbody>
+								<tr class="table-row">
+									<td class="table-data bg-background">{transaction.item_name}</td>
+									<td class="table-data bg-background">{transaction.quantity}</td>
+									<td class="table-data bg-background text-center">{transaction.expiry_date ? new Date(transaction.expiry_date).toLocaleDateString() : 'N/A'}</td>
+									<td class="table-data bg-background">{transaction.unit_price}</td>
+									<td class="table-data bg-background">{transaction.total_price}</td>
+								</tr>
+							</tbody>
+						</table>
+						<table>
+							<tr>
+								<td class="text-right px-4 py-2">Subtotal</td>
+								<td class="py-2">{transaction.total_price}</td>
+							</tr>
+						</table>
+					</div>
+				</div>
+
+				<div class="gap-12 px-8 col-span-2 flex flex-col">
+					<div class="flex flex-col">
+						<h2 class="text-lg font-semibold mb-2">Primary Details</h2>
+						<hr class="mb-4" />
+						<table class="w-full">
+							<tr class="py-2">
+								<td class="text-right px-4 py-2 font-semibold">Invoice Number</td>
+								<td class="py-2">{transaction.invoice_no}</td>
+							</tr>
+							<tr class="py-2">
+								<td class="text-right px-4 py-2 font-semibold">Date</td>
+								<td class="py-2">{new Date(transaction.transaction_datetime).toLocaleDateString()}</td>
+							</tr>
+							<tr class="py-2">
+								<td class="text-right px-4 py-2 font-semibold">Status</td>
+								<td class="py-2 text-green">{transaction.status}</td>
+							</tr>
+							<tr class="py-2">
+								<td class="text-right px-4 py-2 font-semibold">Type</td>
+								<td class="py-2">{transaction.type_name}</td>
+							</tr>
+							<tr class="py-2">
+								<td class="text-right px-4 py-2 font-semibold">Created By</td>
+								<td class="py-2">John Doe</td>
+							</tr>
+						</table>
+					</div>
+
+					{showSupplierDetails && (
+					<div class="flex flex-col">
+						<h2 class="text-lg font-semibold mb-2">Supplier Details</h2>
+						<hr class="mb-4" />
+						<table class="w-full">
+							<tr class="py-2">
+								<td class="text-right px-4 py-2 font-semibold">Supplier</td>
+								<td class="py-2">{transaction.supplier_name}</td>
+							</tr>
+							<tr class="py-2">
+								<td class="text-right px-4 py-2 font-semibold">Contact No</td>
+								<td class="py-2">{transaction.supplier_contact}</td>
+							</tr>
+							<tr class="py-2">
+								<td class="text-right px-4 py-2 font-semibold">Location</td>
+								<td class="py-2">{transaction.supplier_location}</td>
+							</tr>
+						</table>
+					</div>
+					)}
+				</div>
+			</div>
+		) : (
+			<div class="text-center text-textColor-tertiary py-10">No details found for this transaction.</div>
+		)}
+	</div>
+</Layout>

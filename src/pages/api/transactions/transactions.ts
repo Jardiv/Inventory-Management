@@ -1,14 +1,16 @@
 import { supabase } from "../../../utils/supabaseClient.ts";
 
 /**
- * Handles GET requests to fetch all transactions with complete details.
+ * Handles GET requests to fetch transactions.
+ * - If 'direction' is specified ('in' or 'out'), it groups transactions by invoice and calculates total items.
+ * - Otherwise, it fetches individual transaction details.
  * Supports optional query parameters: limit, offset, direction, status, sortBy, sortOrder, startDate, endDate, search
  */
 export async function GET({ request }: { request: Request }) {
 	const url = new URL(request.url);
 	const rawLimit = url.searchParams.get("limit");
 	const rawOffset = url.searchParams.get("offset");
-	const direction = url.searchParams.get("direction"); // 'in' or 'out'
+	const direction = url.searchParams.get("direction");
 	const status = url.searchParams.get("status");
 	const sortBy = url.searchParams.get("sortBy") || "transaction_datetime";
 	const sortOrder = url.searchParams.get("sortOrder") || "desc";
@@ -19,65 +21,106 @@ export async function GET({ request }: { request: Request }) {
 	const limit = parseLimit(rawLimit);
 	const offset = parseOffset(rawOffset);
 
-	const sortMap = {
-		'invoice_no': 'invoice_no',
-		'transaction_datetime': 'transaction_datetime',
-		'quantity': 'quantity',
-		'status': 'status',
-		'type': 'transaction_type_id'
-	};
-
-	const dbSortKey = sortMap[sortBy] || 'transaction_datetime';
-
-	// If direction is specified, use the two-step approach for accurate filtering
 	if (direction) {
-		// First, get transaction type IDs where direction matches
 		const { data: typeData, error: typesError } = await supabase
 			.from("transaction_types")
-			.select("id, name")
+			.select("id")
 			.eq("direction", direction);
 
-		if (typesError) {
-			return jsonResponse({ error: typesError.message }, 500);
-		}
-
+		if (typesError) return jsonResponse({ error: typesError.message }, 500);
+		
 		const typeIds = typeData?.map(t => t.id) || [];
+		if (typeIds.length === 0) return jsonResponse({ transactions: [], total: 0 }, 200);
 
-		if (typeIds.length === 0) {
-			return jsonResponse({ transactions: [], total: 0 }, 200);
-		}
-
-		// Get total count for pagination
-		let countQuery = supabase
+		let query = supabase
 			.from("transactions")
-			.select("*", { count: 'exact', head: true })
+			.select(`
+				id,
+				invoice_no,
+				quantity,
+				transaction_datetime,
+				status,
+				transaction_types:transaction_type_id ( name ),
+				suppliers:supplier_id ( name )
+			`)
 			.in("transaction_type_id", typeIds);
 
-		if (status) {
-			countQuery = countQuery.eq("status", status);
+		if (status) query = query.eq("status", status);
+		if (startDate) query = query.gte("transaction_datetime", startDate);
+		if (endDate) query = query.lte("transaction_datetime", endDate);
+
+		const { data, error } = await query;
+
+		if (error) {
+			console.error("Database error:", error);
+			return jsonResponse({ error: error.message }, 500);
 		}
 
-		if (startDate) {
-			countQuery = countQuery.gte("transaction_datetime", startDate);
-		}
+		const groupedByInvoice = (data ?? []).reduce((acc, tx) => {
+			if (!acc[tx.invoice_no]) {
+				acc[tx.invoice_no] = {
+					id: tx.id,
+					invoice_no: tx.invoice_no,
+					transaction_datetime: tx.transaction_datetime,
+					supplier_name: tx.suppliers?.name ?? null,
+					type_name: tx.transaction_types?.name ?? null,
+					status: tx.status,
+					items_count: 0,
+				};
+			}
+			acc[tx.invoice_no].items_count += tx.quantity;
+			return acc;
+		}, {});
 
-		if (endDate) {
-			countQuery = countQuery.lte("transaction_datetime", endDate);
-		}
+		let summaryData = Object.values(groupedByInvoice);
 
 		if (search) {
+			summaryData = summaryData.filter(tx => 
+				tx.invoice_no.toLowerCase().includes(search.toLowerCase()) ||
+				(tx.supplier_name && tx.supplier_name.toLowerCase().includes(search.toLowerCase())) ||
+				tx.status.toLowerCase().includes(search.toLowerCase())
+			);
+		}
+
+		summaryData.sort((a, b) => {
+			const aVal = a[sortBy];
+			const bVal = b[sortBy];
+			if (aVal < bVal) return sortOrder === 'asc' ? -1 : 1;
+			if (aVal > bVal) return sortOrder === 'asc' ? 1 : -1;
+			return 0;
+		});
+
+		const total = summaryData.length;
+		const paginatedData = summaryData.slice(offset, offset + limit);
+
+		const transformedData = paginatedData.map(tx => ({
+			...tx,
+			transaction_datetime: formatDateTime(tx.transaction_datetime),
+		}));
+
+		return jsonResponse({ 
+			transactions: transformedData, 
+			total: total,
+			limit,
+			offset 
+		}, 200);
+
+	} else {
+		// Logic for when no direction is specified (e.g., LogsTable)
+		let countQuery = supabase.from("transactions").select("*", { count: 'exact', head: true });
+		if (status) countQuery = countQuery.eq("status", status);
+		if (startDate) countQuery = countQuery.gte("transaction_datetime", startDate);
+		if (endDate) countQuery = countQuery.lte("transaction_datetime", endDate);
+		if (search) {
 			countQuery = countQuery.or(`item_id.ilike.%${search}%,quantity.ilike.%${search}%,supplier_id.ilike.%${search}%,transaction_type_id.ilike.%${search}%,status.ilike.%${search}%`);
-			console.log("Search query:", countQuery);
 		}
 
 		const { count, error: countError } = await countQuery;
-
 		if (countError) {
 			console.error("Count error:", countError);
 			return jsonResponse({ error: countError.message }, 500);
 		}
 
-		// Build query with transaction type IDs
 		let query = supabase
 			.from("transactions")
 			.select(`
@@ -89,57 +132,23 @@ export async function GET({ request }: { request: Request }) {
 				items:item_id ( name ),
 				transaction_types:transaction_type_id ( name, direction ),
 				suppliers:supplier_id ( name )
-			`)
-			.in("transaction_type_id", typeIds)
+			`);
 
-		if (sortBy === 'status' || sortBy === 'type') {
-			query = query.order(dbSortKey, { ascending: sortOrder === 'asc' }).order('transaction_datetime', { ascending: sortOrder === 'asc' });
-		} else {
-			query = query.order(dbSortKey, { ascending: sortOrder === 'asc' });
-		}
-
-		// Apply status filter if provided
-		if (status) {
-			query = query.eq("status", status);
-		}
-
-		if (startDate) {
-			query = query.gte("transaction_datetime", startDate);
-		}
-
-		if (endDate) {
-			query = query.lte("transaction_datetime", endDate);
-		}
-
+		query = query.order(sortBy, { ascending: sortOrder === 'asc' });
+		if (status) query = query.eq("status", status);
+		if (startDate) query = query.gte("transaction_datetime", startDate);
+		if (endDate) query = query.lte("transaction_datetime", endDate);
 		if (search) {
-			const searchNumber = Number(search);
-			const searchFilters = [
-				`invoice_no.ilike.%${search}%`,
-				`status.ilike.%${search}%`,
-				`items.name.ilike.%${search}%`,
-				`suppliers.name.ilike.%${search}%`,
-				`transaction_types.name.ilike.%${search}%`,
-			];
-
-			if (!isNaN(searchNumber)) {
-				searchFilters.push(`quantity.eq.${searchNumber}`);
-			}
-
-			query = query.or(searchFilters.join(","));
+			query = query.or(`item_id.ilike.%${search}%,quantity.ilike.%${search}%,supplier_id.ilike.%${search}%,transaction_type_id.ilike.%${search}%,status.ilike.%${search}%`);
 		}
-
-		// Apply pagination
 		query = query.range(offset, offset + limit - 1);
 
 		const { data, error } = await query;
-
 		if (error) {
 			console.error("Database error:", error);
 			return jsonResponse({ error: error.message }, 500);
 		}
-		
 
-		// Transform the data
 		const transformedData = (data ?? []).map((tx) => ({
 			id: tx.id,
 			invoice_no: tx.invoice_no,
@@ -159,257 +168,6 @@ export async function GET({ request }: { request: Request }) {
 			offset 
 		}, 200);
 	}
-
-	// If no direction filter, use the original approach with pagination
-	// Get total count first
-	let countQuery = supabase
-		.from("transactions")
-		.select("*", { count: 'exact', head: true });
-
-	if (status) {
-		countQuery = countQuery.eq("status", status);
-	}
-
-	if (startDate) {
-		countQuery = countQuery.gte("transaction_datetime", startDate);
-	}
-
-	if (endDate) {
-		countQuery = countQuery.lte("transaction_datetime", endDate);
-	}
-
-	if (search) {
-		
-		countQuery = countQuery.or(`item_id.ilike.%${search}%,quantity.ilike.%${search}%,supplier_id.ilike.%${search}%,transaction_type_id.ilike.%${search}%,status.ilike.%${search}%`);
-	}
-
-	const { count, error: countError } = await countQuery;
-
-	if (countError) {
-		console.error("Count error:", countError);
-		return jsonResponse({ error: countError.message }, 500);
-	}
-
-	let query = supabase
-		.from("transactions")
-		.select(`
-			id,
-			invoice_no,
-			quantity,
-			transaction_datetime,
-			status,
-			items:item_id ( name ),
-			transaction_types:transaction_type_id ( name, direction ),
-			suppliers:supplier_id ( name )
-		`);
-
-	if (sortBy === 'status' || sortBy === 'type') {
-		query = query.order(dbSortKey, { ascending: sortOrder === 'asc' }).order('transaction_datetime', { ascending: sortOrder === 'asc' });
-	} else {
-		query = query.order(dbSortKey, { ascending: sortOrder === 'asc' });
-	}
-
-	// Apply status filter if provided
-	if (status) {
-		query = query.eq("status", status);
-	}
-
-	if (startDate) {
-		query = query.gte("transaction_datetime", startDate);
-	}
-
-	if (endDate) {
-		query = query.lte("transaction_datetime", endDate);
-	}
-
-	if (search) {
-		query = query.or(`item_id.ilike.%${search}%,quantity.ilike.%${search}%,supplier_id.ilike.%${search}%,transaction_type_id.ilike.%${search}%,status.ilike.%${search}%`);
-	}
-
-	// Apply pagination
-	query = query.range(offset, offset + limit - 1);
-
-	const { data, error } = await query;
-
-	// Handle errors
-	if (error) {
-		console.error("Database error:", error);
-		return jsonResponse({ error: error.message }, 500);
-	}
-
-	// Transform the data to match the required format
-	const transformedData = (data ?? []).map((tx) => ({
-		id: tx.id,
-		invoice_no: tx.invoice_no,
-		item_name: tx.items?.name ?? null,
-		quantity: tx.quantity,
-		transaction_datetime: formatDateTime(tx.transaction_datetime),
-		type_name: tx.transaction_types?.name ?? null,
-		transaction_direction: tx.transaction_types?.direction ?? null,
-		supplier_name: tx.suppliers?.name ?? null,
-		status: tx.status,
-	}));
-
-	return jsonResponse({ 
-		transactions: transformedData, 
-		total: count || 0,
-		limit,
-		offset 
-	}, 200);
-}
-
-/**
- * Alternative endpoint specifically for stock-in transactions
- */
-export async function getStockIn({ request }: { request: Request }) {
-	const url = new URL(request.url);
-	const rawLimit = url.searchParams.get("limit");
-	const rawOffset = url.searchParams.get("offset");
-	const limit = parseLimit(rawLimit);
-	const offset = parseOffset(rawOffset);
-
-	// First, get transaction type IDs where direction = 'in'
-	const { data: inTypes, error: typesError } = await supabase
-		.from("transaction_types")
-		.select("id")
-		.eq("direction", "in");
-
-	if (typesError) {
-		return jsonResponse({ error: typesError.message }, 500);
-	}
-
-	const inTypeIds = inTypes?.map(t => t.id) || [];
-
-	if (inTypeIds.length === 0) {
-		return jsonResponse({ transactions: [], total: 0 }, 200);
-	}
-
-	// Get total count
-	const { count, error: countError } = await supabase
-		.from("transactions")
-		.select("*", { count: 'exact', head: true })
-		.in("transaction_type_id", inTypeIds);
-
-	if (countError) {
-		return jsonResponse({ error: countError.message }, 500);
-	}
-
-	// Query transactions with those type IDs
-	const { data, error } = await supabase
-		.from("transactions")
-		.select(`
-			id,
-			invoice_no,
-			quantity,
-			transaction_datetime,
-			status,
-			item:item_id ( name ),
-			transaction_type:transaction_type_id ( name, direction ),
-			supplier:supplier_id ( name )
-		`)
-		.in("transaction_type_id", inTypeIds)
-		.order("transaction_datetime", { ascending: false })
-		.range(offset, offset + limit - 1);
-
-	if (error) {
-		return jsonResponse({ error: error.message }, 500);
-	}
-
-	const stockInData = (data ?? []).map((tx) => ({
-		id: tx.id,
-		invoice_no: tx.invoice_no,
-		item_name: tx.item?.name ?? null,
-		quantity: tx.quantity,
-		transaction_datetime: formatDateTime(tx.transaction_datetime),
-		type_name: tx.transaction_type?.name ?? null,
-		transaction_direction: tx.transaction_type?.direction ?? null,
-		supplier_name: tx.supplier?.name ?? null,
-		status: tx.status,
-	}));
-
-	return jsonResponse({ 
-		transactions: stockInData, 
-		total: count || 0,
-		limit,
-		offset 
-	}, 200);
-}
-
-/**
- * Alternative endpoint specifically for stock-out transactions
- */
-export async function getStockOut({ request }: { request: Request }) {
-	const url = new URL(request.url);
-	const rawLimit = url.searchParams.get("limit");
-	const rawOffset = url.searchParams.get("offset");
-	const limit = parseLimit(rawLimit);
-	const offset = parseOffset(rawOffset);
-
-	// First, get transaction type IDs where direction = 'out'
-	const { data: outTypes, error: typesError } = await supabase
-		.from("transaction_types")
-		.select("id")
-		.eq("direction", "out");
-
-	if (typesError) {
-		return jsonResponse({ error: typesError.message }, 500);
-	}
-
-	const outTypeIds = outTypes?.map(t => t.id) || [];
-
-	if (outTypeIds.length === 0) {
-		return jsonResponse({ transactions: [], total: 0 }, 200);
-	}
-
-	// Get total count
-	const { count, error: countError } = await supabase
-		.from("transactions")
-		.select("*", { count: 'exact', head: true })
-		.in("transaction_type_id", outTypeIds);
-
-	if (countError) {
-		return jsonResponse({ error: countError.message }, 500);
-	}
-
-	// Query transactions with those type IDs
-	const { data, error } = await supabase
-		.from("transactions")
-		.select(`
-			id,
-			invoice_no,
-			quantity,
-			transaction_datetime,
-			status,
-			item:item_id ( name ),
-			transaction_type:transaction_type_id ( name, direction ),
-			supplier:supplier_id ( name )
-		`)
-		.in("transaction_type_id", outTypeIds)
-		.order("transaction_datetime", { ascending: false })
-		.range(offset, offset + limit - 1);
-
-	if (error) {
-		return jsonResponse({ error: error.message }, 500);
-	}
-
-	const stockOutData = (data ?? []).map((tx) => ({
-		id: tx.id,
-		invoice_no: tx.invoice_no,
-		item_name: tx.item?.name ?? null,
-		quantity: tx.quantity,
-		transaction_datetime: formatDateTime(tx.transaction_datetime),
-		type_name: tx.transaction_type?.name ?? null,
-		transaction_direction: tx.transaction_type?.direction ?? null,
-		supplier_name: tx.supplier?.name ?? null,
-		status: tx.status,
-	}));
-
-	return jsonResponse({ 
-		transactions: stockOutData, 
-		total: count || 0,
-		limit,
-		offset 
-	}, 200);
 }
 
 // Utility functions

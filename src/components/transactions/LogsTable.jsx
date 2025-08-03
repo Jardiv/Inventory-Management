@@ -1,5 +1,4 @@
 import { useEffect, useState } from "react";
-import DetailsModal from "./DetailsModal";
 import { SkeletonRow } from "./utils/SkeletonRow";
 import { BlankRow } from "./utils/BlankRow";
 import Pagination from "./utils/Pagination";
@@ -43,10 +42,6 @@ export default function LogsTable({ limit, showPagination = false, currentPage =
 		hasNextPage: false,
 		hasPreviousPage: false,
 	});
-	
-	// State to store the ID of the selected transaction for modal display
-	const [selectedTransactionId, setSelectedTransactionId] = useState(null);
-	console.log("LogsTable: Initial selectedTransactionId state set to:", null);
 	
 	// State to manage sorting configuration (key and direction)
 	const [sortConfig, setSortConfig] = useState({ key: "transaction_datetime", direction: "desc" });
@@ -284,20 +279,7 @@ export default function LogsTable({ limit, showPagination = false, currentPage =
 
 	// Handler for clicking a table row to open the details modal
 	const handleRowClick = (id) => {
-		console.log("LogsTable: handleRowClick called with id:", id);
-		if (id) {
-			setSelectedTransactionId(id);
-			console.log("LogsTable: setSelectedTransactionId called with:", id);
-		} else {
-			console.log("LogsTable: handleRowClick called with invalid id.");
-		}
-	};
-
-	// Handler to close the details modal
-	const handleCloseModal = () => {
-		console.log("LogsTable: handleCloseModal called.");
-		setSelectedTransactionId(null);
-		console.log("LogsTable: setSelectedTransactionId called with:", null);
+		window.location.href = `/stock-transaction/details?id=${id}`;
 	};
 
 	console.log("LogsTable: About to render with current state:", {
@@ -305,8 +287,7 @@ export default function LogsTable({ limit, showPagination = false, currentPage =
 		transactions: transactions.length,
 		paginationData,
 		sortConfig,
-		dateRange,
-		selectedTransactionId
+		dateRange
 	});
 
 	return (
@@ -321,9 +302,9 @@ export default function LogsTable({ limit, showPagination = false, currentPage =
 						<th className="table-header cursor-pointer" onClick={() => requestSort("transaction_datetime")}>
 							Date{getSortIndicator("transaction_datetime")}
 						</th>
-						<th className="table-header">Item</th>
+						{/* <th className="table-header">Item</th> */}
 						<th className="table-header cursor-pointer" onClick={() => requestSort("quantity")}>
-							Quantity{getSortIndicator("quantity")}
+							Item Amount{getSortIndicator("quantity")}
 						</th>
 						<th className="table-header">Type</th>
 						<th className="table-header">Supplier</th>
@@ -338,7 +319,7 @@ export default function LogsTable({ limit, showPagination = false, currentPage =
 						// Display skeleton rows while loading
 						Array.from({ length: tableLimit }).map((_, index) => {
 							console.log("LogsTable: Rendering skeleton row", index);
-							return <SkeletonRow key={index} />;
+							return <SkeletonRow key={index} columns={6} />;
 						})
 					) : (
 						<>
@@ -349,7 +330,7 @@ export default function LogsTable({ limit, showPagination = false, currentPage =
 									<tr key={log.id} className="table-row item" onClick={() => handleRowClick(log.id)}>
 										<td className="table-data">{log.invoice_no}</td>
 										<td className="table-data">{log.transaction_datetime}</td>
-										<td className="table-data">{log.item_name}</td>
+										{/* <td className="table-data">{log.item_name}</td> */}
 										<td className="table-data">{log.quantity}</td>
 										<td className="table-data">{log.type_name}</td>
 										<td className="table-data">{log.supplier_name || "---"}</td>
@@ -368,7 +349,7 @@ export default function LogsTable({ limit, showPagination = false, currentPage =
 							{/* Fill remaining rows with blank rows if fewer transactions than tableLimit */}
 							{Array.from({ length: Math.max(0, tableLimit - transactions.length) }).map((_, index) => {
 								console.log("LogsTable: Rendering blank row", index);
-								return <BlankRow key={`blank-${index}`} />;
+								return <BlankRow key={`blank-${index}`} columns={7} />;
 							})}
 						</>
 					)}
@@ -376,9 +357,6 @@ export default function LogsTable({ limit, showPagination = false, currentPage =
 			</table>
 
 			{showPagination && !loading && <Pagination paginationData={paginationData} handlePageChange={handlePageChange} startItem={startItem} endItem={endItem} />}
-
-			{/* Details modal, shown when a transaction is selected */}
-			{selectedTransactionId && <DetailsModal transactionId={selectedTransactionId} onClose={handleCloseModal} />}
 		</div>
 	);
 }

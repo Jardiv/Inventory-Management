@@ -1,5 +1,4 @@
 import { useEffect, useState } from "react";
-import DetailsModal from "./DetailsModal";
 import { SkeletonRow } from "./utils/SkeletonRow";
 import { BlankRow } from "./utils/BlankRow";
 import Pagination from "./utils/Pagination";
@@ -25,8 +24,6 @@ export default function StockInTable({ isAbleToSort = true, limit, showPaginatio
 		hasNextPage: false,
 		hasPreviousPage: false,
 	});
-	// State to store the ID of the selected transaction for modal display
-	const [selectedTransactionId, setSelectedTransactionId] = useState(null);
 	// State to manage sorting configuration (key and direction)
 	const [sortConfig, setSortConfig] = useState({ key: "transaction_datetime", direction: "desc" });
 	// State to store the selected date range for filtering
@@ -171,12 +168,7 @@ export default function StockInTable({ isAbleToSort = true, limit, showPaginatio
 
 	// Handler for clicking a table row to open the details modal
 	const handleRowClick = (id) => {
-		if (id) setSelectedTransactionId(id);
-	};
-
-	// Handler to close the details modal
-	const handleCloseModal = () => {
-		setSelectedTransactionId(null);
+		window.location.href = `/stock-transaction/details?id=${id}`;
 	};
 
 	return (
@@ -191,11 +183,8 @@ export default function StockInTable({ isAbleToSort = true, limit, showPaginatio
 						<th className={`table-header ${isAbleToSort ? "cursor-pointer" : ""}`} onClick={() => requestSort("transaction_datetime")}>
 							Date{getSortIndicator("transaction_datetime")}
 						</th>
-						{/* <th className="table-header">Item</th>
-						<th className={`table-header ${isAbleToSort ? "cursor-pointer" : ""}`} onClick={() => requestSort("quantity")}>
-							Amount{getSortIndicator("quantity")}
-						</th> */}
 						<th className="table-header">Supplier</th>
+						<th className="table-header">Total Items</th>
 						<th className={`table-header ${isAbleToSort ? "cursor-pointer" : ""}`} onClick={() => requestSort("type")}>
 							Type{getSortIndicator("type")}
 						</th>
@@ -208,7 +197,7 @@ export default function StockInTable({ isAbleToSort = true, limit, showPaginatio
 					{/* Conditional rendering for loading state or actual data */}
 					{loading ? (
 						// Display skeleton rows while loading
-						Array.from({ length: tableLimit }).map((_, index) => <SkeletonRow key={index} />)
+						Array.from({ length: tableLimit }).map((_, index) => <SkeletonRow key={index} columns={6} />)
 					) : (
 						<>
 							{/* Map through transactions and render each row */}
@@ -216,9 +205,8 @@ export default function StockInTable({ isAbleToSort = true, limit, showPaginatio
 								<tr key={log.id} className="table-row item" onClick={() => handleRowClick(log.id)}>
 									<td className="table-data">{log.invoice_no}</td>
 									<td className="table-data">{log.transaction_datetime}</td>
-									{/* <td className="table-data">{log.item_name}</td>
-									<td className="table-data">{log.quantity}</td> */}
 									<td className="table-data">{log.supplier_name}</td>
+									<td className="table-data">{log.items_count}</td>
 									<td className="table-data">{log.type_name}</td>
 									<td className="table-data text-center">
 										{/* Display status with dynamic styling */}
@@ -233,7 +221,7 @@ export default function StockInTable({ isAbleToSort = true, limit, showPaginatio
 							))}
 							{/* Fill remaining rows with blank rows if fewer transactions than tableLimit */}
 							{Array.from({ length: Math.max(0, tableLimit - transactions.length) }).map((_, index) => (
-								<BlankRow key={`blank-${index}`} />
+								<BlankRow key={`blank-${index}`} columns={6} />
 							))}
 						</>
 					)}
@@ -241,9 +229,6 @@ export default function StockInTable({ isAbleToSort = true, limit, showPaginatio
 			</table>
 
 			{showPagination && !loading && <Pagination paginationData={paginationData} handlePageChange={handlePageChange} startItem={startItem} endItem={endItem} />}
-
-			{/* Details modal, shown when a transaction is selected */}
-			{selectedTransactionId && <DetailsModal transactionId={selectedTransactionId} onClose={handleCloseModal} />}
 		</div>
 	);
 }

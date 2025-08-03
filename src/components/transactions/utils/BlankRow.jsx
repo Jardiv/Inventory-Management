@@ -1,12 +1,7 @@
-// Blank row component to fill empty space in tables
-export const BlankRow = () => (
+export const BlankRow = ({ columns }) => (
 	<tr className="table-row">
-		<td className="table-data">&nbsp;</td>
-		<td className="table-data">&nbsp;</td>
-		<td className="table-data">&nbsp;</td>
-		<td className="table-data">&nbsp;</td>
-		<td className="table-data">&nbsp;</td>
-		{/* <td className="table-data">&nbsp;</td>
-		<td className="table-data">&nbsp;</td> */}
+		{Array.from({ length: columns }).map((_, index) => (
+            <td className="table-data" key={index}>&nbsp;</td>
+        ))}
 	</tr>
 );

@@ -1,5 +1,4 @@
 import { useEffect, useState } from "react";
-import DetailsModal from "./DetailsModal";
 import { SkeletonRow } from "./utils/SkeletonRow";
 import { BlankRow } from "./utils/BlankRow";
 import Pagination from "./utils/Pagination";
@@ -14,7 +13,6 @@ export default function StockOutTable({ isAbleToSort = true, limit, showPaginati
 		hasNextPage: false,
 		hasPreviousPage: false,
 	});
-	const [selectedTransactionId, setSelectedTransactionId] = useState(null);
 	const [sortConfig, setSortConfig] = useState({ key: "transaction_datetime", direction: "desc" });
 	const [dateRange, setDateRange] = useState({ startDate: "", endDate: "" });
 
@@ -135,11 +133,7 @@ export default function StockOutTable({ isAbleToSort = true, limit, showPaginati
 	};
 
 	const handleRowClick = (id) => {
-		if (id) setSelectedTransactionId(id);
-	};
-
-	const handleCloseModal = () => {
-		setSelectedTransactionId(null);
+		window.location.href = `/stock-transaction/details?id=${id}`;
 	};
 
 	return (
@@ -153,10 +147,7 @@ export default function StockOutTable({ isAbleToSort = true, limit, showPaginati
 						<th className={`table-header ${isAbleToSort ? "cursor-pointer" : ""}`} onClick={() => requestSort("transaction_datetime")}>
 							Date{getSortIndicator("transaction_datetime")}
 						</th>
-						{/* <th className="table-header">Item</th>
-						<th className={`table-header ${isAbleToSort ? "cursor-pointer" : ""}`} onClick={() => requestSort("quantity")}>
-							Amount{getSortIndicator("quantity")}
-						</th> */}
+						<th className="table-header">Total Items</th>
 						<th className="table-header">Type</th>
 						<th className={`table-header text-center ${isAbleToSort ? "cursor-pointer" : ""}`} onClick={() => requestSort("status")}>
 							Status{getSortIndicator("status")}
@@ -165,15 +156,14 @@ export default function StockOutTable({ isAbleToSort = true, limit, showPaginati
 				</thead>
 				<tbody>
 					{loading ? (
-						Array.from({ length: tableLimit }).map((_, index) => <SkeletonRow key={index} />)
+						Array.from({ length: tableLimit }).map((_, index) => <SkeletonRow key={index} columns={5} />)
 					) : (
 						<>
 							{transactions.map((log) => (
 								<tr key={log.id} className="table-row item" onClick={() => handleRowClick(log.id)}>
 									<td className="table-data">{log.invoice_no}</td>
 									<td className="table-data">{log.transaction_datetime}</td>
-									{/* <td className="table-data">{log.item_name}</td>
-									<td className="table-data">{log.quantity}</td> */}
+									<td className="table-data">{log.items_count}</td>
 									<td className="table-data">{log.type_name}</td>
 									<td className="table-data text-center">
 										<span
@@ -186,7 +176,7 @@ export default function StockOutTable({ isAbleToSort = true, limit, showPaginati
 								</tr>
 							))}
 							{Array.from({ length: Math.max(0, tableLimit - transactions.length) }).map((_, index) => (
-								<BlankRow key={`blank-${index}`} />
+								<BlankRow key={`blank-${index}`} columns={5} />
 							))}
 						</>
 					)}
@@ -194,8 +184,6 @@ export default function StockOutTable({ isAbleToSort = true, limit, showPaginati
 			</table>
 
 			{showPagination && !loading && <Pagination paginationData={paginationData} handlePageChange={handlePageChange} startItem={startItem} endItem={endItem} />}
-
-			{selectedTransactionId && <DetailsModal transactionId={selectedTransactionId} onClose={handleCloseModal} />}
 		</div>
 	);
 }
