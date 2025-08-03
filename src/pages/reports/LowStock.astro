@@ -9,391 +9,169 @@ const currentPage = 1; // Default value, actual pagination handled client-side
 
 <Layout>
     <!-- Body -->
-    <div class="flex-1 overflow-hidden bg-primary rounded-lg p-6 mb-6">
-        <div class="flex justify-between items-center mb-4">
-            <h2 class="text-textColor-primary text-xl font-semibold">Low Stock Items</h2>
-            <div class="flex gap-2">
-                <button id="filterBtn" class="p-2 text-textColor-primary hover:bg-btn-hover hover:text-white rounded transition-colors">
-                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M12 3c2.755 0 5.455.232 8.083.678.533.09.917.556.917 1.096v1.044a2.25 2.25 0 0 1-.659 1.591l-5.432 5.432a2.25 2.25 0 0 0-.659 1.591v2.927a2.25 2.25 0 0 1-1.244 2.013L9.75 21v-6.568a2.25 2.25 0 0 0-.659-1.591L3.659 7.409A2.25 2.25 0 0 1 3 5.818V4.774c0-.54.384-1.006.917-1.096A48.32 48.32 0 0 1 12 3Z" />
-                    </svg>
-                </button>
-                <a href="/reports/Dashboard" class="p-2 text-textColor-primary hover:bg-btn-hover hover:text-white rounded">
-                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12" />
-                    </svg>
-                </a>
-            </div>
-        </div>
-        
-        <div class=" h-full overflow-y-auto">
-            <!-- Low Stock Table -->
-            <LowStockTable client:load currentPage={currentPage} />
-        </div>
-        
-        <div class="flex justify-between items-center pt-6 pb-6 border-t border-gray-700 flex-shrink-0">
-            <button id="selectAllButton" class="bg-gray-700 hover:bg-gray-600 text-white px-4 py-2 rounded font-medium text-sm transition-colors flex items-center gap-2">
-                <input type="checkbox" id="selectAllBottom" class="rounded bg-gray-700 border-gray-600 pointer-events-none">
-                <span id="selectAllText">Select All</span>
-                <span id="selectedCount" class="text-xs bg-purple-600 px-2 py-1 rounded-full hidden"></span>
-            </button>
-            
-            <!-- Center section with pagination and items count -->
-            <div class="flex flex-col items-center gap-2">
-                <!-- Enhanced Client-side Pagination Controls -->
-                <div id="paginationControls" class="flex items-center gap-1">
-                    <!-- Previous Button -->
-                    <button 
-                        id="prevPageBtn"
-                        class="p-2 rounded-md transition-colors text-textColor-primary hover:bg-gray-700"
-                        title="Previous Page"
-                    >
+    <div class="w-full h-full flex flex-col">
+        <div class="bg-primary flex-1 rounded-lg p-6 flex flex-col min-h-0">
+            <div class="flex justify-between items-center mb-4">
+                <h2 class="text-textColor-primary text-xl font-semibold">Low Stock Items</h2>
+                <div class="flex gap-2">
+                    <button id="filterBtn" class="p-2 text-textColor-primary hover:bg-btn-hover hover:text-white rounded transition-colors">
                         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5">
-                            <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 19.5 8.25 12l7.5-7.5" />
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M12 3c2.755 0 5.455.232 8.083.678.533.09.917.556.917 1.096v1.044a2.25 2.25 0 0 1-.659 1.591l-5.432 5.432a2.25 2.25 0 0 0-.659 1.591v2.927a2.25 2.25 0 0 1-1.244 2.013L9.75 21v-6.568a2.25 2.25 0 0 0-.659-1.591L3.659 7.409A2.25 2.25 0 0 1 3 5.818V4.774c0-.54.384-1.006.917-1.096A48.32 48.32 0 0 1 12 3Z" />
                         </svg>
                     </button>
-
-                    <!-- Page Numbers Container -->
-                    <div id="pageNumbers" class="flex items-center gap-1">
-                        <!-- Page numbers will be inserted here dynamically -->
+                    <a href="/reports/Dashboard" class="p-2 text-textColor-primary hover:bg-btn-hover hover:text-white rounded">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12" />
+                        </svg>
+                    </a>
+                </div>
+            </div>
+            
+            <div class=" h-full overflow-y-auto">
+                <!-- Low Stock Table -->
+                <LowStockTable client:load currentPage={currentPage} />
+            </div>
+            
+            <div class="flex justify-between items-center pt-6 pb-2 border-t border-gray-700 flex-shrink-0">
+                <button id="selectAllButton" class="bg-gray-700 hover:bg-gray-600 text-white px-4 py-2 rounded font-medium text-sm transition-colors flex items-center gap-2">
+                    <input type="checkbox" id="selectAllBottom" class="rounded bg-gray-700 border-gray-600 pointer-events-none">
+                    <span id="selectAllText">Select All</span>
+                    <span id="selectedCount" class="text-xs bg-purple-600 px-2 py-1 rounded-full hidden"></span>
+                </button>
+                
+                <!-- Center section with pagination and items count -->
+                <div class="flex flex-col items-center gap-2">
+                    <!-- Pagination Info -->
+                    <div id="paginationInfo" class="text-textColor-tertiary text-sm">
+                        Showing 1-10 of 0 low stock items
                     </div>
 
-                    <!-- Next Button -->
-                    <button 
-                        id="nextPageBtn"
-                        class="p-2 rounded-md transition-colors text-textColor-primary hover:bg-gray-700"
-                        title="Next Page"
-                    >
-                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5">
-                            <path stroke-linecap="round" stroke-linejoin="round" d="m8.25 4.5 7.5 7.5-7.5 7.5" />
+                    <!-- Enhanced Client-side Pagination Controls -->
+                    <div id="paginationControls" class="flex items-center gap-1">
+                        <!-- Previous Button -->
+                        <button 
+                            id="prevPageBtn"
+                            class="p-2 rounded-md transition-colors text-textColor-primary hover:bg-gray-700"
+                            title="Previous Page"
+                        >
+                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 19.5 8.25 12l7.5-7.5" />
+                            </svg>
+                        </button>
+
+                        <!-- Page Numbers Container -->
+                        <div id="pageNumbers" class="flex items-center gap-1">
+                            <!-- Page numbers will be inserted here dynamically -->
+                        </div>
+
+                        <!-- Next Button -->
+                        <button 
+                            id="nextPageBtn"
+                            class="p-2 rounded-md transition-colors text-textColor-primary hover:bg-gray-700"
+                            title="Next Page"
+                        >
+                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="m8.25 4.5 7.5 7.5-7.5 7.5" />
+                            </svg>
+                        </button>
+                    </div>
+                    
+
+                </div>
+                
+                <button id="generatePurchaseOrderBtn" class="bg-purple-600 hover:bg-purple-700 text-white px-6 py-2 rounded font-medium text-sm transition-colors">
+                    Generate Purchase Order
+                </button>
+            </div>
+        </div>
+
+        <!-- Purchase Order Detail Modal -->
+        <div id="editModal" class="fixed inset-0 bg-black/60 items-center justify-center z-50 hidden">
+            <div class="bg-primary rounded-lg p-6 w-[500px] relative">
+                <div class="flex justify-between items-center">
+                    <h2 class="text-textColor-primary text-xl font-semibold">Purchase Order Detail</h2>
+                    <button id="closeModalBtn" class="p-2 text-textColor-primary hover:bg-btn-hover hover:text-white rounded">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12" />
                         </svg>
                     </button>
+                </div>
+                
+                <p class="text-textColor-tertiary text-sm mb-6">Review and confirm reorder details for this item.</p>
+                
+                <div class="space-y-4">
+                    <div class="flex items-center gap-4">
+                        <label class="text-textColor-primary font-medium w-36 text-right">Item Code:</label>
+                        <input id="modalItemCode" type="text" class="flex-1 px-3 py-2 bg-background text-textColor-tertiary rounded border border-textColor-tertiary" disabled>
+                    </div>
                     
-                    <!-- Last Page Button -->
-                    <button id="lastPageBtn" class="p-2 rounded-md text-textColor-primary hover:bg-gray-700 transition-colors" title="Last Page">
-                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5">
-                            <path stroke-linecap="round" stroke-linejoin="round" d="m5.25 4.5 7.5 7.5-7.5 7.5m6-15 7.5 7.5-7.5 7.5" />
+                    <div class="flex items-center gap-4">
+                        <label class="text-textColor-primary font-medium w-36 text-right">Item Name:</label>
+                        <input id="modalItemName" type="text" class="flex-1 px-3 py-2 bg-background text-textColor-tertiary rounded border border-textColor-tertiary" disabled>
+                    </div>
+                    
+                    <div class="flex items-center gap-4">
+                        <label class="text-textColor-primary font-medium w-36 text-right">Supplier:</label>
+                        <input type="text" value="ABC Suppliers Inc." class="flex-1 px-3 py-2 bg-background text-textColor-tertiary rounded border border-textColor-tertiary" disabled>
+                    </div>
+                    
+                    <div class="flex items-center gap-4">
+                        <label class="text-textColor-primary font-medium w-36 text-right">Current Quantity:</label>
+                        <input id="modalCurrentQty" type="text" class="flex-1 px-3 py-2 bg-background text-textColor-tertiary rounded border border-textColor-tertiary" disabled>
+                    </div>
+                    
+                    <div class="flex items-center gap-4">
+                        <label class="text-textColor-primary font-medium w-36 text-right">Order Quantity:</label>
+                        <input id="modalOrderQty" type="number" class="flex-1 px-3 py-2 bg-background text-textColor-primary rounded border border-textColor-tertiary focus:border-blue-500 focus:outline-none">
+                    </div>
+                </div>
+                
+                <div class="flex gap-3 mt-6">
+                    <button id="cancelOrderBtn" class="flex-1 bg-background hover:bg-textColor-tertiary  text-textColor-primary px-4 py-2 rounded font-medium transition-colors">
+                        Cancel
+                    </button>
+                    <button id="confirmOrderBtn" class="flex-1 bg-green-700 hover:bg-green-900 text-textColor-primary px-4 py-2 rounded font-medium transition-colors">
+                        Confirm
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Purchase Order Success Modal -->
+        <div id="successModal" class="fixed inset-0 bg-black/60 items-center justify-center z-50 hidden">
+            <div class="bg-primary rounded-lg p-6 w-[400px] relative">
+                <div class="flex justify-between items-center mb-4">
+                    <div></div>
+                    <button id="closeSuccessModalBtn" class="text-textColor-primary hover:text-textColor-tertiary">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12" />
                         </svg>
                     </button>
                 </div>
                 
-                <!-- Pagination Info -->
-                <div id="paginationInfo" class="text-textColor-tertiary text-sm">
-                    Showing 1-10 of 0 low stock items
-                </div>
-            </div>
-            
-            <button id="generatePurchaseOrderBtn" class="bg-purple-600 hover:bg-purple-700 text-white px-6 py-2 rounded font-medium text-sm transition-colors">
-                Generate Purchase Order
-            </button>
-        </div>
-    </div>
-
-    <!-- Purchase Order Detail Modal -->
-    <div id="editModal" class="fixed inset-0 bg-black/60 items-center justify-center z-50 hidden">
-        <div class="bg-primary rounded-lg p-6 w-[500px] relative">
-            <div class="flex justify-between items-center">
-                <h2 class="text-textColor-primary text-xl font-semibold">Purchase Order Detail</h2>
-                <button id="closeModalBtn" class="p-2 text-textColor-primary hover:bg-btn-hover hover:text-white rounded">
-                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12" />
-                    </svg>
-                </button>
-            </div>
-            
-            <p class="text-textColor-tertiary text-sm mb-6">Review and confirm reorder details for this item.</p>
-            
-            <div class="space-y-4">
-                <div class="flex items-center gap-4">
-                    <label class="text-textColor-primary font-medium w-36 text-right">Item Code:</label>
-                    <input id="modalItemCode" type="text" class="flex-1 px-3 py-2 bg-background text-textColor-tertiary rounded border border-textColor-tertiary" disabled>
+                <div class="text-center">
+                    <!-- Green Checkmark Icon -->
+                    <div class="mx-auto mb-4 w-16 h-16 bg-green-600 rounded-full flex items-center justify-center">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-8 h-8 text-white">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5" />
+                        </svg>
+                    </div>
+                    
+                    <h2 class="text-textColor-primary text-xl font-semibold mb-2">Generated Purchase Order Successfully!</h2>
+                    <p class="text-textColor-tertiary text-sm mb-6">You can now view or export the purchase order</p>
                 </div>
                 
-                <div class="flex items-center gap-4">
-                    <label class="text-textColor-primary font-medium w-36 text-right">Item Name:</label>
-                    <input id="modalItemName" type="text" class="flex-1 px-3 py-2 bg-background text-textColor-tertiary rounded border border-textColor-tertiary" disabled>
+                <div class="flex gap-3">
+                    <button id="closeSuccessBtn" class="flex-1 bg-btn-primary hover:btn-primary-600 text-textColor-secondary px-4 py-2 rounded font-medium transition-colors border border-gray-600">
+                        Close
+                    </button>
+                    <button id="viewTransactionBtn" class="flex-1 bg-btn-primary hover:btn-primary-600 text-textColor-secondary px-4 py-2 rounded font-medium transition-colors border border-gray-600">
+                        View Transaction
+                    </button>
                 </div>
-                
-                <div class="flex items-center gap-4">
-                    <label class="text-textColor-primary font-medium w-36 text-right">Supplier:</label>
-                    <input type="text" value="ABC Suppliers Inc." class="flex-1 px-3 py-2 bg-background text-textColor-tertiary rounded border border-textColor-tertiary" disabled>
-                </div>
-                
-                <div class="flex items-center gap-4">
-                    <label class="text-textColor-primary font-medium w-36 text-right">Current Quantity:</label>
-                    <input id="modalCurrentQty" type="text" class="flex-1 px-3 py-2 bg-background text-textColor-tertiary rounded border border-textColor-tertiary" disabled>
-                </div>
-                
-                <div class="flex items-center gap-4">
-                    <label class="text-textColor-primary font-medium w-36 text-right">Order Quantity:</label>
-                    <input id="modalOrderQty" type="number" class="flex-1 px-3 py-2 bg-background text-textColor-primary rounded border border-textColor-tertiary focus:border-blue-500 focus:outline-none">
-                </div>
-            </div>
-            
-            <div class="flex gap-3 mt-6">
-                <button id="cancelOrderBtn" class="flex-1 bg-background hover:bg-textColor-tertiary  text-textColor-primary px-4 py-2 rounded font-medium transition-colors">
-                    Cancel
-                </button>
-                <button id="confirmOrderBtn" class="flex-1 bg-green-700 hover:bg-green-900 text-textColor-primary px-4 py-2 rounded font-medium transition-colors">
-                    Confirm
-                </button>
             </div>
         </div>
     </div>
 
-    <!-- Purchase Order Success Modal -->
-    <div id="successModal" class="fixed inset-0 bg-black/60 items-center justify-center z-50 hidden">
-        <div class="bg-primary rounded-lg p-6 w-[400px] relative">
-            <div class="flex justify-between items-center mb-4">
-                <div></div>
-                <button id="closeSuccessModalBtn" class="text-textColor-primary hover:text-textColor-tertiary">
-                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12" />
-                    </svg>
-                </button>
-            </div>
-            
-            <div class="text-center">
-                <!-- Green Checkmark Icon -->
-                <div class="mx-auto mb-4 w-16 h-16 bg-green-600 rounded-full flex items-center justify-center">
-                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-8 h-8 text-white">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5" />
-                    </svg>
-                </div>
-                
-                <h2 class="text-textColor-primary text-xl font-semibold mb-2">Generated Purchase Order Successfully!</h2>
-                <p class="text-textColor-tertiary text-sm mb-6">You can now view or export the purchase order</p>
-            </div>
-            
-            <div class="flex gap-3">
-                <button id="closeSuccessBtn" class="flex-1 bg-btn-primary hover:btn-primary-600 text-textColor-secondary px-4 py-2 rounded font-medium transition-colors border border-gray-600">
-                    Close
-                </button>
-                <button id="viewTransactionBtn" class="flex-1 bg-btn-primary hover:btn-primary-600 text-textColor-secondary px-4 py-2 rounded font-medium transition-colors border border-gray-600">
-                    View Transaction
-                </button>
-            </div>
-        </div>
-    </div>
-
-    <script is:inline src="/scripts/reports/LowStockNew.js"></script>
-    
-    <script is:inline>
-        // Connect the filter button to the React component's filter modal
-        document.addEventListener('DOMContentLoaded', function() {
-            const filterBtn = document.getElementById('filterBtn');
-            
-            if (filterBtn) {
-                // Handle filter button click
-                filterBtn.addEventListener('click', function() {
-                    // Dispatch a custom event that the React component can listen to
-                    window.dispatchEvent(new CustomEvent('openFilterModal'));
-                });
-                
-                // Listen for modal state changes from React component
-                window.addEventListener('filterModalStateChange', function(event) {
-                    const isOpen = event.detail.isOpen;
-                    
-                    if (isOpen) {
-                        // Add active state when modal is open
-                        filterBtn.classList.remove('text-textColor-primary', 'hover:bg-btn-hover', 'hover:text-white');
-                        filterBtn.classList.add('bg-btn-primary', 'text-white');
-                    } else {
-                        // Remove active state when modal is closed
-                        filterBtn.classList.remove('bg-btn-primary', 'text-white');
-                        filterBtn.classList.add('text-textColor-primary', 'hover:bg-btn-hover', 'hover:text-white');
-                    }
-                });
-            }
-
-            // Client-side pagination controls
-            function initializePagination() {
-                const paginationControls = document.getElementById('paginationControls');
-                const prevBtn = document.getElementById('prevPageBtn');
-                const nextBtn = document.getElementById('nextPageBtn');
-                const lastBtn = document.getElementById('lastPageBtn');
-                const pageNumbersContainer = document.getElementById('pageNumbers');
-                
-                let isUpdating = false; // Prevent concurrent updates
-
-                function updatePaginationControls() {
-                    if (!window.lowStockPagination || isUpdating) return;
-                    
-                    isUpdating = true;
-                    
-                    try {
-                        const { currentPage, totalPages, totalItems, itemsPerPage, hasNextPage, hasPrevPage, goToPage, goToPreviousPage, goToNextPage, getDisplayData } = window.lowStockPagination;
-
-                        // Show/hide pagination controls based on total pages
-                        if (totalPages > 1) {
-                            paginationControls.style.display = 'flex';
-                        } else {
-                            paginationControls.style.display = 'none';
-                            isUpdating = false;
-                            return; // Exit early if no pagination needed
-                        }
-
-                        // Update previous button state
-                        prevBtn.disabled = !hasPrevPage;
-                        prevBtn.className = !hasPrevPage 
-                            ? 'p-2 rounded-md transition-colors text-gray-500 cursor-not-allowed'
-                            : 'p-2 rounded-md transition-colors text-textColor-primary hover:bg-gray-700';
-
-                        // Update next button state
-                        nextBtn.disabled = !hasNextPage;
-                        nextBtn.className = !hasNextPage 
-                            ? 'p-2 rounded-md transition-colors text-gray-500 cursor-not-allowed'
-                            : 'p-2 rounded-md transition-colors text-textColor-primary hover:bg-gray-700';
-
-                        // Update last page button state
-                        if (lastBtn) {
-                            const isLastPage = currentPage === totalPages;
-                            lastBtn.disabled = isLastPage;
-                            lastBtn.className = isLastPage 
-                                ? 'p-2 rounded-md transition-colors text-gray-500 cursor-not-allowed'
-                                : 'p-2 rounded-md transition-colors text-textColor-primary hover:bg-gray-700';
-                        }
-
-                        // Generate page numbers
-                        const generatePageNumbers = (currentPage, totalPages) => {
-                            const pages = [];
-                            
-                            // Always show first page
-                            if (totalPages > 0) {
-                                pages.push(1);
-                            }
-                            
-                            // Add ellipsis if needed before current page range
-                            if (currentPage > 4) {
-                                pages.push('...');
-                            }
-                            
-                            // Add pages around current page
-                            const start = Math.max(2, currentPage - 1);
-                            const end = Math.min(totalPages - 1, currentPage + 1);
-                            
-                            for (let i = start; i <= end; i++) {
-                                if (!pages.includes(i)) {
-                                    pages.push(i);
-                                }
-                            }
-                            
-                            // Add ellipsis if needed after current page range
-                            if (currentPage < totalPages - 3) {
-                                pages.push('...');
-                            }
-                            
-                            // Always show last page
-                            if (totalPages > 1 && !pages.includes(totalPages)) {
-                                pages.push(totalPages);
-                            }
-                            
-                            return pages;
-                        };
-
-                        const pageNumbers = generatePageNumbers(currentPage, totalPages);
-                        
-                        // Clear and rebuild page numbers
-                        pageNumbersContainer.innerHTML = '';
-                        
-                        pageNumbers.forEach(page => {
-                            if (page === '...') {
-                                const span = document.createElement('span');
-                                span.className = 'px-3 py-2 text-gray-500 select-none';
-                                span.textContent = '...';
-                                pageNumbersContainer.appendChild(span);
-                            } else {
-                                const button = document.createElement('button');
-                                const isActive = page === currentPage;
-                                
-                                button.className = isActive 
-                                    ? 'px-3 py-2 rounded-md text-sm font-medium transition-colors bg-btn-primary text-white cursor-default' 
-                                    : 'px-3 py-2 rounded-md text-sm font-medium transition-colors text-textColor-primary hover:bg-gray-700 hover:text-white';
-                                
-                                button.textContent = page;
-                                button.disabled = isActive;
-                                
-                                if (!isActive) {
-                                    button.addEventListener('click', (e) => {
-                                        e.preventDefault();
-                                        e.stopPropagation();
-                                        goToPage(page);
-                                    }, { once: false });
-                                }
-                                
-                                pageNumbersContainer.appendChild(button);
-                            }
-                        });
-
-                        // Set up navigation button handlers (remove existing listeners first)
-                        const newPrevBtn = prevBtn.cloneNode(true);
-                        const newNextBtn = nextBtn.cloneNode(true);
-                        const newLastBtn = lastBtn ? lastBtn.cloneNode(true) : null;
-                        
-                        if (!hasPrevPage) {
-                            newPrevBtn.disabled = true;
-                        } else {
-                            newPrevBtn.addEventListener('click', (e) => {
-                                e.preventDefault();
-                                e.stopPropagation();
-                                goToPreviousPage();
-                            });
-                        }
-                        
-                        if (!hasNextPage) {
-                            newNextBtn.disabled = true;
-                        } else {
-                            newNextBtn.addEventListener('click', (e) => {
-                                e.preventDefault();
-                                e.stopPropagation();
-                                goToNextPage();
-                            });
-                        }
-
-                        // Add last page button handler
-                        if (newLastBtn) {
-                            const isLastPage = currentPage === totalPages;
-                            if (!isLastPage) {
-                                newLastBtn.addEventListener('click', (e) => {
-                                    e.preventDefault();
-                                    e.stopPropagation();
-                                    goToPage(totalPages);
-                                });
-                            }
-                        }
-                        
-                        prevBtn.parentNode.replaceChild(newPrevBtn, prevBtn);
-                        nextBtn.parentNode.replaceChild(newNextBtn, nextBtn);
-                        if (newLastBtn && lastBtn) {
-                            lastBtn.parentNode.replaceChild(newLastBtn, lastBtn);
-                        }
-                        
-                    } catch (error) {
-                        console.error('Error updating pagination:', error);
-                    } finally {
-                        isUpdating = false;
-                    }
-                }
-
-                // Listen for custom events from React component instead of polling
-                window.addEventListener('lowStockPaginationUpdate', updatePaginationControls);
-                
-                // Initial update with delay to ensure React component is loaded
-                setTimeout(() => {
-                    updatePaginationControls();
-                    // Fallback polling at much lower frequency
-                    const fallbackCheck = () => {
-                        if (window.lowStockPagination && !isUpdating) {
-                            updatePaginationControls();
-                        }
-                        setTimeout(fallbackCheck, 2000); // Check every 2 seconds as fallback
-                    };
-                    setTimeout(fallbackCheck, 1000);
-                }, 1000);
-            }
-
-            // Initialize pagination
-            initializePagination();
-        });
-    </script>
+    <script is:inline src="/scripts/reports/LowStock.js"></script>
 </Layout>

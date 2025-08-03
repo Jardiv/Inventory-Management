@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 
-const InventoryTable = ({ itemsPerPage = 10 }) => {
+const InventoryTable = ({ itemsPerPage: initialItemsPerPage = 10 }) => {
     const [inventoryData, setInventoryData] = useState([]);
     const [filteredData, setFilteredData] = useState([]);
     const [allInventoryData, setAllInventoryData] = useState([]); // Store all data
@@ -9,6 +9,7 @@ const InventoryTable = ({ itemsPerPage = 10 }) => {
     const [totalItems, setTotalItems] = useState(0);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
+    const [itemsPerPage, setItemsPerPage] = useState(initialItemsPerPage);
     
     // Sorting and filtering states
     const [currentSort, setCurrentSort] = useState({ column: null, direction: 'asc' });
@@ -299,14 +300,26 @@ const InventoryTable = ({ itemsPerPage = 10 }) => {
         }
     };
 
+    // Handle items per page change
+    const handleItemsPerPageChange = (newItemsPerPage) => {
+        setItemsPerPage(newItemsPerPage);
+        setCurrentPage(1); // Reset to first page when changing items per page
+    };
+
     // Generate pagination pages array
     const generatePaginationPages = (currentPage, totalPages) => {
         const pages = [];
         
-        // Always show first page
-        if (totalPages > 0) {
-            pages.push(1);
+        // If 7 or fewer pages, show all
+        if (totalPages <= 7) {
+            for (let i = 1; i <= totalPages; i++) {
+                pages.push(i);
+            }
+            return pages;
         }
+        
+        // Always show first page
+        pages.push(1);
         
         // Add ellipsis if needed before current page range
         if (currentPage > 4) {
@@ -508,7 +521,7 @@ const InventoryTable = ({ itemsPerPage = 10 }) => {
                                     value={filters.codeSearch}
                                     onChange={(e) => setFilters({...filters, codeSearch: e.target.value})}
                                     placeholder="Search by item code"
-                                    className="w-full px-3 py-2 bg-background text-textColor-primary rounded border border-textColor-tertiary focus:border-blue-500 text-sm"
+                                    className="w-full px-3 py-2 bg-background text-textColor-primary rounded border border-textColor-tertiary focus:border-btn-primary text-sm"
                                 />
                             </div>
                             
@@ -520,7 +533,7 @@ const InventoryTable = ({ itemsPerPage = 10 }) => {
                                     value={filters.nameSearch}
                                     onChange={(e) => setFilters({...filters, nameSearch: e.target.value})}
                                     placeholder="Search by item name"
-                                    className="w-full px-3 py-2 bg-background text-textColor-primary rounded border border-textColor-tertiary focus:border-blue-500 text-sm"
+                                    className="w-full px-3 py-2 bg-background text-textColor-primary rounded border border-textColor-tertiary focus:border-btn-primary text-sm"
                                 />
                             </div>
                             
@@ -533,7 +546,7 @@ const InventoryTable = ({ itemsPerPage = 10 }) => {
                                         value={filters.currentQuantityMin}
                                         onChange={(e) => setFilters({...filters, currentQuantityMin: e.target.value})}
                                         placeholder="Min"
-                                        className="flex-1 px-3 py-2 bg-background text-textColor-primary rounded border border-textColor-tertiary focus:border-blue-500 text-sm"
+                                        className="flex-1 px-3 py-2 bg-background text-textColor-primary rounded border border-textColor-tertiary focus:border-btn-primary text-sm"
                                     />
                                     <span className="text-textColor-tertiary">to</span>
                                     <input 
@@ -541,7 +554,7 @@ const InventoryTable = ({ itemsPerPage = 10 }) => {
                                         value={filters.currentQuantityMax}
                                         onChange={(e) => setFilters({...filters, currentQuantityMax: e.target.value})}
                                         placeholder="Max"
-                                        className="flex-1 px-3 py-2 bg-background text-textColor-primary rounded border border-textColor-tertiary focus:border-blue-500 text-sm"
+                                        className="flex-1 px-3 py-2 bg-background text-textColor-primary rounded border border-textColor-tertiary focus:border-btn-primary text-sm"
                                     />
                                 </div>
                             </div>
@@ -552,7 +565,7 @@ const InventoryTable = ({ itemsPerPage = 10 }) => {
                                 <select 
                                     value={filters.status}
                                     onChange={(e) => setFilters({...filters, status: e.target.value})}
-                                    className="w-full px-3 py-2 bg-background text-textColor-primary rounded border border-textColor-tertiary focus:border-blue-500 text-sm"
+                                    className="w-full px-3 py-2 bg-background text-textColor-primary rounded border border-textColor-tertiary focus:border-btn-primary text-sm"
                                 >
                                     <option value="">All Status</option>
                                     <option value="OK">OK</option>
@@ -678,14 +691,46 @@ const InventoryTable = ({ itemsPerPage = 10 }) => {
             </div>
             
             {/* Client-side Pagination Section */}
-            <div className="flex justify-between items-center pt-6 border-t border-gray-700 flex-shrink-0">
-                {/* Showing info */}
-                <div className="text-textColor-tertiary text-sm">
-                    {totalFilteredItems > 0 ? (
-                        `Showing ${startItem}-${endItem} of ${totalFilteredItems} products`
-                    ) : (
-                        'No products found'
-                    )}
+            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 pt-6 border-t border-gray-700 flex-shrink-0">
+                {/* Items per page info with dropdown */}
+                <div className="flex items-center gap-2 text-sm">
+                    <select 
+                        value={itemsPerPage}
+                        onChange={(e) => handleItemsPerPageChange(parseInt(e.target.value))}
+                        className="rounded px-2 py-1 text-sm focus:outline-none cursor-pointer appearance-none bg-no-repeat bg-right pr-6"
+                        style={{
+                            backgroundColor: 'var(--color-primary)',
+                            borderColor: 'var(--color-border_color)',
+                            color: 'var(--color-textColor-primary)',
+                            border: '1px solid var(--color-border_color)',
+                            backgroundImage: 'url("data:image/svg+xml,%3csvg xmlns=\'http://www.w3.org/2000/svg\' fill=\'none\' viewBox=\'0 0 20 20\'%3e%3cpath stroke=\'%236b7280\' stroke-linecap=\'round\' stroke-linejoin=\'round\' stroke-width=\'1.5\' d=\'M6 8l4 4 4-4\'/%3e%3c/svg%3e")',
+                            backgroundPosition: 'right 0.5rem center',
+                            backgroundSize: '1rem'
+                        }}
+                        onFocus={(e) => {
+                            e.target.style.borderColor = '#8b5cf6';
+                        }}
+                        onBlur={(e) => {
+                            e.target.style.borderColor = 'var(--color-border_color)';
+                        }}
+                        onMouseEnter={(e) => {
+                            e.target.style.borderColor = '#8b5cf6';
+                        }}
+                        onMouseLeave={(e) => {
+                            e.target.style.borderColor = 'var(--color-border_color)';
+                        }}
+                    >
+                        {/* Dynamic options based on data length */}
+                        {totalFilteredItems > 5 && <option value={5}>5</option>}
+                        {totalFilteredItems > 10 && <option value={10}>10</option>}
+                        {totalFilteredItems > 20 && <option value={20}>20</option>}
+                        {totalFilteredItems > 50 && <option value={50}>50</option>}
+                        {totalFilteredItems > 100 && <option value={100}>100</option>}
+                        <option value={totalFilteredItems}>All</option>
+                    </select>
+                    <span className="text-textColor-tertiary">
+                        Showing {Math.min(startIndex + 1, totalFilteredItems)}-{Math.min(endIndex, totalFilteredItems)} of {totalFilteredItems} items
+                    </span>
                 </div>
                 
                 {/* Pagination Controls */}
@@ -747,8 +792,19 @@ const InventoryTable = ({ itemsPerPage = 10 }) => {
                     </div>
                 )}
                 
-                {/* Empty space when no pagination needed to maintain layout */}
-                {(totalFilteredItems === 0 || calculatedTotalPages <= 1) && (
+                {/* Show page 1 when "All" is selected */}
+                {totalFilteredItems > 0 && calculatedTotalPages <= 1 && (
+                    <div className="flex items-center gap-1">
+                        <button 
+                            className="px-3 py-2 rounded-md text-sm font-medium bg-btn-primary text-white"
+                        >
+                            1
+                        </button>
+                    </div>
+                )}
+                
+                {/* Empty space when no data to maintain layout */}
+                {totalFilteredItems === 0 && (
                     <div></div>
                 )}
             </div>

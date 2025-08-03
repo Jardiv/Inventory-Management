@@ -34,28 +34,20 @@ export async function GET({ request }: { request: Request }) {
                 });
             }
 
-            // Transform inventory data
-            const inventoryStock = inventoryData.map((item) => {
-                // Sum up quantities from all warehouses for this item
-                let current = 0;
-                if (item.warehouse_items && Array.isArray(item.warehouse_items)) {
-                    current = item.warehouse_items.reduce((total, warehouseItem) => {
-                        return total + (warehouseItem.quantity || 0);
-                    }, 0);
-                }
-
+            // Process inventory data using actual quantities
+            const inventoryStock = inventoryData.map(item => {
                 const minimum = item.min_quantity || 0;
                 
-                // Determine status and color
+                // Calculate actual current quantity from warehouse_items
+                const current = item.warehouse_items?.reduce((sum, wi) => sum + (wi.quantity || 0), 0) || 0;
+                
+                // Determine status based on actual quantities
                 let status = 'Normal';
-                let statusColor = 'text-green-400';
                 
                 if (current === 0) {
                     status = 'Out of Stock';
-                    statusColor = 'text-red-400';
                 } else if (current <= minimum) {
                     status = 'Low Stock';
-                    statusColor = 'text-yellow-400';
                 }
 
                 return {
@@ -63,8 +55,7 @@ export async function GET({ request }: { request: Request }) {
                     itemName: item.name || `Item ${item.id}`,
                     current: current,
                     minimum: minimum,
-                    status: status,
-                    statusColor: statusColor
+                    status: status
                 };
             });
 
@@ -90,41 +81,33 @@ export async function GET({ request }: { request: Request }) {
                 });
             }
 
-            // For each warehouse, calculate the total used space from warehouse_items
+            // Get actual warehouse utilization data
             const warehouseCapacity = await Promise.all(
                 warehouseData.map(async (warehouse) => {
-                    // Get total quantity used in this warehouse
+                    const maxCapacity = warehouse.max_capacity || 0;
+                    
+                    // Get actual used capacity by summing all warehouse_items quantities for this warehouse
                     const { data: warehouseItems, error: itemsError } = await supabase
                         .from("warehouse_items")
                         .select("quantity")
                         .eq("warehouse_id", warehouse.id);
 
-                    let used = 0;
-                    if (!itemsError && warehouseItems) {
-                        used = warehouseItems.reduce((total, item) => total + (item.quantity || 0), 0);
+                    if (itemsError) {
+                        console.error('Warehouse items query error:', itemsError);
+                        // Continue with zero if error
                     }
 
-                    // Calculate metrics
-                    const maxCapacity = warehouse.max_capacity || 0;
+                    const used = warehouseItems?.reduce((sum, item) => sum + (item.quantity || 0), 0) || 0;
                     const available = Math.max(0, maxCapacity - used);
                     const utilization = maxCapacity > 0 ? Math.round((used / maxCapacity) * 100) : 0;
 
-                    // Determine status based on utilization
+                    // Determine status based on actual utilization
                     let status = 'Available';
-                    let statusColor = 'text-green-400';
                     
                     if (utilization >= 100) {
                         status = 'Full';
-                        statusColor = 'text-red-400';
                     } else if (utilization >= 90) {
                         status = 'Critical';
-                        statusColor = 'text-orange-400';
-                    } else if (utilization >= 75) {
-                        status = 'High';
-                        statusColor = 'text-orange-400';
-                    } else if (utilization >= 50) {
-                        status = 'Medium';
-                        statusColor = 'text-blue-400';
                     }
 
                     return {
@@ -133,8 +116,7 @@ export async function GET({ request }: { request: Request }) {
                         used: used,
                         available: available,
                         utilization: utilization,
-                        status: status,
-                        statusColor: statusColor
+                        status: status
                     };
                 })
             );
@@ -165,47 +147,47 @@ export async function GET({ request }: { request: Request }) {
                 });
             }
 
-            // Filter and transform data for low stock items
+            // Process low stock items using actual quantities
             const lowStockItems = lowStockAllData
-                .map((item) => {
-                    // Sum up quantities from all warehouses for this item
-                    let current = 0;
-                    if (item.warehouse_items && Array.isArray(item.warehouse_items)) {
-                        current = item.warehouse_items.reduce((total, warehouseItem) => {
-                            return total + (warehouseItem.quantity || 0);
-                        }, 0);
-                    }
-
+                .map(item => {
                     const minimum = item.min_quantity || 0;
                     
-                    // Only include items that are low stock or out of stock
+                    // Calculate actual current quantity from warehouse_items
+                    const current = item.warehouse_items?.reduce((sum, wi) => sum + (wi.quantity || 0), 0) || 0;
+                    
+                    // Only include items that are actually low stock or out of stock
                     if (current <= minimum) {
                         // Calculate suggested order quantity
-                        const toOrder = current === 0 ? Math.max(minimum, 50) : minimum;
+                        const toOrder = current === 0 ? Math.max(minimum * 2, 100) : minimum - current + minimum;
                         
-                        // Determine status and color
+                        // Determine status
                         let status = 'Low Stock';
-                        let statusColor = 'text-yellow-400';
                         
                         if (current === 0) {
                             status = 'Out of Stock';
-                            statusColor = 'text-red-400';
                         }
 
                         return {
                             id: item.id,
-                            itemCode: item.sku || `SKU-${item.id}`,
+                            itemCode: item.sku || `ITEM-${item.id}`,
                             itemName: item.name || `Item ${item.id}`,
                             current: current,
                             minimum: minimum,
                             toOrder: toOrder,
-                            status: status,
-                            statusColor: statusColor
+                            status: status
                         };
                     }
                     return null;
                 })
-                .filter(item => item !== null); // Remove null items
+                .filter(item => item !== null) // Remove null items
+                .sort((a, b) => {
+                    // Sort to prioritize critical items first
+                    if (a.current === 0 && b.current !== 0) return -1;
+                    if (a.current !== 0 && b.current === 0) return 1;
+                    if (a.current <= a.minimum * 0.3 && b.current > b.minimum * 0.3) return -1;
+                    if (a.current > a.minimum * 0.3 && b.current <= b.minimum * 0.3) return 1;
+                    return 0;
+                });
 
             result.lowstock = lowStockItems;
         }

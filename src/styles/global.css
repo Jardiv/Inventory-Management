@@ -121,6 +121,9 @@
 	.stock-table td, .stock-table th {
 		@apply h-[3rem] px-6;
 	}
+	.stock-table th:nth-child(3), .stock-table td:nth-child(3) {
+		@apply w-[20%];
+	}
 	.table-row {
 		@apply bg-primary text-textColor-primary border-t-2 border-border_color;
 	}

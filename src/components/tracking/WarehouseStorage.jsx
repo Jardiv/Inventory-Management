@@ -1,19 +1,12 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 
-function statusColor(status) {
-  switch (status?.toLowerCase()) {
-    case 'received':
-    case 'active':
-      return 'text-green-600';
-    case 'pending':
-      return 'text-yellow-500';
-    case 'cancelled':
-    case 'inactive':
-      return 'text-red-600';
-    default:
-      return 'text-gray-500';
-  }
-}
+
+const warehouseList = [
+  { id: '1', name: 'Warehouse 1' },
+  { id: '2', name: 'Warehouse 2' },
+  { id: '3', name: 'Warehouse 3' }
+];
+
 
 export default function WarehouseStorage({ initialItems, total, limit, page }) {
   const [items] = useState(initialItems);
@@ -21,6 +14,8 @@ export default function WarehouseStorage({ initialItems, total, limit, page }) {
 
   const currentPage = page || 1;
   const totalPages = Math.ceil((total || 0) / (limit || 10));
+  
+  
 
   return (
     <div>
@@ -158,12 +153,11 @@ export default function WarehouseStorage({ initialItems, total, limit, page }) {
       <div className="overflow-x-auto">
         <table className="w-full table-fixed border-collapse">
           <thead>
-            <tr className="text-left text-sm font-medium text-gray-500">
+            <tr className="text-left text-sm font-medium">
               <th className="px-4 py-2 w-[120px]">SKU</th>
               <th className="px-4 py-2 w-[160px]">Name</th>
               <th className="px-4 py-2 w-[80px]">Qty</th>
               <th className="px-4 py-2 w-[140px]">Category</th>
-              <th className="px-4 py-2 w-[120px]">Status</th>
               <th className="px-4 py-2 w-[160px]">Date Assigned</th>
             </tr>
           </thead>
@@ -177,9 +171,6 @@ export default function WarehouseStorage({ initialItems, total, limit, page }) {
                 <td className="py-3 px-4 w-[160px]">{item.items?.name || ''}</td>
                 <td className="py-3 px-4 w-[80px]">{item.quantity ?? ''}</td>
                 <td className="py-3 px-4 w-[140px]">{item.items?.category?.name || ''}</td>
-                <td className={`py-3 px-4 w-[120px] font-semibold ${statusColor(item.status)}`}>
-                  {item.status || ''}
-                </td>
                 <td className="py-3 px-4 w-[160px]">{item.date_assigned || ''}</td>
               </tr>
             ))}
@@ -195,20 +186,19 @@ export default function WarehouseStorage({ initialItems, total, limit, page }) {
                 <td className="py-3 px-4">&nbsp;</td>
                 <td className="py-3 px-4">&nbsp;</td>
                 <td className="py-3 px-4">&nbsp;</td>
-                <td className="py-3 px-4">&nbsp;</td>
               </tr>
             ))}
           </tbody>
         </table>
       </div>
       {/* Pagination UI */}
-      <div className="flex justify-between items-center border-t border-border_color pt-4 mt-4 text-sm text-gray-700">
+      <div className="flex justify-between items-center border-t border-border_color pt-4 mt-4">
         <div>
           Showing <span className="font-medium">{(page - 1) * limit + 1}</span>-<span className="font-medium">{Math.min(page * limit, total)}</span> of <span className="font-medium">{total}</span> products
         </div>
         <nav className="flex items-center gap-1">
           {page > 1 && (
-            <a href={`?page=${page - 1}`} className="px-2 py-1 text-gray-500 hover:text-gray-700">
+            <a href={`?page=${page - 1}`} className="px-2 py-1 hover:text-gray-700">
               <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" /></svg>
             </a>
           )}
@@ -216,15 +206,15 @@ export default function WarehouseStorage({ initialItems, total, limit, page }) {
             const current = i + 1;
             if (current === 1 || current === totalPages || Math.abs(current - page) <= 1) {
               return (
-                <a key={current} href={`?page=${current}`} className={`px-3 py-1.5 rounded-lg ${page === current ? "bg-[#8A00C4] text-white font-medium" : "text-gray-700 hover:bg-gray-100"}`}>{current}</a>
+                <a key={current}href={`?page=${current}`}className={`px-3 py-1.5 rounded-lg transition-colors duration-200 ${page === current ? "bg-[#8A00C4] font-medium text-white": "hover:bg-tbl-hover hover:text-[#8A00C4] text-textColor-primary"}`}>{current}</a>
               );
             } else if ((current === page - 2 && current !== 1) || (current === page + 2 && current !== totalPages)) {
-              return <span key={`ellipsis-${current}`} className="px-2 py-1 text-gray-500">...</span>;
+              return <span key={`ellipsis-${current}`} className="px-2 py-1 ">...</span>;
             }
             return null;
           })}
           {page < totalPages && (
-            <a href={`?page=${page + 1}`} className="px-2 py-1 text-gray-500 hover:text-gray-700">
+            <a href={`?page=${page + 1}`} className="px-2 py-1 hover:text-gray-700">
               <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" /></svg>
             </a>
           )}
@@ -233,3 +223,4 @@ export default function WarehouseStorage({ initialItems, total, limit, page }) {
     </div>
   );
 }
+
