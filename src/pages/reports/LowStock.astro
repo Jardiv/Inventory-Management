@@ -32,7 +32,7 @@ const currentPage = 1; // Default value, actual pagination handled client-side
                 <LowStockTable client:load currentPage={currentPage} />
             </div>
             
-            <div class="flex justify-between items-center pt-6 pb-6 border-t border-gray-700 flex-shrink-0">
+            <div class="flex justify-between items-center pt-6 pb-2 border-t border-gray-700 flex-shrink-0">
                 <button id="selectAllButton" class="bg-gray-700 hover:bg-gray-600 text-white px-4 py-2 rounded font-medium text-sm transition-colors flex items-center gap-2">
                     <input type="checkbox" id="selectAllBottom" class="rounded bg-gray-700 border-gray-600 pointer-events-none">
                     <span id="selectAllText">Select All</span>

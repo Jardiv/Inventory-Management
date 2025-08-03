@@ -9,6 +9,12 @@ const PurchaseOrderLogs = () => {
   const [itemsPerPage, setItemsPerPage] = useState(10);
   const [totalItems, setTotalItems] = useState(0);
   
+  // Modal state
+  const [showDetailsModal, setShowDetailsModal] = useState(false);
+  const [selectedPO, setSelectedPO] = useState(null);
+  const [poDetails, setPODetails] = useState(null);
+  const [loadingDetails, setLoadingDetails] = useState(false);
+  
   // Debug logging - this should show loading: true initially
   console.log('=== PurchaseOrderLogs RENDER ===');
   console.log('loading:', loading);
@@ -89,6 +95,37 @@ const PurchaseOrderLogs = () => {
       setLoading(false);
     }
   }, []);
+
+  // Fetch detailed purchase order information
+  const fetchPODetails = useCallback(async (transactionId) => {
+    try {
+      setLoadingDetails(true);
+      const response = await fetch(`/api/reports/purchase-order-details?id=${transactionId}`);
+      const result = await response.json();
+      
+      if (result.success) {
+        setPODetails(result.data);
+      } else {
+        console.error('Failed to fetch PO details:', result.error);
+        // Set empty state with error message
+        setPODetails({
+          ...selectedPO,
+          items: [],
+          error: result.error || 'Failed to load purchase order details'
+        });
+      }
+    } catch (err) {
+      console.error('Error fetching PO details:', err);
+      // Set error state
+      setPODetails({
+        ...selectedPO,
+        items: [],
+        error: 'Failed to connect to server'
+      });
+    } finally {
+      setLoadingDetails(false);
+    }
+  }, [selectedPO]);
 
   useEffect(() => {
     fetchLogs();
@@ -376,10 +413,16 @@ const PurchaseOrderLogs = () => {
 
   // Handle view details
   const handleViewDetails = (log) => {
-    // This would open a detailed view of the purchase order
-    console.log('Viewing details for:', log.poNumber);
-    // Implementation would depend on your routing setup
-    alert(`Viewing details for ${log.poNumber}`);
+    setSelectedPO(log);
+    setShowDetailsModal(true);
+    fetchPODetails(log.id);
+  };
+
+  // Close modal
+  const closeDetailsModal = () => {
+    setShowDetailsModal(false);
+    setSelectedPO(null);
+    setPODetails(null);
   };
 
   if (loading) {
@@ -638,7 +681,11 @@ const PurchaseOrderLogs = () => {
                     </tr>
                   ) : (
                     currentLogs.map((log) => (
-                      <tr key={log.id} className="border-b border-gray-800 hover:bg-tbl-hover transition-colors">
+                      <tr 
+                        key={log.id} 
+                        className="border-b border-gray-800 hover:bg-tbl-hover transition-colors cursor-pointer"
+                        onClick={() => handleViewDetails(log)}
+                      >
                         <td className="px-4 py-3 text-textColor-primary text-sm font-medium">
                           {log.poNumber}
                         </td>
@@ -810,6 +857,158 @@ const PurchaseOrderLogs = () => {
             )}
           </div>
         </>
+      )}
+
+      {/* Purchase Order Details Modal */}
+      {showDetailsModal && (
+        <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-4">
+          <div className="bg-primary rounded-lg w-full max-w-4xl max-h-[90vh] overflow-y-auto">
+            {/* Modal Header */}
+            <div className="flex justify-between items-center p-6 border-b border-gray-700">
+              <h2 className="text-textColor-primary text-xl font-semibold">
+                Purchase Order Details
+              </h2>
+              <button 
+                onClick={closeDetailsModal}
+                className="p-2 text-textColor-primary hover:bg-btn-hover hover:text-white rounded transition-colors"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth="1.5" stroke="currentColor" className="w-6 h-6">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M6 18 18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+
+            {/* Modal Content */}
+            <div className="p-6">
+              {loadingDetails ? (
+                <div className="flex justify-center items-center h-64">
+                  <div className="text-textColor-primary">Loading purchase order details...</div>
+                </div>
+              ) : selectedPO && (
+                <div className="space-y-6">
+                  {/* Primary Details Section */}
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div className="space-y-4">
+                      <h3 className="text-textColor-primary text-lg font-medium border-b border-gray-700 pb-2">
+                        Primary Details
+                      </h3>
+                      
+                      <div className="space-y-3">
+                        <div>
+                          <label className="block text-textColor-tertiary text-sm">Invoice Number</label>
+                          <p className="text-textColor-primary font-medium">{poDetails?.poNumber || selectedPO.poNumber}</p>
+                        </div>
+                        
+                        <div>
+                          <label className="block text-textColor-tertiary text-sm">Date Generated</label>
+                          <p className="text-textColor-primary">{poDetails?.dateCreated || selectedPO.dateCreated}</p>
+                        </div>
+                        
+                        <div>
+                          <label className="block text-textColor-tertiary text-sm">Transaction Type</label>
+                          <p className="text-textColor-primary">Purchase Order</p>
+                        </div>
+                        
+                        <div>
+                          <label className="block text-textColor-tertiary text-sm">Status</label>
+                          <span className={getStatusBadgeClass(poDetails?.status || selectedPO.status)}>
+                            {poDetails?.status || selectedPO.status}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                    
+                    <div className="space-y-4">
+                      <h3 className="text-textColor-primary text-lg font-medium border-b border-gray-700 pb-2">
+                        Summary
+                      </h3>
+                      
+                      <div className="space-y-3">
+                        <div>
+                          <label className="block text-textColor-tertiary text-sm">Total Quantity</label>
+                          <p className="text-textColor-primary font-medium">{poDetails?.totalQuantity || selectedPO.totalQuantity} pcs</p>
+                        </div>
+                        
+                        <div>
+                          <label className="block text-textColor-tertiary text-sm">Total Amount</label>
+                          <p className="text-textColor-primary font-medium text-lg">{poDetails?.totalAmount || selectedPO.totalAmount}</p>
+                        </div>
+                        
+                        <div>
+                          <label className="block text-textColor-tertiary text-sm">Created By</label>
+                          <p className="text-textColor-primary">{poDetails?.createdBy || selectedPO.createdBy}</p>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Purchased Products Table */}
+                  <div className="space-y-4">
+                    <h3 className="text-textColor-primary text-lg font-medium border-b border-gray-700 pb-2">
+                      Purchased Products
+                    </h3>
+                    
+                    {poDetails?.error ? (
+                      <div className="text-center py-8">
+                        <div className="text-red-400 mb-2">Error loading product details</div>
+                        <div className="text-textColor-tertiary text-sm">{poDetails.error}</div>
+                      </div>
+                    ) : (
+                      <div className="overflow-x-auto">
+                        <table className="w-full text-sm">
+                          <thead className="bg-background">
+                            <tr className="border-b border-gray-700">
+                              <th className="px-4 py-3 text-left text-textColor-primary font-medium">Product Name</th>
+                              <th className="px-4 py-3 text-left text-textColor-primary font-medium">Supplier</th>
+                              <th className="px-4 py-3 text-left text-textColor-primary font-medium">Quantity</th>
+                              <th className="px-4 py-3 text-left text-textColor-primary font-medium">Unit Price</th>
+                              <th className="px-4 py-3 text-left text-textColor-primary font-medium">Total Price</th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {poDetails?.items && poDetails.items.length > 0 ? (
+                              poDetails.items.map((item, index) => (
+                                <tr key={item.id || index} className="border-b border-gray-800 hover:bg-tbl-hover transition-colors">
+                                  <td className="px-4 py-3 text-textColor-primary">{item.name}</td>
+                                  <td className="px-4 py-3 text-textColor-primary">{item.supplier}</td>
+                                  <td className="px-4 py-3 text-textColor-primary">{item.quantity} pcs</td>
+                                  <td className="px-4 py-3 text-textColor-primary">{item.unitPrice}</td>
+                                  <td className="px-4 py-3 text-textColor-primary font-medium">{item.totalPrice}</td>
+                                </tr>
+                              ))
+                            ) : (
+                              <tr>
+                                <td colSpan="5" className="px-4 py-8 text-center text-textColor-tertiary">
+                                  No product details available for this purchase order
+                                </td>
+                              </tr>
+                            )}
+                          </tbody>
+                        </table>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* Modal Footer */}
+            <div className="flex justify-end gap-3 p-6 border-t border-gray-700">
+              <button
+                onClick={() => handleDownloadPDF(selectedPO)}
+                className="px-4 py-2 bg-green hover:bg-green/80 text-white rounded font-medium transition-colors"
+              >
+                Download PDF
+              </button>
+              <button
+                onClick={closeDetailsModal}
+                className="px-4 py-2 bg-background hover:bg-textColor-tertiary text-textColor-primary rounded font-medium transition-colors"
+              >
+                Close
+              </button>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );
