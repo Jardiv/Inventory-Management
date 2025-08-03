@@ -15,7 +15,11 @@ export const GET: APIRoute = async ({ url }) => {
     const urlParams = new URLSearchParams(url.search);
     const transactionId = urlParams.get('id');
 
+    console.log('=== Purchase Order Details API ===');
+    console.log('Requested transaction ID:', transactionId);
+
     if (!transactionId) {
+      console.log('❌ No transaction ID provided');
       return new Response(JSON.stringify({
         success: false,
         error: 'Transaction ID is required'
@@ -26,7 +30,10 @@ export const GET: APIRoute = async ({ url }) => {
     }
 
     // Get the main transaction details
-    const { data: transactionData, error: transactionError } = await supabase
+    console.log('🔍 Querying transaction with ID:', transactionId);
+    
+    // First, let's see if the transaction exists at all
+    const { data: anyTransaction, error: anyError } = await supabase
       .from('transactions')
       .select(`
         id,
@@ -36,17 +43,35 @@ export const GET: APIRoute = async ({ url }) => {
         total_price,
         status,
         source,
-        product_id
+        transaction_type_id
+      `)
+      .eq('id', transactionId);
+
+    console.log('📊 Any transaction query result:', { anyTransaction, anyError });
+
+    // Now try the specific query for Purchase Orders
+    const { data: transactionData, error: transactionError } = await supabase
+      .from('transactions')
+      .select(`
+        id,
+        invoice_no,
+        transaction_datetime,
+        quantity,
+        total_price,
+        status,
+        source
       `)
       .eq('id', transactionId)
       .eq('transaction_type_id', 1) // Ensure it's a Purchase Order
       .single();
 
+    console.log('📊 Purchase Order query result:', { transactionData, transactionError });
+
     if (transactionError) {
-      console.error('Transaction error:', transactionError);
+      console.error('❌ Transaction error:', transactionError);
       return new Response(JSON.stringify({
         success: false,
-        error: 'Failed to fetch transaction details'
+        error: 'Failed to fetch transaction details: ' + transactionError.message
       }), {
         status: 500,
         headers: { 'Content-Type': 'application/json' }
@@ -63,107 +88,55 @@ export const GET: APIRoute = async ({ url }) => {
       });
     }
 
-    // Get product details if product_id exists
+    // Since there's no direct product linking in the transactions table,
+    // we'll create product details based on the transaction data itself
     let productDetails: ProductDetail[] = [];
-    if (transactionData.product_id) {
-      const { data: productData, error: productError } = await supabase
-        .from('products')
-        .select(`
-          id,
-          product_name,
-          supplier,
-          price
-        `)
-        .eq('id', transactionData.product_id);
 
-      if (!productError && productData && productData.length > 0) {
-        const product = productData[0];
-        productDetails = [{
-          id: product.id,
-          name: product.product_name || 'Unknown Product',
-          supplier: product.supplier || 'Unknown Supplier',
-          quantity: transactionData.quantity || 0,
+    // Get all related transactions with the same invoice number
+    const { data: relatedTransactions, error: relatedError } = await supabase
+      .from('transactions')
+      .select(`
+        id,
+        quantity,
+        total_price,
+        invoice_no
+      `)
+      .eq('invoice_no', transactionData.invoice_no)
+      .eq('transaction_type_id', 1);
+
+    console.log('📊 Related transactions:', { relatedTransactions, relatedError });
+
+    if (!relatedError && relatedTransactions && relatedTransactions.length > 0) {
+      // Create product details from transaction data
+      productDetails = relatedTransactions.map((transaction, index) => {
+        const unitPrice = (transaction.total_price || 0) / (transaction.quantity || 1);
+        return {
+          id: transaction.id,
+          name: `Item ${index + 1} for ${transaction.invoice_no}`,
+          supplier: 'To be determined', // This would need to come from a separate source
+          quantity: transaction.quantity || 0,
           unitPrice: new Intl.NumberFormat('en-US', {
             style: 'currency',
             currency: 'USD'
-          }).format(product.price || 0),
+          }).format(unitPrice),
           totalPrice: new Intl.NumberFormat('en-US', {
             style: 'currency',
             currency: 'USD'
-          }).format((product.price || 0) * (transactionData.quantity || 0))
-        }];
-      }
-    }
-
-    // If no specific product found, get all purchase orders from the same invoice/batch
-    if (productDetails.length === 0) {
-      const { data: relatedTransactions, error: relatedError } = await supabase
-        .from('transactions')
-        .select(`
-          id,
-          product_id,
-          quantity,
-          total_price
-        `)
-        .eq('invoice_no', transactionData.invoice_no)
-        .eq('transaction_type_id', 1);
-
-      if (!relatedError && relatedTransactions && relatedTransactions.length > 0) {
-        // Get product details for all related transactions
-        const productIds = relatedTransactions
-          .filter(t => t.product_id)
-          .map(t => t.product_id);
-
-        if (productIds.length > 0) {
-          const { data: productsData, error: productsError } = await supabase
-            .from('products')
-            .select(`
-              id,
-              product_name,
-              supplier,
-              price
-            `)
-            .in('id', productIds);
-
-          if (!productsError && productsData) {
-            productDetails = relatedTransactions
-              .map(transaction => {
-                const product = productsData.find(p => p.id === transaction.product_id);
-                if (product) {
-                  return {
-                    id: product.id,
-                    name: product.product_name || 'Unknown Product',
-                    supplier: product.supplier || 'Unknown Supplier',
-                    quantity: transaction.quantity || 0,
-                    unitPrice: new Intl.NumberFormat('en-US', {
-                      style: 'currency',
-                      currency: 'USD'
-                    }).format(product.price || 0),
-                    totalPrice: new Intl.NumberFormat('en-US', {
-                      style: 'currency',
-                      currency: 'USD'
-                    }).format(transaction.total_price || 0)
-                  };
-                }
-                return null;
-              })
-              .filter((item): item is ProductDetail => item !== null);
-          }
-        }
-      }
-    }
-
-    // If still no products found, create a mock entry based on transaction data
-    if (productDetails.length === 0) {
+          }).format(transaction.total_price || 0)
+        };
+      });
+    } else {
+      // Create a single product entry from the main transaction
+      const unitPrice = (transactionData.total_price || 0) / (transactionData.quantity || 1);
       productDetails = [{
         id: transactionData.id,
-        name: `Product for ${transactionData.invoice_no}`,
-        supplier: 'Unknown Supplier',
+        name: `Purchase Order Item`,
+        supplier: 'To be determined',
         quantity: transactionData.quantity || 0,
         unitPrice: new Intl.NumberFormat('en-US', {
           style: 'currency',
           currency: 'USD'
-        }).format((transactionData.total_price || 0) / (transactionData.quantity || 1)),
+        }).format(unitPrice),
         totalPrice: new Intl.NumberFormat('en-US', {
           style: 'currency',
           currency: 'USD'

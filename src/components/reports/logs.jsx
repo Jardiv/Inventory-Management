@@ -99,14 +99,18 @@ const PurchaseOrderLogs = () => {
   // Fetch detailed purchase order information
   const fetchPODetails = useCallback(async (transactionId) => {
     try {
+      console.log('🔍 Fetching PO details for transaction ID:', transactionId);
       setLoadingDetails(true);
       const response = await fetch(`/api/reports/purchase-order-details?id=${transactionId}`);
+      console.log('📡 API Response status:', response.status);
+      
       const result = await response.json();
+      console.log('📊 API Response data:', result);
       
       if (result.success) {
         setPODetails(result.data);
       } else {
-        console.error('Failed to fetch PO details:', result.error);
+        console.error('❌ Failed to fetch PO details:', result.error);
         // Set empty state with error message
         setPODetails({
           ...selectedPO,
@@ -115,7 +119,7 @@ const PurchaseOrderLogs = () => {
         });
       }
     } catch (err) {
-      console.error('Error fetching PO details:', err);
+      console.error('❌ Error fetching PO details:', err);
       // Set error state
       setPODetails({
         ...selectedPO,
