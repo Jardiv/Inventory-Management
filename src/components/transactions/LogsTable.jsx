@@ -50,6 +50,12 @@ const BlankRow = () => (
  */
 export default function LogsTable({ limit, showPagination = false, currentPage = 1, itemsPerPage = 10 }) {
 	console.log("LogsTable: Component rendering...", { showPagination, currentPage, itemsPerPage, limit });
+
+	// Ensure numeric props are correctly typed, providing default values.
+	const numItemsPerPage = parseInt(itemsPerPage, 10) || 10;
+	const numLimit = parseInt(limit, 10) || 10;
+	
+	const [clientCurrentPage, setClientCurrentPage] = useState(parseInt(currentPage, 10) || 1);
 	
 	// State to store the fetched transactions
 	const [transactions, setTransactions] = useState([]);
@@ -58,10 +64,6 @@ export default function LogsTable({ limit, showPagination = false, currentPage =
 	// State to manage loading status
 	const [loading, setLoading] = useState(true);
 	console.log("LogsTable: Initial loading state set to:", true);
-	
-	// Add this for testing skeleton - remove in production
-	const [forceLoading, setForceLoading] = useState(false);
-	console.log("LogsTable: Initial forceLoading state set to:", false);
 	
 	// State to store pagination-related data
 	const [paginationData, setPaginationData] = useState({
@@ -92,14 +94,19 @@ export default function LogsTable({ limit, showPagination = false, currentPage =
 	console.log("LogsTable: Initial dateRange state set to:", { startDate: "", endDate: "" });
 
 	// Determine the effective limit for fetching data
-	const tableLimit = showPagination ? itemsPerPage : parseInt(limit) || 10;
-	console.log("LogsTable: tableLimit calculated as:", tableLimit, "from showPagination:", showPagination, "itemsPerPage:", itemsPerPage, "limit:", limit);
+	const tableLimit = showPagination ? numItemsPerPage : numLimit;
+	console.log("LogsTable: tableLimit calculated as:", tableLimit, "from showPagination:", showPagination, "itemsPerPage:", numItemsPerPage, "limit:", numLimit);
 
 	// Effect hook to read sort and date parameters from URL on initial load
 	useEffect(() => {
 		console.log("LogsTable: Mount useEffect running to read URL params.");
 		const params = new URLSearchParams(window.location.search);
 		console.log("LogsTable: URLSearchParams created from:", window.location.search);
+
+		const pageFromUrl = parseInt(params.get("page"), 10);
+        if (pageFromUrl) {
+            setClientCurrentPage(pageFromUrl);
+        }
 		
 		const sortBy = params.get("sortBy");
 		const sortOrder = params.get("sortOrder");
@@ -131,16 +138,16 @@ export default function LogsTable({ limit, showPagination = false, currentPage =
 			console.log("LogsTable: Found search param in URL.", { search });
 			// You might want to store the search query in state as well
 		} else {
-			console.log("LogsTable: No search param found in URL.");
+			console.log("LogsTable: No search param in URL.");
 		}
 	}, []); // Empty dependency array means this effect runs once on mount
 
 	// Effect hook to fetch transactions whenever relevant dependencies change
 	useEffect(() => {
 		console.log("LogsTable: Fetch useEffect triggered with dependencies:", {
-			limit,
-			currentPage,
-			itemsPerPage,
+			limit: numLimit,
+			currentPage: clientCurrentPage,
+			itemsPerPage: numItemsPerPage,
 			showPagination,
 			sortConfig,
 			dateRange
@@ -158,12 +165,12 @@ export default function LogsTable({ limit, showPagination = false, currentPage =
 				await new Promise(resolve => setTimeout(resolve, 2000)); // 2 second delay
 				
 				// Calculate offset for pagination
-				const offset = showPagination ? (currentPage - 1) * itemsPerPage : 0;
-				console.log("LogsTable: offset calculated as:", offset, "from showPagination:", showPagination, "currentPage:", currentPage, "itemsPerPage:", itemsPerPage);
+				const offset = showPagination ? (clientCurrentPage - 1) * numItemsPerPage : 0;
+				console.log("LogsTable: offset calculated as:", offset, "from showPagination:", showPagination, "currentPage:", clientCurrentPage, "itemsPerPage:", numItemsPerPage);
 				
 				// Determine the limit for the API call
-				const fetchLimit = showPagination ? itemsPerPage : limit;
-				console.log("LogsTable: fetchLimit set to:", fetchLimit, "from showPagination:", showPagination, "itemsPerPage:", itemsPerPage, "limit:", limit);
+				const fetchLimit = showPagination ? numItemsPerPage : numLimit;
+				console.log("LogsTable: fetchLimit set to:", fetchLimit, "from showPagination:", showPagination, "itemsPerPage:", numItemsPerPage, "limit:", numLimit);
 
 				// Construct the API URL with pagination, sorting, and date range parameters
 				const params = new URLSearchParams(window.location.search);
@@ -186,7 +193,7 @@ export default function LogsTable({ limit, showPagination = false, currentPage =
 					console.log("LogsTable: Added search to URL:", search, "New URL:", url);
 				}
 				console.log("LogsTable: Final URL for fetch:", url);
-
+				
 				// Fetch data from the API
 				const res = await fetch(url, { signal });
 				console.log("LogsTable: Fetch response received - ok:", res.ok, "status:", res.status, "statusText:", res.statusText);
@@ -204,15 +211,15 @@ export default function LogsTable({ limit, showPagination = false, currentPage =
 					// If pagination is enabled and total items are available, update pagination data
 					if (showPagination && data.total !== undefined) {
 						console.log("LogsTable: Updating pagination data with total:", data.total);
-						const totalPages = Math.ceil(data.total / itemsPerPage);
-						console.log("LogsTable: totalPages calculated as:", totalPages, "from data.total:", data.total, "itemsPerPage:", itemsPerPage);
+						const totalPages = Math.ceil(data.total / numItemsPerPage);
+						console.log("LogsTable: totalPages calculated as:", totalPages, "from data.total:", data.total, "itemsPerPage:", numItemsPerPage);
 						
 						const newPaginationData = {
-							currentPage: currentPage,
+							currentPage: clientCurrentPage,
 							totalPages: totalPages,
 							totalItems: data.total,
-							hasNextPage: currentPage < totalPages,
-							hasPreviousPage: currentPage > 1,
+							hasNextPage: clientCurrentPage < totalPages,
+							hasPreviousPage: clientCurrentPage > 1,
 						};
 						console.log("LogsTable: setPaginationData called with:", newPaginationData);
 						setPaginationData(newPaginationData);
@@ -251,7 +258,7 @@ export default function LogsTable({ limit, showPagination = false, currentPage =
 			console.log("LogsTable: useEffect cleanup. Aborting fetch controller.");
 			controller.abort();
 		};
-	}, [limit, currentPage, itemsPerPage, showPagination, sortConfig, dateRange]); // Dependencies for this effect
+	}, [numLimit, clientCurrentPage, numItemsPerPage, showPagination, sortConfig, dateRange]); // Dependencies for this effect
 
 	// Function to handle sorting requests when a table header is clicked
 	const requestSort = (key) => {
@@ -271,6 +278,17 @@ export default function LogsTable({ limit, showPagination = false, currentPage =
 		console.log("LogsTable: setSortConfig will be called with:", newSortConfig);
 		setSortConfig(newSortConfig); // Update sort configuration
 	};
+
+	const handlePageChange = (e, newPage) => {
+        e.preventDefault();
+        if (typeof newPage !== 'number' || newPage < 1 || newPage > paginationData.totalPages) {
+            return;
+        }
+        setClientCurrentPage(newPage);
+        const params = new URLSearchParams(window.location.search);
+        params.set('page', newPage);
+        window.history.pushState({page: newPage}, '', `${window.location.pathname}?${params.toString()}`);
+    };
 
 	// Function to get the sort indicator (arrow) for table headers
 	const getSortIndicator = (key) => {
@@ -333,8 +351,8 @@ export default function LogsTable({ limit, showPagination = false, currentPage =
 	console.log("LogsTable: paginationPages generated:", paginationPages);
 
 	// Calculate the starting and ending item numbers for display
-	const startItem = showPagination ? (paginationData.currentPage - 1) * itemsPerPage + 1 : 1;
-	const endItem = showPagination ? Math.min(paginationData.currentPage * itemsPerPage, paginationData.totalItems) : transactions.length;
+	const startItem = showPagination ? (paginationData.currentPage - 1) * numItemsPerPage + 1 : 1;
+	const endItem = showPagination ? Math.min(paginationData.currentPage * numItemsPerPage, paginationData.totalItems) : transactions.length;
 	console.log("LogsTable: Item range calculated - startItem:", startItem, "endItem:", endItem);
 
 	// Map for status-based color styling
@@ -376,21 +394,6 @@ export default function LogsTable({ limit, showPagination = false, currentPage =
 
 	return (
 		<div className="flex flex-col">
-			{/* Add test button for skeleton loading - remove in production */}
-			<button 
-				onClick={() => {
-					console.log("LogsTable: Test button clicked, toggling forceLoading");
-					setForceLoading(prev => {
-						const newValue = !prev;
-						console.log("LogsTable: setForceLoading called with:", newValue);
-						return newValue;
-					});
-				}}
-				className="mb-4 px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
-			>
-				{forceLoading ? 'Hide' : 'Show'} Skeleton Loading
-			</button>
-			
 			<table className="stock-table">
 				<thead>
 					<tr>
@@ -414,7 +417,7 @@ export default function LogsTable({ limit, showPagination = false, currentPage =
 				</thead>
 				<tbody>
 					{/* Conditional rendering for loading state or actual data */}
-					{(loading || forceLoading) ? (
+					{loading ? (
 						// Display skeleton rows while loading
 						Array.from({ length: tableLimit }).map((_, index) => {
 							console.log("LogsTable: Rendering skeleton row", index);
@@ -456,7 +459,7 @@ export default function LogsTable({ limit, showPagination = false, currentPage =
 			</table>
 
 			{/* Pagination controls, shown only if showPagination is true and not loading */}
-			{showPagination && !loading && !forceLoading && (
+			{showPagination && !loading && (
 				<div className="flex justify-between items-center pt-6 flex-shrink-0 mt-4">
 					{/* Displaying current item range and total items */}
 					<div className="text-textColor-tertiary text-sm">
@@ -469,13 +472,8 @@ export default function LogsTable({ limit, showPagination = false, currentPage =
 						<div className="flex items-center gap-1">
 							{/* Previous page button */}
 							<a
-								href={
-									paginationData.hasPreviousPage
-										? `?page=${paginationData.currentPage - 1}&sortBy=${sortConfig.key}&sortOrder=${sortConfig.direction}${
-												dateRange.startDate ? `&startDate=${dateRange.startDate}` : ""
-										  }${dateRange.endDate ? `&endDate=${dateRange.endDate}` : ""}`
-										: "#"
-								}
+								href="#"
+								onClick={(e) => handlePageChange(e, paginationData.currentPage - 1)}
 								className={`p-2 rounded-md transition-colors ${
 									paginationData.hasPreviousPage ? "text-textColor-primary hover:bg-tbl-hover" : "text-gray-500 cursor-not-allowed"
 								}`}>
@@ -498,9 +496,8 @@ export default function LogsTable({ limit, showPagination = false, currentPage =
 								) : (
 									<a
 										key={`page-${page}`}
-										href={`?page=${page}&sortBy=${sortConfig.key}&sortOrder=${sortConfig.direction}${
-											dateRange.startDate ? `&startDate=${dateRange.startDate}` : ""
-										}${dateRange.endDate ? `&endDate=${dateRange.endDate}` : ""}`}
+										href="#"
+										onClick={(e) => handlePageChange(e, page)}
 										className={`px-3 py-2 rounded-md text-sm font-medium transition-colors ${
 											page === paginationData.currentPage
 												? "bg-btn-primary text-white hover:bg-btn-hover"
@@ -512,13 +509,8 @@ export default function LogsTable({ limit, showPagination = false, currentPage =
 							)}
 							{/* Next page button */}
 							<a
-								href={
-									paginationData.hasNextPage
-										? `?page=${paginationData.currentPage + 1}&sortBy=${sortConfig.key}&sortOrder=${sortConfig.direction}${
-												dateRange.startDate ? `&startDate=${dateRange.startDate}` : ""
-										  }${dateRange.endDate ? `&endDate=${dateRange.endDate}` : ""}`
-										: "#"
-								}
+								href="#"
+								onClick={(e) => handlePageChange(e, paginationData.currentPage + 1)}
 								className={`p-2 rounded-md transition-colors ${
 									paginationData.hasNextPage ? "text-textColor-primary hover:bg-tbl-hover" : "text-gray-500 cursor-not-allowed"
 								}`}>
