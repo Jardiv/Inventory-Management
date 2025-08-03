@@ -1,40 +1,8 @@
 import { useEffect, useState } from "react";
 import DetailsModal from "./DetailsModal";
-
-// Skeleton row component
-const SkeletonRow = () => (
-	<tr className="table-row">
-		<td className="table-data">
-			<div className="skeleton-loading"></div>
-		</td>
-		<td className="table-data">
-			<div className="skeleton-loading"></div>
-		</td>
-		<td className="table-data">
-			<div className="skeleton-loading"></div>
-		</td>
-		<td className="table-data">
-			<div className="skeleton-loading"></div>
-		</td>
-		<td className="table-data">
-			<div className="skeleton-loading"></div>
-		</td>
-		<td className="table-data">
-			<div className="skeleton-loading"></div>
-		</td>
-	</tr>
-);
-
-const BlankRow = () => (
-	<tr className="table-row">
-		<td className="table-data">&nbsp;</td>
-		<td className="table-data">&nbsp;</td>
-		<td className="table-data">&nbsp;</td>
-		<td className="table-data">&nbsp;</td>
-		<td className="table-data">&nbsp;</td>
-		<td className="table-data">&nbsp;</td>
-	</tr>
-);
+import { SkeletonRow } from "./utils/SkeletonRow";
+import { BlankRow } from "./utils/BlankRow";
+import Pagination from "./utils/Pagination";
 
 export default function StockOutTable({ isAbleToSort = true, limit, showPagination = false, currentPage = 1, itemsPerPage = 10 }) {
 	const [transactions, setTransactions] = useState([]);
@@ -50,6 +18,8 @@ export default function StockOutTable({ isAbleToSort = true, limit, showPaginati
 	const [sortConfig, setSortConfig] = useState({ key: "transaction_datetime", direction: "desc" });
 	const [dateRange, setDateRange] = useState({ startDate: "", endDate: "" });
 
+	const [clientCurrentPage, setClientCurrentPage] = useState(parseInt(currentPage, 10) || 1);
+
 	const tableLimit = showPagination ? itemsPerPage : parseInt(limit) || 10;
 
 	useEffect(() => {
@@ -62,6 +32,10 @@ export default function StockOutTable({ isAbleToSort = true, limit, showPaginati
 
 	useEffect(() => {
 		const params = new URLSearchParams(window.location.search);
+		const pageFromUrl = parseInt(params.get("page"), 10);
+        if (pageFromUrl) {
+            setClientCurrentPage(pageFromUrl);
+        }
 		const sortBy = params.get("sortBy");
 		const sortOrder = params.get("sortOrder");
 		const startDate = params.get("startDate");
@@ -83,7 +57,7 @@ export default function StockOutTable({ isAbleToSort = true, limit, showPaginati
 		async function fetchTransactions() {
 			setLoading(true);
 			try {
-				const offset = showPagination ? (currentPage - 1) * itemsPerPage : 0;
+				const offset = showPagination ? (clientCurrentPage - 1) * itemsPerPage : 0;
 				const fetchLimit = showPagination ? itemsPerPage : limit;
 				let url = `/api/transactions/transactions/?direction=out&limit=${fetchLimit}&offset=${offset}&sortBy=${sortConfig.key}&sortOrder=${sortConfig.direction}`;
 				if (dateRange.startDate) url += `&startDate=${dateRange.startDate}`;
@@ -98,11 +72,11 @@ export default function StockOutTable({ isAbleToSort = true, limit, showPaginati
 					if (showPagination && data.total !== undefined) {
 						const totalPages = Math.ceil(data.total / itemsPerPage);
 						setPaginationData({
-							currentPage: currentPage,
+							currentPage: clientCurrentPage,
 							totalPages: totalPages,
 							totalItems: data.total,
-							hasNextPage: currentPage < totalPages,
-							hasPreviousPage: currentPage > 1,
+							hasNextPage: clientCurrentPage < totalPages,
+							hasPreviousPage: clientCurrentPage > 1,
 						});
 					}
 				}
@@ -122,7 +96,7 @@ export default function StockOutTable({ isAbleToSort = true, limit, showPaginati
 		return () => {
 			controller.abort();
 		};
-	}, [limit, currentPage, itemsPerPage, showPagination, sortConfig, dateRange]);
+	}, [limit, clientCurrentPage, itemsPerPage, showPagination, sortConfig, dateRange]);
 
 	const requestSort = (key) => {
 		if (!isAbleToSort) return;
@@ -133,26 +107,21 @@ export default function StockOutTable({ isAbleToSort = true, limit, showPaginati
 		setSortConfig({ key, direction });
 	};
 
+	const handlePageChange = (e, newPage) => {
+        e.preventDefault();
+        if (typeof newPage !== 'number' || newPage < 1 || newPage > paginationData.totalPages) {
+            return;
+        }
+        setClientCurrentPage(newPage);
+        const params = new URLSearchParams(window.location.search);
+        params.set('page', newPage);
+        window.history.pushState({page: newPage}, '', `${window.location.pathname}?${params.toString()}`);
+    };
+
 	const getSortIndicator = (key) => {
 		if (!isAbleToSort || sortConfig.key !== key) return null;
 		return sortConfig.direction === "asc" ? " ↑" : " ↓";
 	};
-
-	const generatePaginationPages = (currentPage, totalPages) => {
-		const pages = [];
-		if (totalPages > 0) pages.push(1);
-		if (currentPage > 4) pages.push("...");
-		const start = Math.max(2, currentPage - 1);
-		const end = Math.min(totalPages - 1, currentPage + 1);
-		for (let i = start; i <= end; i++) {
-			if (!pages.includes(i)) pages.push(i);
-		}
-		if (currentPage < totalPages - 3) pages.push("...");
-		if (totalPages > 1 && !pages.includes(totalPages)) pages.push(totalPages);
-		return pages;
-	};
-
-	const paginationPages = generatePaginationPages(paginationData.currentPage, paginationData.totalPages);
 
 	const startItem = showPagination ? (paginationData.currentPage - 1) * itemsPerPage + 1 : 1;
 	const endItem = showPagination ? Math.min(paginationData.currentPage * itemsPerPage, paginationData.totalItems) : transactions.length;
@@ -224,81 +193,7 @@ export default function StockOutTable({ isAbleToSort = true, limit, showPaginati
 				</tbody>
 			</table>
 
-			{showPagination && !loading && (
-				<div className="flex justify-between items-center pt-6 border-t border-border_color flex-shrink-0 mt-4">
-					<div className="text-textColor-tertiary text-sm">
-						{paginationData.totalItems > 0
-							? `Showing ${startItem}-${endItem} of ${paginationData.totalItems} transactions`
-							: "No transactions found"}
-					</div>
-					{paginationData.totalItems > 0 && paginationData.totalPages > 1 && (
-						<div className="flex items-center gap-1">
-							<a
-								href={
-									paginationData.hasPreviousPage
-										? `?page=${paginationData.currentPage - 1}&sortBy=${sortConfig.key}&sortOrder=${sortConfig.direction}${
-												dateRange.startDate ? `&startDate=${dateRange.startDate}` : ""
-										  }${dateRange.endDate ? `&endDate=${dateRange.endDate}` : ""}`
-										: "#"
-								}
-								className={`p-2 rounded-md transition-colors ${
-									paginationData.hasPreviousPage ? "text-textColor-primary hover:bg-tbl-hover" : "text-gray-500 cursor-not-allowed"
-								}`}>
-								<svg
-									xmlns="http://www.w3.org/2000/svg"
-									fill="none"
-									viewBox="0 0 24 24"
-									strokeWidth="1.5"
-									stroke="currentColor"
-									className="w-5 h-5">
-									<path strokeLinecap="round" strokeLinejoin="round" d="M15.75 19.5 8.25 12l7.5-7.5" />
-								</svg>
-							</a>
-							{paginationPages.map((page, index) =>
-								page === "..." ? (
-									<span key={index} className="px-3 py-2 text-gray-500">
-										...
-									</span>
-								) : (
-									<a
-										key={page}
-										href={`?page=${page}&sortBy=${sortConfig.key}&sortOrder=${sortConfig.direction}${
-											dateRange.startDate ? `&startDate=${dateRange.startDate}` : ""
-										}${dateRange.endDate ? `&endDate=${dateRange.endDate}` : ""}`}
-										className={`px-3 py-2 rounded-md text-sm font-medium transition-colors ${
-											page === paginationData.currentPage
-												? "bg-btn-primary text-white hover:bg-btn-hover"
-												: "text-textColor-primary hover:bg-tbl-hover hover:text-white"
-										}`}>
-										{page}
-									</a>
-								)
-							)}
-							<a
-								href={
-									paginationData.hasNextPage
-										? `?page=${paginationData.currentPage + 1}&sortBy=${sortConfig.key}&sortOrder=${sortConfig.direction}${
-												dateRange.startDate ? `&startDate=${dateRange.startDate}` : ""
-										  }${dateRange.endDate ? `&endDate=${dateRange.endDate}` : ""}`
-										: "#"
-								}
-								className={`p-2 rounded-md transition-colors ${
-									paginationData.hasNextPage ? "text-textColor-primary hover:bg-tbl-hover" : "text-gray-500 cursor-not-allowed"
-								}`}>
-								<svg
-									xmlns="http://www.w3.org/2000/svg"
-									fill="none"
-									viewBox="0 0 24 24"
-									strokeWidth="1.5"
-									stroke="currentColor"
-									className="w-5 h-5">
-									<path strokeLinecap="round" strokeLinejoin="round" d="m8.25 4.5 7.5 7.5-7.5 7.5" />
-								</svg>
-							</a>
-						</div>
-					)}
-				</div>
-			)}
+			{showPagination && !loading && <Pagination paginationData={paginationData} handlePageChange={handlePageChange} startItem={startItem} endItem={endItem} />}
 
 			{selectedTransactionId && <DetailsModal transactionId={selectedTransactionId} onClose={handleCloseModal} />}
 		</div>

@@ -1,45 +1,8 @@
 import { useEffect, useState } from "react";
 import DetailsModal from "./DetailsModal";
-
-// Skeleton row component for loading state
-const SkeletonRow = () => (
-	<tr className="table-row">
-		<td className="table-data">
-			<div className="skeleton-loading"></div>
-		</td>
-		<td className="table-data">
-			<div className="skeleton-loading"></div>
-		</td>
-		<td className="table-data">
-			<div className="skeleton-loading"></div>
-		</td>
-		<td className="table-data">
-			<div className="skeleton-loading"></div>
-		</td>
-		<td className="table-data">
-			<div className="skeleton-loading"></div>
-		</td>
-		<td className="table-data">
-			<div className="skeleton-loading"></div>
-		</td>
-		<td className="table-data">
-			<div className="skeleton-loading"></div>
-		</td>
-	</tr>
-);
-
-// Blank row component to fill empty space in tables
-const BlankRow = () => (
-	<tr className="table-row">
-		<td className="table-data">&nbsp;</td>
-		<td className="table-data">&nbsp;</td>
-		<td className="table-data">&nbsp;</td>
-		<td className="table-data">&nbsp;</td>
-		<td className="table-data">&nbsp;</td>
-		<td className="table-data">&nbsp;</td>
-		<td className="table-data">&nbsp;</td>
-	</tr>
-);
+import { SkeletonRow } from "./utils/SkeletonRow";
+import { BlankRow } from "./utils/BlankRow";
+import Pagination from "./utils/Pagination";
 
 /**
  * LogsTable component displays a table of transaction logs with pagination, sorting, and date filtering.
@@ -302,53 +265,7 @@ export default function LogsTable({ limit, showPagination = false, currentPage =
 		return indicator; // Return up or down arrow
 	};
 
-	// Function to generate an array of page numbers for pagination display
-	const generatePaginationPages = (currentPage, totalPages) => {
-		console.log("LogsTable: generatePaginationPages called with currentPage:", currentPage, "totalPages:", totalPages);
-		const pages = [];
-		const pageSet = new Set(); // Use a Set to avoid duplicate page numbers
-		
-		if (totalPages > 0) {
-			pages.push(1);
-			pageSet.add(1);
-			console.log("LogsTable: Added page 1 to pages array");
-		} // Always include the first page
-		
-		if (currentPage > 4) {
-			pages.push("...");
-			console.log("LogsTable: Added ellipsis before current page range");
-		} // Add ellipsis if current page is far from the beginning
-		
-		const start = Math.max(2, currentPage - 1); // Determine start of visible page range
-		const end = Math.min(totalPages - 1, currentPage + 1); // Determine end of visible page range
-		console.log("LogsTable: Page range calculated - start:", start, "end:", end);
-		
-		for (let i = start; i <= end; i++) {
-			if (!pageSet.has(i)) {
-				pages.push(i);
-				pageSet.add(i);
-				console.log("LogsTable: Added page", i, "to pages array");
-			} // Add pages within the range
-		}
-		
-		if (currentPage < totalPages - 3) {
-			pages.push("...");
-			console.log("LogsTable: Added ellipsis after current page range");
-		} // Add ellipsis if current page is far from the end
-		
-		if (totalPages > 1 && !pageSet.has(totalPages)) {
-			pages.push(totalPages);
-			pageSet.add(totalPages);
-			console.log("LogsTable: Added last page", totalPages, "to pages array");
-		} // Always include the last page
-		
-		console.log("LogsTable: Final pages array:", pages);
-		return pages;
-	};
-
-	// Generate pagination pages based on current data
-	const paginationPages = generatePaginationPages(paginationData.currentPage, paginationData.totalPages);
-	console.log("LogsTable: paginationPages generated:", paginationPages);
+	
 
 	// Calculate the starting and ending item numbers for display
 	const startItem = showPagination ? (paginationData.currentPage - 1) * numItemsPerPage + 1 : 1;
@@ -404,7 +321,7 @@ export default function LogsTable({ limit, showPagination = false, currentPage =
 						<th className="table-header cursor-pointer" onClick={() => requestSort("transaction_datetime")}>
 							Date{getSortIndicator("transaction_datetime")}
 						</th>
-						<th className="table-header">Item Name</th>
+						<th className="table-header">Item</th>
 						<th className="table-header cursor-pointer" onClick={() => requestSort("quantity")}>
 							Quantity{getSortIndicator("quantity")}
 						</th>
@@ -458,76 +375,7 @@ export default function LogsTable({ limit, showPagination = false, currentPage =
 				</tbody>
 			</table>
 
-			{/* Pagination controls, shown only if showPagination is true and not loading */}
-			{showPagination && !loading && (
-				<div className="flex justify-between items-center pt-6 flex-shrink-0 mt-4">
-					{/* Displaying current item range and total items */}
-					<div className="text-textColor-tertiary text-sm">
-						{paginationData.totalItems > 0
-							? `Showing ${startItem}-${endItem} of ${paginationData.totalItems} transactions`
-							: "No transactions found"}
-					</div>
-					{/* Pagination buttons */}
-					{paginationData.totalItems > 0 && paginationData.totalPages > 1 && (
-						<div className="flex items-center gap-1">
-							{/* Previous page button */}
-							<a
-								href="#"
-								onClick={(e) => handlePageChange(e, paginationData.currentPage - 1)}
-								className={`p-2 rounded-md transition-colors ${
-									paginationData.hasPreviousPage ? "text-textColor-primary hover:bg-tbl-hover" : "text-gray-500 cursor-not-allowed"
-								}`}>
-								<svg
-									xmlns="http://www.w3.org/2000/svg"
-									fill="none"
-									viewBox="0 0 24 24"
-									strokeWidth="1.5"
-									stroke="currentColor"
-									className="w-5 h-5">
-									<path strokeLinecap="round" strokeLinejoin="round" d="M15.75 19.5 8.25 12l7.5-7.5" />
-								</svg>
-							</a>
-							{/* Page number buttons */}
-							{paginationPages.map((page, index) =>
-								page === "..." ? (
-									<span key={`ellipsis-${index}`} className="px-3 py-2 text-gray-500">
-										...
-									</span>
-								) : (
-									<a
-										key={`page-${page}`}
-										href="#"
-										onClick={(e) => handlePageChange(e, page)}
-										className={`px-3 py-2 rounded-md text-sm font-medium transition-colors ${
-											page === paginationData.currentPage
-												? "bg-btn-primary text-white hover:bg-btn-hover"
-												: "text-textColor-primary hover:bg-tbl-hover hover:text-white"
-										}`}>
-										{page}
-									</a>
-								)
-							)}
-							{/* Next page button */}
-							<a
-								href="#"
-								onClick={(e) => handlePageChange(e, paginationData.currentPage + 1)}
-								className={`p-2 rounded-md transition-colors ${
-									paginationData.hasNextPage ? "text-textColor-primary hover:bg-tbl-hover" : "text-gray-500 cursor-not-allowed"
-								}`}>
-								<svg
-									xmlns="http://www.w3.org/2000/svg"
-									fill="none"
-									viewBox="0 0 24 24"
-									strokeWidth="1.5"
-									stroke="currentColor"
-									className="w-5 h-5">
-									<path strokeLinecap="round" strokeLinejoin="round" d="m8.25 4.5 7.5 7.5-7.5 7.5" />
-								</svg>
-							</a>
-						</div>
-					)}
-				</div>
-			)}
+			{showPagination && !loading && <Pagination paginationData={paginationData} handlePageChange={handlePageChange} startItem={startItem} endItem={endItem} />}
 
 			{/* Details modal, shown when a transaction is selected */}
 			{selectedTransactionId && <DetailsModal transactionId={selectedTransactionId} onClose={handleCloseModal} />}

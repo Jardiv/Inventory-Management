@@ -1,45 +1,8 @@
 import { useEffect, useState } from "react";
 import DetailsModal from "./DetailsModal";
-
-// Skeleton row component for loading state
-const SkeletonRow = () => (
-	<tr className="table-row">
-		<td className="table-data">
-			<div className="skeleton-loading"></div>
-		</td>
-		<td className="table-data">
-			<div className="skeleton-loading"></div>
-		</td>
-		<td className="table-data">
-			<div className="skeleton-loading"></div>
-		</td>
-		<td className="table-data">
-			<div className="skeleton-loading"></div>
-		</td>
-		<td className="table-data">
-			<div className="skeleton-loading"></div>
-		</td>
-		<td className="table-data">
-			<div className="skeleton-loading"></div>
-		</td>
-		<td className="table-data">
-			<div className="skeleton-loading"></div>
-		</td>
-	</tr>
-);
-
-// Blank row component to fill empty space in tables
-const BlankRow = () => (
-	<tr className="table-row">
-		<td className="table-data">&nbsp;</td>
-		<td className="table-data">&nbsp;</td>
-		<td className="table-data">&nbsp;</td>
-		<td className="table-data">&nbsp;</td>
-		<td className="table-data">&nbsp;</td>
-		<td className="table-data">&nbsp;</td>
-		<td className="table-data">&nbsp;</td>
-	</tr>
-);
+import { SkeletonRow } from "./utils/SkeletonRow";
+import { BlankRow } from "./utils/BlankRow";
+import Pagination from "./utils/Pagination";
 
 /**
  * StockInTable component displays a table of stock-in transactions with pagination, sorting, and date filtering.
@@ -69,6 +32,8 @@ export default function StockInTable({ isAbleToSort = true, limit, showPaginatio
 	// State to store the selected date range for filtering
 	const [dateRange, setDateRange] = useState({ startDate: "", endDate: "" });
 
+	const [clientCurrentPage, setClientCurrentPage] = useState(parseInt(currentPage, 10) || 1);
+
 	// Determine the effective limit for fetching data
 	const tableLimit = showPagination ? itemsPerPage : parseInt(limit) || 10;
 
@@ -86,6 +51,10 @@ export default function StockInTable({ isAbleToSort = true, limit, showPaginatio
 	// Effect hook to read sort and date parameters from URL on initial load
 	useEffect(() => {
 		const params = new URLSearchParams(window.location.search);
+		const pageFromUrl = parseInt(params.get("page"), 10);
+        if (pageFromUrl) {
+            setClientCurrentPage(pageFromUrl);
+        }
 		const sortBy = params.get("sortBy");
 		const sortOrder = params.get("sortOrder");
 		const startDate = params.get("startDate");
@@ -110,7 +79,7 @@ export default function StockInTable({ isAbleToSort = true, limit, showPaginatio
 			setLoading(true); // Set loading to true before fetching
 			try {
 				// Calculate offset for pagination
-				const offset = showPagination ? (currentPage - 1) * itemsPerPage : 0;
+				const offset = showPagination ? (clientCurrentPage - 1) * itemsPerPage : 0;
 				// Determine the limit for the API call
 				const fetchLimit = showPagination ? itemsPerPage : limit;
 				// Construct the API URL with pagination, sorting, and date range parameters, specifically for 'in' direction
@@ -130,11 +99,11 @@ export default function StockInTable({ isAbleToSort = true, limit, showPaginatio
 					if (showPagination && data.total !== undefined) {
 						const totalPages = Math.ceil(data.total / itemsPerPage);
 						setPaginationData({
-							currentPage: currentPage,
+							currentPage: clientCurrentPage,
 							totalPages: totalPages,
 							totalItems: data.total,
-							hasNextPage: currentPage < totalPages,
-							hasPreviousPage: currentPage > 1,
+							hasNextPage: clientCurrentPage < totalPages,
+							hasPreviousPage: clientCurrentPage > 1,
 						});
 					}
 				}
@@ -157,7 +126,7 @@ export default function StockInTable({ isAbleToSort = true, limit, showPaginatio
 		return () => {
 			controller.abort();
 		};
-	}, [limit, currentPage, itemsPerPage, showPagination, sortConfig, dateRange]); // Dependencies for this effect
+	}, [limit, clientCurrentPage, itemsPerPage, showPagination, sortConfig, dateRange]); // Dependencies for this effect
 
 	// Function to handle sorting requests when a table header is clicked
 	const requestSort = (key) => {
@@ -170,29 +139,22 @@ export default function StockInTable({ isAbleToSort = true, limit, showPaginatio
 		setSortConfig({ key, direction }); // Update sort configuration
 	};
 
+	const handlePageChange = (e, newPage) => {
+        e.preventDefault();
+        if (typeof newPage !== 'number' || newPage < 1 || newPage > paginationData.totalPages) {
+            return;
+        }
+        setClientCurrentPage(newPage);
+        const params = new URLSearchParams(window.location.search);
+        params.set('page', newPage);
+        window.history.pushState({page: newPage}, '', `${window.location.pathname}?${params.toString()}`);
+    };
+
 	// Function to get the sort indicator (arrow) for table headers
 	const getSortIndicator = (key) => {
 		if (!isAbleToSort || sortConfig.key !== key) return null; // No indicator if not the current sort key
 		return sortConfig.direction === "asc" ? " ↑" : " ↓"; // Return up or down arrow
 	};
-
-	// Function to generate an array of page numbers for pagination display
-	const generatePaginationPages = (currentPage, totalPages) => {
-		const pages = [];
-		if (totalPages > 0) pages.push(1); // Always include the first page
-		if (currentPage > 4) pages.push("..."); // Add ellipsis if current page is far from the beginning
-		const start = Math.max(2, currentPage - 1); // Determine start of visible page range
-		const end = Math.min(totalPages - 1, currentPage + 1); // Determine end of visible page range
-		for (let i = start; i <= end; i++) {
-			if (!pages.includes(i)) pages.push(i);
-		}
-		if (currentPage < totalPages - 3) pages.push("..."); // Add ellipsis if current page is far from the end
-		if (totalPages > 1 && !pages.includes(totalPages)) pages.push(totalPages); // Always include the last page
-		return pages;
-	};
-
-	// Generate pagination pages based on current data
-	const paginationPages = generatePaginationPages(paginationData.currentPage, paginationData.totalPages);
 
 	// Calculate the starting and ending item numbers for display
 	const startItem = showPagination ? (paginationData.currentPage - 1) * itemsPerPage + 1 : 1;
@@ -278,87 +240,7 @@ export default function StockInTable({ isAbleToSort = true, limit, showPaginatio
 				</tbody>
 			</table>
 
-			{/* Pagination controls, shown only if showPagination is true and not loading */}
-			{showPagination && !loading && (
-				<div className="flex justify-between items-center pt-6 border-t border-border_color flex-shrink-0 mt-4">
-					{/* Displaying current item range and total items */}
-					<div className="text-textColor-tertiary text-sm">
-						{paginationData.totalItems > 0
-							? `Showing ${startItem}-${endItem} of ${paginationData.totalItems} transactions`
-							: "No transactions found"}
-					</div>
-					{/* Pagination buttons */}
-					{paginationData.totalItems > 0 && paginationData.totalPages > 1 && (
-						<div className="flex items-center gap-1">
-							{/* Previous page button */}
-							<a
-								href={
-									paginationData.hasPreviousPage
-										? `?page=${paginationData.currentPage - 1}&sortBy=${sortConfig.key}&sortOrder=${sortConfig.direction}${
-												dateRange.startDate ? `&startDate=${dateRange.startDate}` : ""
-										  }${dateRange.endDate ? `&endDate=${dateRange.endDate}` : ""}`
-										: "#"
-								}
-								className={`p-2 rounded-md transition-colors ${
-									paginationData.hasPreviousPage ? "text-textColor-primary hover:bg-tbl-hover" : "text-gray-500 cursor-not-allowed"
-								}`}>
-								<svg
-									xmlns="http://www.w3.org/2000/svg"
-									fill="none"
-									viewBox="0 0 24 24"
-									strokeWidth="1.5"
-									stroke="currentColor"
-									className="w-5 h-5">
-									<path strokeLinecap="round" strokeLinejoin="round" d="M15.75 19.5 8.25 12l7.5-7.5" />
-								</svg>
-							</a>
-							{/* Page number buttons */}
-							{paginationPages.map((page, index) =>
-								page === "..." ? (
-									<span key={index} className="px-3 py-2 text-gray-500">
-										...
-									</span>
-								) : (
-									<a
-										key={page}
-										href={`?page=${page}&sortBy=${sortConfig.key}&sortOrder=${sortConfig.direction}${
-											dateRange.startDate ? `&startDate=${dateRange.startDate}` : ""
-										}${dateRange.endDate ? `&endDate=${dateRange.endDate}` : ""}`}
-										className={`px-3 py-2 rounded-md text-sm font-medium transition-colors ${
-											page === paginationData.currentPage
-												? "bg-btn-primary text-white hover:bg-btn-hover"
-												: "text-textColor-primary hover:bg-tbl-hover hover:text-white"
-										}`}>
-										{page}
-									</a>
-								)
-							)}
-							{/* Next page button */}
-							<a
-								href={
-									paginationData.hasNextPage
-										? `?page=${paginationData.currentPage + 1}&sortBy=${sortConfig.key}&sortOrder=${sortConfig.direction}${
-												dateRange.startDate ? `&startDate=${dateRange.startDate}` : ""
-										  }${dateRange.endDate ? `&endDate=${dateRange.endDate}` : ""}`
-										: "#"
-								}
-								className={`p-2 rounded-md transition-colors ${
-									paginationData.hasNextPage ? "text-textColor-primary hover:bg-tbl-hover" : "text-gray-500 cursor-not-allowed"
-								}`}>
-								<svg
-									xmlns="http://www.w3.org/2000/svg"
-									fill="none"
-									viewBox="0 0 24 24"
-									strokeWidth="1.5"
-									stroke="currentColor"
-									className="w-5 h-5">
-									<path strokeLinecap="round" strokeLinejoin="round" d="m8.25 4.5 7.5 7.5-7.5 7.5" />
-								</svg>
-							</a>
-						</div>
-					)}
-				</div>
-			)}
+			{showPagination && !loading && <Pagination paginationData={paginationData} handlePageChange={handlePageChange} startItem={startItem} endItem={endItem} />}
 
 			{/* Details modal, shown when a transaction is selected */}
 			{selectedTransactionId && <DetailsModal transactionId={selectedTransactionId} onClose={handleCloseModal} />}
