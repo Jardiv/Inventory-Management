@@ -11,9 +11,15 @@ const quickSummaryData = [
 
 // Icons for Quick Summary (defined in component, not in data)
 const summaryIcons = ["🏭", "📦", "📥", "🔄"];
-const baseURL = import.meta.env.SITE || 'http://localhost:4321'; // fallback to local dev
-const response = await fetch(`${baseURL}/api/tracking/warehouse-storage?page=1&limit=5`);
-const { data: warehouseItems = [] } = await response.json();
+const baseURL = import.meta.env.SITE || 'http://localhost:4321';
+
+const [warehouseRes, transferRes] = await Promise.all([
+  fetch(`${baseURL}/api/tracking/warehouse-storage?page=1&limit=5`),
+  fetch(`${baseURL}/api/tracking/transfers?page=1&limit=4`)
+]);
+
+const { data: warehouseItems = [] } = await warehouseRes.json();
+const { data: recentTransfers = [] } = await transferRes.json();
 ---
 
 <!-- TRACKING DASHBOARD -->
@@ -174,37 +180,24 @@ const { data: warehouseItems = [] } = await response.json();
           <span>From</span>
           <span>To</span>
         </div>
-        <div class="space-y-2 text-sm">
-          <div class="grid grid-cols-5 items-center border-b border-border_color py-2">
-            <span>T1</span>
-            <span>Soap</span>
-            <span>120</span>
-            <span>W1</span>
-            <span>W2</span>
+          <div class="space-y-2 text-sm">
+            {recentTransfers.map((t) => (
+              <div class="grid grid-cols-5 items-center border-b border-border_color py-2">
+                <span>{t.id}</span>
+                <span>{t.items?.name || 'Unknown'}</span>
+                <span>{t.quantity}</span>
+                <span>{t.from_warehouse?.name || 'N/A'}</span>
+                <span>{t.to_warehouse?.name || 'N/A'}</span>
+              </div>
+            ))}
+
+            {/* Fill up to 4 rows visually */}
+            {Array.from({ length: Math.max(0, 4 - recentTransfers.length) }).map(() => (
+              <div class="grid grid-cols-5 items-center py-2 text-transparent">
+                <span>-</span><span>-</span><span>-</span><span>-</span><span>-</span>
+              </div>
+            ))}
           </div>
-          <div class="grid grid-cols-5 items-center border-b border-border_color py-2">
-            <span>T1</span>
-            <span>Soap</span>
-            <span>120</span>
-            <span>W1</span>
-            <span>W2</span>
-          </div>
-          <div class="grid grid-cols-5 items-center border-b border-border_color py-2">
-            <span>T1</span>
-            <span>Soap</span>
-            <span>120</span>
-            <span>W1</span>
-            <span>W2</span>
-          </div>
-          <div class="grid grid-cols-5 items-center  py-2">
-            <span>T1</span>
-            <span>Soap</span>
-            <span>120</span>
-            <span>W1</span>
-            <span>W2</span>
-          </div>
-          <!-- More rows... -->
-        </div>
       </div>
     </div>
   </div>
