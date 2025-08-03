@@ -85,58 +85,6 @@ const currentPage = 1; // Default value, actual pagination handled client-side
             </div>
         </div>
 
-        <!-- Purchase Order Detail Modal -->
-        <div id="editModal" class="fixed inset-0 bg-black/60 items-center justify-center z-50 hidden">
-            <div class="bg-primary rounded-lg p-6 w-[500px] relative">
-                <div class="flex justify-between items-center">
-                    <h2 class="text-textColor-primary text-xl font-semibold">Purchase Order Detail</h2>
-                    <button id="closeModalBtn" class="p-2 text-textColor-primary hover:bg-btn-hover hover:text-white rounded">
-                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6">
-                            <path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12" />
-                        </svg>
-                    </button>
-                </div>
-                
-                <p class="text-textColor-tertiary text-sm mb-6">Review and confirm reorder details for this item.</p>
-                
-                <div class="space-y-4">
-                    <div class="flex items-center gap-4">
-                        <label class="text-textColor-primary font-medium w-36 text-right">Item Code:</label>
-                        <input id="modalItemCode" type="text" class="flex-1 px-3 py-2 bg-background text-textColor-tertiary rounded border border-textColor-tertiary" disabled>
-                    </div>
-                    
-                    <div class="flex items-center gap-4">
-                        <label class="text-textColor-primary font-medium w-36 text-right">Item Name:</label>
-                        <input id="modalItemName" type="text" class="flex-1 px-3 py-2 bg-background text-textColor-tertiary rounded border border-textColor-tertiary" disabled>
-                    </div>
-                    
-                    <div class="flex items-center gap-4">
-                        <label class="text-textColor-primary font-medium w-36 text-right">Supplier:</label>
-                        <input type="text" value="ABC Suppliers Inc." class="flex-1 px-3 py-2 bg-background text-textColor-tertiary rounded border border-textColor-tertiary" disabled>
-                    </div>
-                    
-                    <div class="flex items-center gap-4">
-                        <label class="text-textColor-primary font-medium w-36 text-right">Current Quantity:</label>
-                        <input id="modalCurrentQty" type="text" class="flex-1 px-3 py-2 bg-background text-textColor-tertiary rounded border border-textColor-tertiary" disabled>
-                    </div>
-                    
-                    <div class="flex items-center gap-4">
-                        <label class="text-textColor-primary font-medium w-36 text-right">Order Quantity:</label>
-                        <input id="modalOrderQty" type="number" class="flex-1 px-3 py-2 bg-background text-textColor-primary rounded border border-textColor-tertiary focus:border-blue-500 focus:outline-none">
-                    </div>
-                </div>
-                
-                <div class="flex gap-3 mt-6">
-                    <button id="cancelOrderBtn" class="flex-1 bg-background hover:bg-textColor-tertiary  text-textColor-primary px-4 py-2 rounded font-medium transition-colors">
-                        Cancel
-                    </button>
-                    <button id="confirmOrderBtn" class="flex-1 bg-green-700 hover:bg-green-900 text-textColor-primary px-4 py-2 rounded font-medium transition-colors">
-                        Confirm
-                    </button>
-                </div>
-            </div>
-        </div>
-
         <!-- Purchase Order Success Modal -->
         <div id="successModal" class="fixed inset-0 bg-black/60 items-center justify-center z-50 hidden">
             <div class="bg-primary rounded-lg p-6 w-[400px] relative">
