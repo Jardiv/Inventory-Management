@@ -227,24 +227,6 @@ const DetailsModal = ({ transactionId, onClose }) => {
 									<p className="font-medium text-textColor-primary mt-1">{transaction.supplier_location}</p>
 								</div>
 							</div>
-							{/* 
-                                <div>
-                                    <p className="text-sm text-textColor-tertiary">Supplier</p>
-                                    <p className="font-medium text-textColor-primary mt-1">{transaction.supplier_name}</p>
-                                </div>
-                                <div>
-                                    <p className="text-sm text-textColor-tertiary">Contact No</p>
-                                    <p className="font-medium text-textColor-primary mt-1">{transaction.supplier_contact}</p>
-                                </div>
-                                <div>
-                                    <p className="text-sm text-textColor-tertiary">Location</p>
-                                    <p className="font-medium text-textColor-primary mt-1">{transaction.supplier_location}</p>
-                                </div>
-                                <div>
-                                    <p className="text-sm text-textColor-tertiary">Remarks</p>
-                                    <p className="font-medium text-textColor-primary mt-1">{transaction.remarks || "No remarks"}</p>
-                                </div> 
-							*/}
 						</section>
 					</div>
 				) : (
