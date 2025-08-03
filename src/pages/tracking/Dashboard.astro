@@ -11,6 +11,9 @@ const quickSummaryData = [
 
 // Icons for Quick Summary (defined in component, not in data)
 const summaryIcons = ["🏭", "📦", "📥", "🔄"];
+const baseURL = import.meta.env.SITE || 'http://localhost:4321'; // fallback to local dev
+const response = await fetch(`${baseURL}/api/tracking/warehouse-storage?page=1&limit=5`);
+const { data: warehouseItems = [] } = await response.json();
 ---
 
 <!-- TRACKING DASHBOARD -->
@@ -78,30 +81,24 @@ const summaryIcons = ["🏭", "📦", "📥", "🔄"];
 
     <!-- Table Rows -->
     <div class="divide-y divide-border_color">
-      <div class="grid grid-cols-4 py-4 text-center text-lg">
-        <div class="w-full min-w-0">A2B1</div>
-        <div class="w-full min-w-0">Sardines</div>
-        <div class="w-full min-w-0">120</div>
-        <div class="w-full min-w-0 font-semibold text-base">Canned Goods</div>
-      </div>
-      <div class="grid grid-cols-4 py-4 text-center text-lg">
-        <div class="w-full min-w-0">B4B1</div>
-        <div class="w-full min-w-0">PS4</div>
-        <div class="w-full min-w-0">30</div>
-        <div class="w-full min-w-0 font-semibold text-base">Console</div>
-      </div>
-      <div class="grid grid-cols-4 py-4 text-center text-lg">
-        <div class="w-full min-w-0">C1A1</div>
-        <div class="w-full min-w-0">T-shirt</div>
-        <div class="w-full min-w-0">1000</div>
-        <div class="w-full min-w-0 font-semibold text-base">Clothes</div>
-      </div>
-      <div class="grid grid-cols-4 py-4 text-center text-lg">
-        <div class="w-full min-w-0">A2B1</div>
-        <div class="w-full min-w-0">Sardines</div>
-        <div class="w-full min-w-0">120</div>
-        <div class="w-full min-w-0 font-semibold text-base">Canned Goods</div>
-      </div>
+      {warehouseItems.map(item => (
+        <div class="grid grid-cols-4 py-4 text-center text-lg">
+          <div class="w-full min-w-0">{item.items?.sku}</div>
+          <div class="w-full min-w-0">{item.items?.name}</div>
+          <div class="w-full min-w-0">{item.quantity}</div>
+          <div class="w-full min-w-0 font-semibold text-base">{item.items?.category?.name}</div>
+        </div>
+      ))}
+
+      {/* Empty rows to make it always 5 */}
+      {Array.from({ length: Math.max(0, 5 - warehouseItems.length) }).map(() => (
+        <div class="grid grid-cols-4 py-4 text-center text-lg text-transparent">
+          <div class="w-full min-w-0">-</div>
+          <div class="w-full min-w-0">-</div>
+          <div class="w-full min-w-0">-</div>
+          <div class="w-full min-w-0">-</div>
+        </div>
+      ))}
     </div>
   </div>
 
