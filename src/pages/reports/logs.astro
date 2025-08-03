@@ -94,43 +94,8 @@ import PurchaseOrderLogs from '../../components/reports/logs.jsx';
                 </div>
             </div>
             
-            <div class="h-full overflow-y-auto">
-                <PurchaseOrderLogs client:load />
-            </div>
-            
-            <!-- Pagination -->
-            <div id="paginationContainer" class="flex justify-between items-center pt-6 border-1gs border-gray-800 flex-shrink-0 hidden">
-                <div id="paginationInfo" class="text-textColor-tertiary text-sm">
-                    Showing 1-10 of 0 purchase orders
-                </div>
-                
-                <div class="flex items-center gap-1">
-                    <!-- Previous Button -->
-                    <button id="prevPageBtn" class="p-2 rounded-md text-textColor-primary hover:bg-gray-700 transition-colors" title="Previous Page">
-                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5">
-                            <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 19.5 8.25 12l7.5-7.5" />
-                        </svg>
-                    </button>
-
-                    <!-- Page Numbers Container -->
-                    <div id="pageNumbers" class="flex items-center gap-1">
-                        <!-- Page numbers will be inserted here dynamically -->
-                    </div>
-
-                    <!-- Next Button -->
-                    <button id="nextPageBtn" class="p-2 rounded-md text-textColor-primary hover:bg-gray-700 transition-colors" title="Next Page">
-                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5">
-                            <path stroke-linecap="round" stroke-linejoin="round" d="m8.25 4.5 7.5 7.5-7.5 7.5" />
-                        </svg>
-                    </button>
-                    
-                    <!-- Last Page Button -->
-                    <button id="lastPageBtn" class="p-2 rounded-md text-textColor-primary hover:bg-gray-700 transition-colors" title="Last Page">
-                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5">
-                            <path stroke-linecap="round" stroke-linejoin="round" d="m5.25 4.5 7.5 7.5-7.5 7.5m6-15 7.5 7.5-7.5 7.5" />
-                        </svg>
-                    </button>
-                </div>
+            <div class="flex-1 overflow-hidden flex flex-col min-h-0">
+                <PurchaseOrderLogs client:only="react" />
             </div>
         </div>
     </div>

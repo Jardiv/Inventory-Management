@@ -34,43 +34,20 @@ export async function GET({ request }: { request: Request }) {
                 });
             }
 
-            // Generate dynamic inventory data with prioritized critical items
-            const inventoryStock = inventoryData.map((item, index) => {
-                const minimum = item.min_quantity || Math.floor(Math.random() * 50) + 10;
+            // Process inventory data using actual quantities
+            const inventoryStock = inventoryData.map(item => {
+                const minimum = item.min_quantity || 0;
                 
-                // Prioritize critical conditions (40% chance of critical status)
-                const shouldBeCritical = Math.random() < 0.4;
-                let current: number;
+                // Calculate actual current quantity from warehouse_items
+                const current = item.warehouse_items?.reduce((sum, wi) => sum + (wi.quantity || 0), 0) || 0;
                 
-                if (shouldBeCritical) {
-                    // Generate critical scenarios more frequently
-                    const criticalType = Math.random();
-                    if (criticalType < 0.3) {
-                        current = 0; // Out of stock
-                    } else if (criticalType < 0.7) {
-                        current = Math.floor(Math.random() * minimum); // Low stock
-                    } else {
-                        current = minimum + Math.floor(Math.random() * 20); // Just above minimum
-                    }
-                } else {
-                    // Normal stock levels with some variation
-                    current = minimum + Math.floor(Math.random() * 200) + 10;
-                }
-                
-                // Add some time-based variation to make data feel more dynamic
-                const timeVariation = Math.sin(Date.now() / 100000 + index) * 10;
-                current = Math.max(0, Math.floor(current + timeVariation));
-                
-                // Determine status and color
+                // Determine status based on actual quantities
                 let status = 'Normal';
-                let statusColor = 'text-green-400';
                 
                 if (current === 0) {
                     status = 'Out of Stock';
-                    statusColor = 'text-red-400';
                 } else if (current <= minimum) {
                     status = 'Low Stock';
-                    statusColor = 'text-yellow-400';
                 }
 
                 return {
@@ -78,8 +55,7 @@ export async function GET({ request }: { request: Request }) {
                     itemName: item.name || `Item ${item.id}`,
                     current: current,
                     minimum: minimum,
-                    status: status,
-                    statusColor: statusColor
+                    status: status
                 };
             });
 
@@ -105,50 +81,33 @@ export async function GET({ request }: { request: Request }) {
                 });
             }
 
-            // Generate dynamic warehouse capacity data with prioritized critical conditions
+            // Get actual warehouse utilization data
             const warehouseCapacity = await Promise.all(
-                warehouseData.map(async (warehouse, index) => {
-                    const maxCapacity = warehouse.max_capacity || Math.floor(Math.random() * 1000) + 500;
+                warehouseData.map(async (warehouse) => {
+                    const maxCapacity = warehouse.max_capacity || 0;
                     
-                    // Prioritize high utilization scenarios (35% chance of critical status)
-                    const shouldBeCritical = Math.random() < 0.35;
-                    let used: number;
-                    
-                    if (shouldBeCritical) {
-                        // Generate high utilization scenarios more frequently
-                        const criticalType = Math.random();
-                        if (criticalType < 0.25) {
-                            used = maxCapacity; // Completely full
-                        } else if (criticalType < 0.5) {
-                            used = Math.floor(maxCapacity * (0.90 + Math.random() * 0.1)); // 90-100%
-                        } else if (criticalType < 0.75) {
-                            used = Math.floor(maxCapacity * (0.75 + Math.random() * 0.15)); // 75-90%
-                        } else {
-                            used = Math.floor(maxCapacity * (0.50 + Math.random() * 0.25)); // 50-75%
-                        }
-                    } else {
-                        // Normal utilization levels
-                        used = Math.floor(maxCapacity * Math.random() * 0.6); // 0-60%
-                    }
-                    
-                    // Add time-based variation for dynamic feel
-                    const timeVariation = Math.sin(Date.now() / 120000 + index * 2) * (maxCapacity * 0.05);
-                    used = Math.max(0, Math.min(maxCapacity, Math.floor(used + timeVariation)));
+                    // Get actual used capacity by summing all warehouse_items quantities for this warehouse
+                    const { data: warehouseItems, error: itemsError } = await supabase
+                        .from("warehouse_items")
+                        .select("quantity")
+                        .eq("warehouse_id", warehouse.id);
 
-                    // Calculate metrics
+                    if (itemsError) {
+                        console.error('Warehouse items query error:', itemsError);
+                        // Continue with zero if error
+                    }
+
+                    const used = warehouseItems?.reduce((sum, item) => sum + (item.quantity || 0), 0) || 0;
                     const available = Math.max(0, maxCapacity - used);
                     const utilization = maxCapacity > 0 ? Math.round((used / maxCapacity) * 100) : 0;
 
-                    // Determine status based on utilization
+                    // Determine status based on actual utilization
                     let status = 'Available';
-                    let statusColor = 'text-green-400';
                     
                     if (utilization >= 100) {
                         status = 'Full';
-                        statusColor = 'text-red-400';
                     } else if (utilization >= 90) {
                         status = 'Critical';
-                        statusColor = 'text-red-400';
                     }
 
                     return {
@@ -157,8 +116,7 @@ export async function GET({ request }: { request: Request }) {
                         used: used,
                         available: available,
                         utilization: utilization,
-                        status: status,
-                        statusColor: statusColor
+                        status: status
                     };
                 })
             );
@@ -189,61 +147,34 @@ export async function GET({ request }: { request: Request }) {
                 });
             }
 
-            // Generate dynamic low stock items with prioritized critical scenarios
+            // Process low stock items using actual quantities
             const lowStockItems = lowStockAllData
-                .map((item, index) => {
-                    const minimum = item.min_quantity || Math.floor(Math.random() * 50) + 10;
+                .map(item => {
+                    const minimum = item.min_quantity || 0;
                     
-                    // Force more items to be in low stock condition for visibility (60% chance)
-                    const shouldBeLowStock = Math.random() < 0.6;
-                    let current: number;
+                    // Calculate actual current quantity from warehouse_items
+                    const current = item.warehouse_items?.reduce((sum, wi) => sum + (wi.quantity || 0), 0) || 0;
                     
-                    if (shouldBeLowStock) {
-                        // Generate critical scenarios
-                        const criticalType = Math.random();
-                        if (criticalType < 0.4) {
-                            current = 0; // Out of stock
-                        } else if (criticalType < 0.8) {
-                            current = Math.floor(Math.random() * minimum); // Low stock
-                        } else {
-                            current = minimum; // Exactly at minimum
-                        }
-                    } else {
-                        // Some items above minimum but close to it
-                        current = minimum + Math.floor(Math.random() * 10);
-                    }
-                    
-                    // Add time-based variation
-                    const timeVariation = Math.sin(Date.now() / 90000 + index * 3) * 5;
-                    current = Math.max(0, Math.floor(current + timeVariation));
-                    
-                    // Only include items that are low stock or out of stock
+                    // Only include items that are actually low stock or out of stock
                     if (current <= minimum) {
-                        // Calculate suggested order quantity with some randomization
-                        const baseOrder = current === 0 ? Math.max(minimum * 2, 100) : minimum * 1.5;
-                        const toOrder = Math.floor(baseOrder + (Math.random() * 50));
+                        // Calculate suggested order quantity
+                        const toOrder = current === 0 ? Math.max(minimum * 2, 100) : minimum - current + minimum;
                         
-                        // Determine status and color
+                        // Determine status
                         let status = 'Low Stock';
-                        let statusColor = 'text-yellow-400';
                         
                         if (current === 0) {
                             status = 'Out of Stock';
-                            statusColor = 'text-red-400';
-                        } else if (current <= minimum * 0.3) {
-                            status = 'Critical Low';
-                            statusColor = 'text-red-400';
                         }
 
                         return {
                             id: item.id,
-                            itemCode: item.sku || `SKU-${item.id}`,
+                            itemCode: item.sku || `ITEM-${item.id}`,
                             itemName: item.name || `Item ${item.id}`,
                             current: current,
                             minimum: minimum,
                             toOrder: toOrder,
-                            status: status,
-                            statusColor: statusColor
+                            status: status
                         };
                     }
                     return null;
