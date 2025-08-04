@@ -85,13 +85,9 @@ export const GET: APIRoute = async ({ url }) => {
       })
       // Filter to only show low stock and out of stock items
       .filter(item => item.status === 'Low' || item.status === 'Out of stock');
-
-    console.log(`Total items: ${allItems.length}, Low stock items: ${allLowStockItems.length}`);
     
     // If no low stock items found, return empty result
     if (allLowStockItems.length === 0) {
-      console.log('No low stock items found.');
-      
       return new Response(JSON.stringify({
         success: true,
         data: [],

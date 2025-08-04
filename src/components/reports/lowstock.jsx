@@ -265,6 +265,9 @@ const LowStockTable = ({ currentPage = 1 }) => {
             console.log('Starting purchase order generation...');
             console.log('Items to process:', purchaseOrderSummary.items.length);
             
+            // Add a small delay to ensure UI updates
+            await new Promise(resolve => setTimeout(resolve, 100));
+            
             const response = await fetch('/api/reports/generate-purchase-order', {
                 method: 'POST',
                 headers: {
@@ -279,6 +282,8 @@ const LowStockTable = ({ currentPage = 1 }) => {
             });
 
             if (!response.ok) {
+                const errorText = await response.text();
+                console.error(`HTTP error! status: ${response.status}, response: ${errorText}`);
                 throw new Error(`HTTP error! status: ${response.status}`);
             }
 
@@ -321,8 +326,10 @@ const LowStockTable = ({ currentPage = 1 }) => {
             }
             
             // Check if it's a duplicate key error and provide helpful guidance
-            if (errorMessage.includes('duplicate key') || errorMessage.includes('Duplicate key')) {
-                alert(`Error generating purchase order: Database constraint error\n\nThis might be due to:\n- Clicking the button multiple times\n- Network issues causing duplicate requests\n- Concurrent purchase order generation\n\nPlease wait a moment and try again. If the issue persists, check the Reports > Logs to see if the purchase order was actually created.`);
+            if (errorMessage.includes('duplicate key') || errorMessage.includes('Duplicate key') || errorMessage.includes('23505')) {
+                alert(`Error generating purchase order: Database constraint error\n\nThis might be due to:\n- Clicking the button multiple times quickly\n- Network issues causing duplicate requests\n- High system load causing timing conflicts\n\nThe purchase order may have been created successfully. Please:\n1. Check Reports > Logs to see if it was created\n2. Wait 10-15 seconds before trying again\n3. Refresh the page if the issue persists\n\nIf you continue to have issues, please contact your system administrator.`);
+            } else if (errorMessage.includes('HTTP error')) {
+                alert(`Network error generating purchase order.\n\nThis might be due to:\n- Slow internet connection\n- Server timeout\n- High server load\n\nPlease:\n1. Check your internet connection\n2. Wait a moment and try again\n3. Check Reports > Logs to see if the order was created\n\nError details: ${errorMessage}`);
             } else {
                 alert(`Error generating purchase order: ${errorMessage}\n\nPlease check the browser console for more details and try again.`);
             }

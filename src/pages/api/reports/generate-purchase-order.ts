@@ -103,6 +103,26 @@ export const POST: APIRoute = async ({ request }) => {
 
     console.log('🔨 Generating purchase order:', { invoiceNo, itemCount: items.length, totalAmount, source });
 
+    // Get the current maximum ID from transactions table to avoid duplicates
+    let nextTransactionId = 1;
+    try {
+      const { data: maxIdResult, error: maxIdError } = await supabase
+        .from('transactions')
+        .select('id')
+        .order('id', { ascending: false })
+        .limit(1)
+        .single();
+
+      if (!maxIdError && maxIdResult) {
+        nextTransactionId = maxIdResult.id + 1;
+        console.log(`🔍 Found max transaction ID: ${maxIdResult.id}, next will be: ${nextTransactionId}`);
+      } else {
+        console.log('🔍 No existing transactions found, starting from ID 1');
+      }
+    } catch (idError) {
+      console.log('⚠️  Could not fetch max ID, starting from 1:', idError);
+    }
+
     // Create transactions for each item sequentially to avoid conflicts
     const transactions = [];
     
@@ -115,6 +135,12 @@ export const POST: APIRoute = async ({ request }) => {
       while (!success && attempts < maxAttempts) {
         try {
           attempts++;
+          
+          // Add a small random delay to prevent concurrent request collisions
+          if (attempts === 1) {
+            await new Promise(resolve => setTimeout(resolve, Math.random() * 100));
+          }
+          
           console.log(`🔨 Processing item ${i + 1}/${items.length}:`, { id: item.id, sku: item.sku, quantity: item.quantity, attempt: attempts });
           
           // Find a supplier for this item
@@ -137,21 +163,33 @@ export const POST: APIRoute = async ({ request }) => {
             }
           }
 
-          // Create unique invoice number for each attempt
+          // Create more unique invoice number for each attempt and item
           let currentInvoiceNo = invoiceNo;
           if (attempts > 1) {
             const retryTimestamp = Date.now();
-            const retryRandomSuffix = Math.random().toString(36).substring(2, 4).toUpperCase();
-            currentInvoiceNo = `PO-${timestamp}-${retryRandomSuffix}-${retryTimestamp}`;
+            const retryRandomSuffix = Math.random().toString(36).substring(2, 5).toUpperCase();
+            const attemptId = Math.random().toString(36).substring(2, 3).toUpperCase();
+            currentInvoiceNo = `PO-${timestamp}-${retryRandomSuffix}-${attemptId}-${retryTimestamp}`;
+          } else {
+            // Even for first attempt, make each item's invoice slightly unique
+            const itemSuffix = Math.random().toString(36).substring(2, 2).toUpperCase();
+            currentInvoiceNo = `${invoiceNo}-${i}${itemSuffix}`;
           }
 
-          // Create transaction record (DO NOT specify an id - let the database auto-generate it)
+          // Create a unique transaction datetime for each item to prevent conflicts
+          const uniqueTransactionDateTime = new Date(Date.now() + i * 10 + Math.random() * 5).toISOString();
+
+          // Calculate the ID for this transaction (max ID + current item index + 1)
+          const currentTransactionId = nextTransactionId + i;
+
+          // Create transaction record with explicit ID to avoid auto-increment conflicts
           const transactionData = {
+            id: currentTransactionId,  // Explicitly set the ID
             invoice_no: currentInvoiceNo,
             item_id: item.id,
             quantity: item.quantity,
             total_price: item.totalPrice,
-            transaction_datetime: transactionDateTime,
+            transaction_datetime: uniqueTransactionDateTime,
             transaction_type_id: transactionType.id,
             supplier_id: supplierId,
             source: source.trim(),
@@ -160,23 +198,42 @@ export const POST: APIRoute = async ({ request }) => {
             expiration_date: null
           };
 
-          console.log(`Transaction data for item ${item.sku}:`, transactionData);
+          console.log(`Transaction data for item ${item.sku} with ID ${currentTransactionId}:`, transactionData);
 
-          // Insert transaction
+          // Insert transaction using a more reliable approach
           const { data, error } = await supabase
             .from('transactions')
-            .insert(transactionData)
-            .select('*')
-            .single();
+            .insert([transactionData])  // Use array format for better compatibility
+            .select('*');
 
           if (error) {
             console.error(`❌ Error creating transaction for item ${item.sku} (attempt ${attempts}):`, error);
             
-            // If it's a duplicate key error and we have attempts left, try again
+            // If it's a duplicate key error and we have attempts left, try again with a new ID
             if ((error.code === '23505' || error.message.includes('duplicate key')) && attempts < maxAttempts) {
               console.log(`🔄 Retrying transaction for item ${item.sku} due to duplicate key error`);
-              // Add a delay before retry
-              await new Promise(resolve => setTimeout(resolve, 500 + (attempts * 200)));
+              
+              // Update the transaction ID for the retry - find the new max ID
+              try {
+                const { data: newMaxIdResult, error: newMaxIdError } = await supabase
+                  .from('transactions')
+                  .select('id')
+                  .order('id', { ascending: false })
+                  .limit(1)
+                  .single();
+
+                if (!newMaxIdError && newMaxIdResult) {
+                  nextTransactionId = newMaxIdResult.id + 1;
+                  console.log(`🔄 Updated next transaction ID to: ${nextTransactionId}`);
+                }
+              } catch (updateIdError) {
+                console.log('⚠️ Could not update max ID, incrementing by 10:', updateIdError);
+                nextTransactionId += 10; // Fallback: add a larger increment
+              }
+              
+              // Add a random delay between 100-1000ms to reduce collision chances
+              const delay = 100 + Math.random() * 900 + (attempts * 300);
+              await new Promise(resolve => setTimeout(resolve, delay));
               continue; // Try again
             }
             
@@ -184,14 +241,20 @@ export const POST: APIRoute = async ({ request }) => {
             if (error.code === '23503') {
               throw new Error(`Foreign key constraint violated for item ${item.sku}. Invalid item_id (${item.id}) or transaction_type_id (${transactionType.id}).`);
             } else if (error.code === '23505') {
-              throw new Error(`Unable to create unique transaction for item ${item.sku} after ${attempts} attempts. Please try again later.`);
+              throw new Error(`Unable to create unique transaction for item ${item.sku} after ${attempts} attempts. Database sequence may be out of sync. Please try again later or contact administrator.`);
             } else {
               throw new Error(`Database error for item ${item.sku}: ${error.message}`);
             }
           }
 
-          console.log(`✅ Transaction created successfully for item ${item.sku}:`, data.id);
-          transactions.push(data);
+          // Check if we got data back
+          if (!data || data.length === 0) {
+            throw new Error(`No transaction data returned for item ${item.sku}`);
+          }
+
+          const insertedTransaction = data[0];
+          console.log(`✅ Transaction created successfully for item ${item.sku} with ID: ${insertedTransaction.id}`);
+          transactions.push(insertedTransaction);
           success = true;
 
         } catch (itemError) {
@@ -208,6 +271,24 @@ export const POST: APIRoute = async ({ request }) => {
           }
         }
       }
+    }
+
+    // Update the database sequence to be in sync with our manually set IDs
+    try {
+      const finalMaxId = Math.max(...transactions.map(t => t.id));
+      const { error: seqError } = await supabase.rpc('setval', {
+        sequence_name: 'transactions_id_seq',
+        new_value: finalMaxId,
+        is_called: true
+      });
+      
+      if (seqError) {
+        console.log('⚠️ Could not update sequence (non-critical):', seqError);
+      } else {
+        console.log(`🔧 Updated sequence to ${finalMaxId}`);
+      }
+    } catch (seqUpdateError) {
+      console.log('⚠️ Sequence update failed (non-critical):', seqUpdateError);
     }
 
     console.log('✅ Purchase order generated successfully:', { 

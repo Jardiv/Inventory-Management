@@ -334,7 +334,6 @@ import Layout from '../../layouts/Layout.astro';
 
         applyFiltersBtn.addEventListener('click', () => {
             // Apply filter logic here
-            console.log('Applying filters...');
             filterModal.classList.add('hidden');
             filterModal.classList.remove('flex');
         });
@@ -387,7 +386,6 @@ import Layout from '../../layouts/Layout.astro';
                 }
                 
                 // Apply sorting logic here
-                console.log(`Sorting by ${column} in ${currentSort.direction} order`);
                 sortTable(column, currentSort.direction);
             });
         });
