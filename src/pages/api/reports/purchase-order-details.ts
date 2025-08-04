@@ -15,11 +15,7 @@ export const GET: APIRoute = async ({ url }) => {
     const urlParams = new URLSearchParams(url.search);
     const transactionId = urlParams.get('id');
 
-    console.log('=== Purchase Order Details API ===');
-    console.log('Requested transaction ID:', transactionId);
-
     if (!transactionId) {
-      console.log('❌ No transaction ID provided');
       return new Response(JSON.stringify({
         success: false,
         error: 'Transaction ID is required'
@@ -30,7 +26,6 @@ export const GET: APIRoute = async ({ url }) => {
     }
 
     // Get the main transaction details
-    console.log('🔍 Querying transaction with ID:', transactionId);
     
     // First, let's see if the transaction exists at all
     const { data: anyTransaction, error: anyError } = await supabase
@@ -47,8 +42,6 @@ export const GET: APIRoute = async ({ url }) => {
       `)
       .eq('id', transactionId);
 
-    console.log('📊 Any transaction query result:', { anyTransaction, anyError });
-
     // Now try the specific query for Purchase Orders
     const { data: transactionData, error: transactionError } = await supabase
       .from('transactions')
@@ -64,8 +57,6 @@ export const GET: APIRoute = async ({ url }) => {
       .eq('id', transactionId)
       .eq('transaction_type_id', 1) // Ensure it's a Purchase Order
       .single();
-
-    console.log('📊 Purchase Order query result:', { transactionData, transactionError });
 
     if (transactionError) {
       console.error('❌ Transaction error:', transactionError);
@@ -103,8 +94,6 @@ export const GET: APIRoute = async ({ url }) => {
       `)
       .eq('invoice_no', transactionData.invoice_no)
       .eq('transaction_type_id', 1);
-
-    console.log('📊 Related transactions:', { relatedTransactions, relatedError });
 
     if (!relatedError && relatedTransactions && relatedTransactions.length > 0) {
       // Create product details from transaction data

@@ -58,8 +58,6 @@ export async function GET() {
         let outOfStock = 0;
         let totalStockItems = 0;
 
-        console.log('Debug: Processing', allItems.length, 'items');
-
         allItems.forEach((item) => {
             // Sum up quantities from all warehouses for this item
             let current = 0;
@@ -72,23 +70,14 @@ export async function GET() {
             totalStockItems += current;
             const minimum = item.min_quantity || 0;
             
-            // Debug log for each item
-            console.log(`Item: ${item.name}, Current: ${current}, Minimum: ${minimum}`);
-            
             // Check stock status - separate low stock from out of stock (same logic as lowstock.ts)
             if (current === 0) {
                 outOfStock++;
-                console.log(`  -> Out of Stock`);
             } else if (current <= minimum) {
                 // Only count as low stock if not out of stock (current > 0)
                 lowStock++;
-                console.log(`  -> Low Stock (${current} <= ${minimum})`);
-            } else {
-                console.log(`  -> Normal Stock (${current} > ${minimum})`);
             }
         });
-
-        console.log('Final counts - Low Stock:', lowStock, 'Out of Stock:', outOfStock);
 
         const summaryData = [
             { label: "Total Items", value: totalItems?.toString() || "0", color: "text-blue" },
