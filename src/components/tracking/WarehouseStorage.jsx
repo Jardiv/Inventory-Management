@@ -12,7 +12,9 @@ export default function WarehouseStorage({ initialItems, total, limit, page }) {
 
 
   const currentPage = page || 1;
-  const totalPages = Math.ceil((total || 0) / (limit || 10));
+  const [filteredTotal, setFilteredTotal] = useState(total || 0);
+  const totalPages = Math.ceil(filteredTotal / limit);
+
 
   useEffect(() => {
     const fetchWarehouses = async () => {
@@ -39,6 +41,7 @@ export default function WarehouseStorage({ initialItems, total, limit, page }) {
         const res = await fetch(`/api/tracking/warehouse-storage?page=${page}&limit=${limit}&warehouse_id=${selectedWarehouse}`);
         const result = await res.json();
         setItems(result.data || []);
+        setFilteredTotal(result.count || 0); // 👈 this now uses count from your API
       } catch (err) {
         console.error("Error fetching items", err);
       } finally {
@@ -205,7 +208,9 @@ export default function WarehouseStorage({ initialItems, total, limit, page }) {
       {/* Pagination UI */}
       <div className="flex justify-between items-center border-t border-border_color pt-4 mt-4">
         <div>
-          Showing <span className="font-medium">{(page - 1) * limit + 1}</span>-<span className="font-medium">{Math.min(page * limit, total)}</span> of <span className="font-medium">{total}</span> products
+          Showing <span className="font-medium">{(page - 1) * limit + 1}</span>–
+          <span className="font-medium">{Math.min(page * limit, filteredTotal)}</span> of{' '}
+          <span className="font-medium">{filteredTotal}</span> products
         </div>
         <nav className="flex items-center gap-1">
           {page > 1 && (
