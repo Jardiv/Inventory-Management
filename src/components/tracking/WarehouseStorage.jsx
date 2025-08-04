@@ -1,11 +1,6 @@
 import { useEffect, useState } from 'react';
 
 
-const warehouseList = [
-  { id: '1', name: 'Warehouse 1' },
-  { id: '2', name: 'Warehouse 2' },
-  { id: '3', name: 'Warehouse 3' }
-];
 
 
 export default function WarehouseStorage({ initialItems, total, limit, page }) {
@@ -25,6 +20,10 @@ export default function WarehouseStorage({ initialItems, total, limit, page }) {
         const res = await fetch('/api/tracking/warehouses');
         const result = await res.json();
         setWarehouseList(result.data || []);
+        
+        if (result.data && result.data.length > 0) {
+          setSelectedWarehouse(result.data[0].id); // Set the first warehouse as default
+        }
       } catch (err) {
         console.error("Error fetching warehouses", err);
       }
@@ -68,7 +67,6 @@ export default function WarehouseStorage({ initialItems, total, limit, page }) {
               }}
               className="flex items-center gap-2 px-4 py-2 border border-transparent rounded hover:border-btn-hover transition"
             >
-              <span>Select Warehouse</span>
               <svg xmlns="http://www.w3.org/2000/svg" className="size-6" fill="currentColor" viewBox="0 0 24 24">
                 <path
                   fillRule="evenodd"
@@ -77,7 +75,7 @@ export default function WarehouseStorage({ initialItems, total, limit, page }) {
                 />
               </svg>
             </button>
-            <div id="warehouse-dropdown" className="hidden absolute left-1/2 -translate-x-1/2 mt-2 bg-primary border border-border_color rounded shadow-md z-10 w-[130px]">
+            <div id="warehouse-dropdown" className="hidden absolute left-1/2 -translate-x-1/2 mt-2 bg-primary border border-border_color rounded shadow-md z-10 w-[200px] max-h-[200px] overflow-y-auto">
               <ul className="py-1 text-sm text-textColor-primary text-left">
                 {warehouseList.map(w => (
                   <li key={w.id}>
