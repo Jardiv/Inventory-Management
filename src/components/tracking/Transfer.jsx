@@ -121,30 +121,79 @@ const TransferList = () => {
       </div>
 
       {/* Pagination */}
-      <div className="flex justify-between items-center border-t border-border_color pt-4 mt-4 text-sm text-gray-700">
+      <div className="flex justify-between items-center border-t border-border_color pt-4 mt-4">
         <div>
           Showing <span className="font-medium">{(currentPage - 1) * 10 + 1}</span>–
           <span className="font-medium">{Math.min(currentPage * 10, totalCount)}</span> of
           <span className="font-medium"> {totalCount} </span> transfers
         </div>
         <nav className="flex items-center gap-1">
-          <button onClick={() => setCurrentPage((p) => Math.max(p - 1, 1))} className="px-2 py-1 text-gray-500 hover:text-gray-700">
-            <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2"><path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" /></svg>
-          </button>
-
-          {Array.from({ length: totalPages }).map((_, i) => (
+          {currentPage > 1 && (
             <button
-              key={i}
-              onClick={() => setCurrentPage(i + 1)}
-              className={`px-3 py-1.5 rounded-lg font-medium ${currentPage === i + 1 ? 'bg-[#8A00C4] text-white' : 'text-gray-700 hover:bg-gray-100'}`}
+              onClick={() => setCurrentPage(currentPage - 1)}
+              className="px-2 py-1 hover:text-gray-700 flex items-center justify-center rounded-full"
             >
-              {i + 1}
+              <svg
+                className="w-4 h-4"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                viewBox="0 0 24 24"
+              >
+                <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
+              </svg>
             </button>
-          ))}
+          )}
 
-          <button onClick={() => setCurrentPage((p) => Math.min(p + 1, totalPages))} className="px-2 py-1 text-gray-500 hover:text-gray-700">
-            <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2"><path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" /></svg>
-          </button>
+          {Array.from({ length: totalPages }).map((_, i) => {
+            const page = i + 1;
+            if (
+              page === 1 ||
+              page === totalPages ||
+              Math.abs(page - currentPage) <= 1
+            ) {
+              return (
+                <button
+                  key={page}
+                  onClick={() => setCurrentPage(page)}
+                  className={`px-3 py-1.5 rounded-lg transition-colors duration-200 ${
+                    currentPage === page
+                      ? "bg-[#8A00C4] font-medium text-white"
+                      : "hover:bg-tbl-hover hover:text-[#8A00C4] text-textColor-primary"
+                  }`}
+                >
+                  {page}
+                </button>
+              );
+            } else if (
+              (page === currentPage - 2 && page !== 1) ||
+              (page === currentPage + 2 && page !== totalPages)
+            ) {
+              return (
+                <span key={`ellipsis-${page}`} className="px-2 py-1">
+                  ...
+                </span>
+              );
+            }
+            return null;
+          })}
+
+          {currentPage < totalPages && (
+            <button
+              onClick={() => setCurrentPage(currentPage + 1)}
+              className="px-2 py-1 hover:text-gray-700 flex items-center justify-center rounded-full"
+            >
+              <svg
+                className="w-4 h-4"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                viewBox="0 0 24 24"
+              >
+                <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
+              </svg>
+            </button>
+          )}
         </nav>
       </div>
 

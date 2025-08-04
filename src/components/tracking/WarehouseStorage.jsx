@@ -9,20 +9,55 @@ const warehouseList = [
 
 
 export default function WarehouseStorage({ initialItems, total, limit, page }) {
-  const [items] = useState(initialItems);
+  const [items, setItems] = useState(initialItems);
+  const [selectedWarehouse, setSelectedWarehouse] = useState('1'); // default to 'Warehouse 1'
+  const [loading, setLoading] = useState(false);
   const [showModal, setShowModal] = useState(false);
+  const [warehouseList, setWarehouseList] = useState([]);
+
 
   const currentPage = page || 1;
   const totalPages = Math.ceil((total || 0) / (limit || 10));
-  
-  
+
+  useEffect(() => {
+    const fetchWarehouses = async () => {
+      try {
+        const res = await fetch('/api/tracking/warehouses');
+        const result = await res.json();
+        setWarehouseList(result.data || []);
+      } catch (err) {
+        console.error("Error fetching warehouses", err);
+      }
+    };
+
+    fetchWarehouses();
+  }, []);
+
+  useEffect(() => {
+    const fetchItems = async () => {
+      setLoading(true);
+      try {
+        const res = await fetch(`/api/tracking/warehouse-storage?page=${page}&limit=${limit}&warehouse_id=${selectedWarehouse}`);
+        const result = await res.json();
+        setItems(result.data || []);
+      } catch (err) {
+        console.error("Error fetching items", err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchItems();
+  }, [selectedWarehouse, page]);
 
   return (
     <div>
       {/* Top Bar with Buttons */}
       <div className="flex justify-between items-center mb-6">
         <div className="flex gap-4 items-center">
-          <h2 className="text-2xl font-semibold">Warehouse 1</h2>
+          <h2 className="text-2xl font-semibold">
+            {warehouseList.find(w => w.id === selectedWarehouse)?.name}
+          </h2>
 
           {/* Select Warehouse */}
           <div className="relative">
@@ -44,9 +79,19 @@ export default function WarehouseStorage({ initialItems, total, limit, page }) {
             </button>
             <div id="warehouse-dropdown" className="hidden absolute left-1/2 -translate-x-1/2 mt-2 bg-primary border border-border_color rounded shadow-md z-10 w-[130px]">
               <ul className="py-1 text-sm text-textColor-primary text-left">
-                <li><a href="#" className="block px-4 py-2 hover:bg-btn-hover">Warehouse 1</a></li>
-                <li><a href="#" className="block px-4 py-2 hover:bg-btn-hover">Warehouse 2</a></li>
-                <li><a href="#" className="block px-4 py-2 hover:bg-btn-hover">Warehouse 3</a></li>
+                {warehouseList.map(w => (
+                  <li key={w.id}>
+                    <button
+                      onClick={() => {
+                        setSelectedWarehouse(w.id);
+                        document.getElementById('warehouse-dropdown')?.classList.add('hidden');
+                      }}
+                      className="block w-full text-left px-4 py-2 hover:bg-btn-hover"
+                    >
+                      {w.name}
+                    </button>
+                  </li>
+                ))}
               </ul>
             </div>
           </div>
@@ -69,44 +114,7 @@ export default function WarehouseStorage({ initialItems, total, limit, page }) {
             Add Warehouse
           </button>
 
-          {/* Filter Button */}
-          <div className="relative inline-block text-center">
-            <button
-              onClick={() => {
-                const dropdown = document.getElementById('filter-dropdown');
-                dropdown?.classList.toggle('hidden');
-              }}
-              className="bg-primary text-secondary rounded px-4 py-3 text-sm hover:text-textColor-secondary hover:bg-violet-600 w-[60px]"
-            >
-              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none"
-                stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-                <line x1="3" y1="6" x2="21" y2="6" />
-                <line x1="6" y1="12" x2="18" y2="12" />
-                <line x1="9" y1="18" x2="15" y2="18" />
-              </svg>
-            </button>
-
-            <div
-              id="filter-dropdown"
-              className="hidden absolute left-1/2 -translate-x-1/2 mt-2 bg-primary border border-border_color rounded shadow-md z-10 w-[130px]"
-            >
-              <ul className="py-1 text-sm text-textColor-primary text-left">
-                <li><a href="#" className="block px-4 py-2 hover:bg-btn-hover">Received</a></li>
-                <li><a href="#" className="block px-4 py-2 hover:bg-btn-hover">Delivered</a></li>
-                <li><a href="#" className="block px-4 py-2 hover:bg-btn-hover">Pending</a></li>
-              </ul>
-            </div>
-          </div>
-
-          {/* Cancel Button */}
-          <a href="/tracking/Dashboard">
-            <button className="bg-primary text-secondary rounded px-4 py-3 text-sm hover:text-textColor-secondary hover:bg-violet-600 w-[60px]">
-              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
-                strokeWidth="1.5" stroke="currentColor" className="w-5 h-5 mx-auto">
-                <path strokeLinecap="round" strokeLinejoin="round" d="M6 18 18 6M6 6l12 12" />
-              </svg>
-            </button>
-          </a>
+          {/* Other Buttons */}
         </div>
       </div>
 
@@ -117,15 +125,21 @@ export default function WarehouseStorage({ initialItems, total, limit, page }) {
             <h2 className="text-xl font-semibold mb-4">Add New Warehouse</h2>
 
             <form>
-              <label className="block mb-1">Warehouse Name</label>
-              <input type="text" required className="w-full border border-border_color rounded px-3 py-2 mb-4 bg-primary text-textColor-primary placeholder:text-textColor-tertiary focus:outline-none focus:ring-2 focus:ring-btn-primary" />
+              {/* Warehouse Name Select */}
+              <label className="block mb-1">Select Warehouse</label>
+              <select
+                onChange={(e) => setSelectedWarehouse(e.target.value)}
+                value={selectedWarehouse}
+                className="w-full border border-border_color rounded px-3 py-2 mb-4 bg-primary text-textColor-primary"
+              >
+                {warehouseList.map((w) => (
+                  <option key={w.id} value={w.id}>
+                    {w.name}
+                  </option>
+                ))}
+              </select>
 
-              <label className="block mb-1">Location</label>
-              <input type="text" required className="w-full border border-border_color rounded px-3 py-2 mb-4 bg-primary text-textColor-primary placeholder:text-textColor-tertiary focus:outline-none focus:ring-2 focus:ring-btn-primary" />
-
-              <label className="block mb-1">Description (optional)</label>
-              <textarea className="w-full border border-border_color rounded px-3 py-2 mb-4 bg-primary text-textColor-primary placeholder:text-textColor-tertiary focus:outline-none focus:ring-2 focus:ring-btn-primary"></textarea>
-
+              {/* Other Form Fields */}
               <div className="text-sm text-textColor-tertiary mb-4">
                 Requested By: <span className="font-medium text-textColor-primary">Inventory module</span><br />
                 Requested Date: <span className="font-medium text-textColor-primary">Current Date</span>
@@ -147,7 +161,6 @@ export default function WarehouseStorage({ initialItems, total, limit, page }) {
           </div>
         </div>
       )}
-
       {/* Continue with Table & Pagination UI */}
       {/* Warehouse Table */}
       <div className="overflow-x-auto">

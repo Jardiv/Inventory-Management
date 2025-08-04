@@ -12,7 +12,7 @@ export const GET: APIRoute = async ({ request }) => {
   const { data, error } = await supabase
     .from("transfers")
     .select(`
-      id,
+      id, 
       quantity,
       date,
       status,
