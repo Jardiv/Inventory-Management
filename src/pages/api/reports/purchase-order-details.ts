@@ -52,7 +52,8 @@ export const GET: APIRoute = async ({ url }) => {
         quantity,
         total_price,
         status,
-        source
+        source,
+        item_id
       `)
       .eq('id', transactionId)
       .eq('transaction_type_id', 1) // Ensure it's a Purchase Order
@@ -83,25 +84,37 @@ export const GET: APIRoute = async ({ url }) => {
     // we'll create product details based on the transaction data itself
     let productDetails: ProductDetail[] = [];
 
-    // Get all related transactions with the same invoice number
+    // Get all related transactions with the same invoice number and actual product details
     const { data: relatedTransactions, error: relatedError } = await supabase
       .from('transactions')
       .select(`
         id,
         quantity,
         total_price,
-        invoice_no
+        invoice_no,
+        item_id,
+        items (
+          name,
+          sku,
+          description
+        )
       `)
       .eq('invoice_no', transactionData.invoice_no)
       .eq('transaction_type_id', 1);
 
     if (!relatedError && relatedTransactions && relatedTransactions.length > 0) {
-      // Create product details from transaction data
-      productDetails = relatedTransactions.map((transaction, index) => {
+      // Create product details from transaction data with actual product information
+      productDetails = relatedTransactions.map((transaction: any, index: number) => {
         const unitPrice = (transaction.total_price || 0) / (transaction.quantity || 1);
+        
+        // Get the actual product name from the joined items table
+        const productName = transaction.items 
+          ? `${transaction.items.name} (${transaction.items.sku})`
+          : `Product ID ${transaction.item_id}`;
+        
         return {
           id: transaction.id,
-          name: `Item ${index + 1} for ${transaction.invoice_no}`,
+          name: productName,
           supplier: 'To be determined', // This would need to come from a separate source
           quantity: transaction.quantity || 0,
           unitPrice: new Intl.NumberFormat('en-US', {
@@ -115,11 +128,29 @@ export const GET: APIRoute = async ({ url }) => {
         };
       });
     } else {
-      // Create a single product entry from the main transaction
+      // Create a single product entry from the main transaction - try to get actual product info
+      let productName = 'Purchase Order Item';
+      
+      if (transactionData.item_id) {
+        try {
+          const { data: itemData, error: itemError } = await supabase
+            .from('items')
+            .select('name, sku')
+            .eq('id', transactionData.item_id)
+            .single();
+          
+          if (!itemError && itemData) {
+            productName = `${itemData.name} (${itemData.sku})`;
+          }
+        } catch (itemLookupError) {
+          console.log('Could not fetch item details:', itemLookupError);
+        }
+      }
+      
       const unitPrice = (transactionData.total_price || 0) / (transactionData.quantity || 1);
       productDetails = [{
         id: transactionData.id,
-        name: `Purchase Order Item`,
+        name: productName,
         supplier: 'To be determined',
         quantity: transactionData.quantity || 0,
         unitPrice: new Intl.NumberFormat('en-US', {
