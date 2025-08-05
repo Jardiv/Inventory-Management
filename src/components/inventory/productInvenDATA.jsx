@@ -1,214 +1,80 @@
 import { useEffect, useState } from "react";
 import { supabase } from "../../utils/supabaseClient";
 
-export default function ProductInventoryPreview({ limit = 10, paginated = true }) {
+export default function ProductInventoryPreview({ limit = 10 }) {
   const [products, setProducts] = useState([]);
-  const [total, setTotal] = useState(0);
-  const [page, setPage] = useState(1);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    fetchProducts();
-  }, [page, limit]);
-
-  async function fetchProducts() {
-    setLoading(true);
-    const from = (page - 1) * limit;
-    const to = from + limit - 1;
-
-    const selectOptions = paginated ? { count: "exact" } : {};
-
-    const { data, count, error } = await supabase
-      .from("items")
-      .select(
-        `
-        sku,
-        name,
-        unit_price,
-        status,
-        category (
-          name
-        ),
-        auto_reorder (
-          suppliers (
+    async function fetchProducts() {
+      const { data, error } = await supabase
+        .from('items')
+        .select(`
+          id,
+          sku,
+          name,
+          unit_price,
+          min_quantity,
+          max_quantity,
+          category (
             name
+          ),
+          added_items (
+            status,
+            created_at
           )
-        )
-      `,
-        selectOptions
-      )
-      .order("sku", { ascending: true })
-      .range(from, to);
+        `)
+        .order('id', { ascending: true })
+        .limit(limit);
 
-    if (error) {
-      console.error("Error fetching data:", error);
-      setProducts([]);
-      if (paginated) setTotal(0);
-      setLoading(false);
-      return;
-    }
-
-    const formatted = data.map((item) => {
-      const category = item.category?.name || "Uncategorized";
-
-      // This handles if `suppliers` is null, object, or array
-      let supplier = "Pending";
-      const supplierData = item.auto_reorder?.suppliers;
-
-      if (Array.isArray(supplierData) && supplierData.length > 0) {
-        supplier = supplierData[0]?.name || "Pending";
-      } else if (typeof supplierData === "object" && supplierData !== null) {
-        supplier = supplierData.name || "Pending";
+      if (error) {
+        console.error("Failed to fetch products:", error.message);
+      } else {
+        setProducts(data);
       }
-
-      return {
-        code: item.sku,
-        name: item.name,
-        category,
-        supplier,
-        price: item.unit_price ? `₱${parseFloat(item.unit_price).toFixed(2)}` : "₱0.00",
-        status: item.status || "Unknown"
-      };
-    });
-
-    setProducts(formatted);
-    if (paginated && typeof count === "number") setTotal(count);
-    setLoading(false);
-  }
-
-  const totalPages = paginated ? Math.ceil(total / limit) : 1;
-
-  const getStatusStyle = (status) => {
-    switch (status.toUpperCase()) {
-      case "OK":
-        return "text-green bg-primary";
-      case "LOW":
-        return "text-orange bg-primary";
-      case "OUT OF STOCK":
-        return "text-red bg-primary";
-      default:
-        return "text-green bg-primary";
-    }
-  };
-
-  const renderPageButtons = () => {
-    const buttons = [];
-    const maxButtons = 3;
-
-    buttons.push(
-      <button
-        key="1"
-        onClick={() => setPage(1)}
-        className={`px-3 py-1 rounded ${page === 1 ? "bg-purple-600 text-white" : "hover:bg-gray-200"}`}
-      >
-        1
-      </button>
-    );
-
-    if (page > maxButtons) {
-      buttons.push(<span key="dots-left" className="px-2 text-gray-500">...</span>);
+      setLoading(false);
     }
 
-    const start = Math.max(2, page - 1);
-    const end = Math.min(totalPages - 1, page + 1);
+    fetchProducts();
+  }, [limit]);
 
-    for (let i = start; i <= end; i++) {
-      buttons.push(
-        <button
-          key={i}
-          onClick={() => setPage(i)}
-          className={`px-3 py-1 rounded ${page === i ? "bg-purple-600 text-white" : "hover:bg-gray-200"}`}
-        >
-          {i}
-        </button>
-      );
-    }
-
-    if (page < totalPages - maxButtons) {
-      buttons.push(<span key="dots-right" className="px-2 text-gray-500">...</span>);
-    }
-
-    if (totalPages > 1) {
-      buttons.push(
-        <button
-          key={totalPages}
-          onClick={() => setPage(totalPages)}
-          className={`px-3 py-1 rounded ${page === totalPages ? "bg-purple-600 text-white" : "hover:bg-gray-200"}`}
-        >
-          {totalPages}
-        </button>
-      );
-    }
-
-    return buttons;
-  };
+  if (loading) return <p className="text-sm text-gray-500">Loading products...</p>;
 
   return (
-    <div className="space-y-0">
-      {/* Table Headers */}
-      <div className="grid grid-cols-6 items-center border-b border-border_color pb-2 font-semibold text-sm text-textColor-primary uppercase">
-        <span>Item Code</span>
-        <span className="text-left">Item Name</span>
-        <span className="text-left">Category</span>
-        <span className="text-left">Supplier</span>
-        <span className="text-left">Unit Price</span>
-        <span className="text-left">Status</span>
-      </div>
+    <div className="overflow-x-auto mt-4">
+      <table className="w-full text-sm text-left border border-gray-200 rounded">
+<thead className="bg-violet-100 border-b border-gray-300 text-sm text-gray-700">
+  <tr>
+    <th className="px-4 py-2 text-left font-semibold">SKU</th>
+    <th className="px-4 py-2 text-left font-semibold">Name</th>
+    <th className="px-4 py-2 text-left font-semibold">Category</th>
+    <th className="px-4 py-2 text-left font-semibold">Status</th>
+    <th className="px-4 py-2 text-left font-semibold">Min Qty</th>
+    <th className="px-4 py-2 text-left font-semibold">Max Qty</th>
+    <th className="px-4 py-2 text-left font-semibold">Unit Price</th>
+    <th className="px-4 py-2 text-left font-semibold">Created At</th>
+  </tr>
+</thead>
 
-      {/* Table Rows */}
-      {loading ? (
-        <p className="text-textColor-primary">Loading...</p>
-      ) : products.length === 0 ? (
-        <p className="text-textColor-primary">No products found.</p>
-      ) : (
-        products.map((product) => (
-          <a
-            href={`/inventory/product/${product.code}`}
-            key={product.code}
-            className="grid grid-cols-6 items-center border-b border-border_color px-3 py-3 text-sm hover:bg-btn-hover rounded transition cursor-pointer"
-          >
-            <span>{product.code}</span>
-            <span className="text-left">{product.name}</span>
-            <span className="text-left">{product.category}</span>
-            <span className="text-left">{product.supplier}</span>
-            <span className="text-left">{product.price}</span>
-            <span
-              className={`px-3 py-1 text-xs font-semibold rounded-full w-fit ${getStatusStyle(product.status)}`}
-            >
-              {product.status.replace(/\b\w/g, (l) => l.toUpperCase())}
-            </span>
-          </a>
-        ))
-      )}
-
-      {/* Pagination Footer */}
-      {paginated && totalPages > 1 && (
-        <div className="flex items-center justify-between mt-4 text-sm text-gray-700">
-          <div>
-            Showing {(page - 1) * limit + 1}-{Math.min(page * limit, total)} of {total} products
-          </div>
-
-          <div className="flex items-center gap-1">
-            <button
-              onClick={() => setPage((p) => Math.max(p - 1, 1))}
-              disabled={page === 1}
-              className="px-2 py-1 rounded hover:bg-gray-200 disabled:opacity-30"
-            >
-              &lt;
-            </button>
-
-            {renderPageButtons()}
-
-            <button
-              onClick={() => setPage((p) => Math.min(p + 1, totalPages))}
-              disabled={page === totalPages}
-              className="px-2 py-1 rounded hover:bg-gray-200 disabled:opacity-30"
-            >
-              &gt;
-            </button>
-          </div>
-        </div>
-      )}
+        <tbody>
+          {products.map(item => (
+            <tr key={item.id} className="border-t">
+              <td className="p-3">{item.sku}</td>
+              <td className="p-3">{item.name}</td>
+              <td className="p-3">{item.category?.name || '—'}</td>
+              <td className="p-3">{item.added_items?.status || '—'}</td>
+              <td className="p-3">{item.min_quantity}</td>
+              <td className="p-3">{item.max_quantity}</td>
+              <td className="p-3">₱{item.unit_price?.toFixed(2)}</td>
+              <td className="p-3">
+                {item.added_items?.created_at
+                  ? new Date(item.added_items.created_at).toLocaleDateString()
+                  : '—'}
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
     </div>
   );
 }
