@@ -13,64 +13,45 @@ interface ProductDetail {
 export const GET: APIRoute = async ({ url }) => {
   try {
     const urlParams = new URLSearchParams(url.search);
-    const transactionId = urlParams.get('id');
+    const purchaseOrderId = urlParams.get('id');
 
-    if (!transactionId) {
+    if (!purchaseOrderId) {
       return new Response(JSON.stringify({
         success: false,
-        error: 'Transaction ID is required'
+        error: 'Purchase Order ID is required'
       }), {
         status: 400,
         headers: { 'Content-Type': 'application/json' }
       });
     }
 
-    // Get the main transaction details
-    
-    // First, let's see if the transaction exists at all
-    const { data: anyTransaction, error: anyError } = await supabase
-      .from('transactions')
+    // Get the main purchase order details
+    const { data: purchaseOrderData, error: poError } = await supabase
+      .from('purchase_orders')
       .select(`
         id,
         invoice_no,
-        transaction_datetime,
-        quantity,
+        date_created,
+        created_by,
+        total_quantity,
         total_price,
-        status,
-        source,
-        transaction_type_id
+        status
       `)
-      .eq('id', transactionId);
-
-    // Now try the specific query for Purchase Orders
-    const { data: transactionData, error: transactionError } = await supabase
-      .from('transactions')
-      .select(`
-        id,
-        invoice_no,
-        transaction_datetime,
-        quantity,
-        total_price,
-        status,
-        source,
-        item_id
-      `)
-      .eq('id', transactionId)
-      .eq('transaction_type_id', 1) // Ensure it's a Purchase Order
+      .eq('id', purchaseOrderId)
       .single();
 
-    if (transactionError) {
-      console.error('❌ Transaction error:', transactionError);
+    if (poError) {
+      console.error('❌ Purchase order error:', poError);
       return new Response(JSON.stringify({
         success: false,
-        error: 'Failed to fetch transaction details: ' + transactionError.message
+        error: 'Failed to fetch purchase order details: ' + poError.message
       }), {
         status: 500,
         headers: { 'Content-Type': 'application/json' }
       });
     }
 
-    if (!transactionData) {
+    if (!purchaseOrderData) {
       return new Response(JSON.stringify({
         success: false,
         error: 'Purchase order not found'
@@ -80,111 +61,58 @@ export const GET: APIRoute = async ({ url }) => {
       });
     }
 
-    // Since there's no direct product linking in the transactions table,
-    // we'll create product details based on the transaction data itself
-    let productDetails: ProductDetail[] = [];
-
-    // Get all related transactions with the same invoice number to calculate overall totals
-    const { data: relatedTransactions, error: relatedError } = await supabase
-      .from('transactions')
+    // Get all purchase order items for this purchase order
+    const { data: purchaseOrderItems, error: itemsError } = await supabase
+      .from('purchase_orders_items')
       .select(`
         id,
-        quantity,
-        total_price,
-        invoice_no,
         item_id,
+        quantity,
+        supplier_id,
+        invoice_no,
         items (
           name,
-          sku,
-          description
+          sku
+        ),
+        suppliers (
+          name
         )
       `)
-      .eq('invoice_no', transactionData.invoice_no)
-      .eq('transaction_type_id', 1);
+      .eq('invoice_no', purchaseOrderData.invoice_no);
 
-    if (!relatedError && relatedTransactions && relatedTransactions.length > 0) {
-      // Calculate overall totals for all items with the same invoice number
-      const overallTotalQuantity = relatedTransactions.reduce((sum, transaction) => sum + (transaction.quantity || 0), 0);
-      const overallTotalAmount = relatedTransactions.reduce((sum, transaction) => sum + (transaction.total_price || 0), 0);
-      
-      // Create product details from transaction data with actual product information
-      productDetails = relatedTransactions.map((transaction: any, index: number) => {
-        const unitPrice = (transaction.total_price || 0) / (transaction.quantity || 1);
-        
-        // Get the actual product name from the joined items table
-        const productName = transaction.items 
-          ? `${transaction.items.name} (${transaction.items.sku})`
-          : `Product ID ${transaction.item_id}`;
-        
-        return {
-          id: transaction.id,
-          name: productName,
-          supplier: 'To be determined', // This would need to come from a separate source
-          quantity: transaction.quantity || 0,
-          unitPrice: new Intl.NumberFormat('en-US', {
-            style: 'currency',
-            currency: 'USD'
-          }).format(unitPrice),
-          totalPrice: new Intl.NumberFormat('en-US', {
-            style: 'currency',
-            currency: 'USD'
-          }).format(transaction.total_price || 0)
-        };
-      });
-
-      // Format response data with overall totals
-      const responseData = {
-        id: transactionData.id,
-        poNumber: transactionData.invoice_no || `PO-${transactionData.id}`,
-        dateCreated: new Date(transactionData.transaction_datetime).toLocaleDateString('en-US', {
-          year: 'numeric',
-          month: 'short',
-          day: 'numeric'
-        }),
-        totalQuantity: overallTotalQuantity, // Overall total quantity for all items with same invoice
-        totalAmount: new Intl.NumberFormat('en-US', {
-          style: 'currency',
-          currency: 'USD'
-        }).format(overallTotalAmount), // Overall total amount for all items with same invoice
-        status: transactionData.status || 'Unknown',
-        createdBy: transactionData.source || 'System',
-        items: productDetails
-      };
-
+    if (itemsError) {
+      console.error('❌ Purchase order items error:', itemsError);
       return new Response(JSON.stringify({
-        success: true,
-        data: responseData
+        success: false,
+        error: 'Failed to fetch purchase order items: ' + itemsError.message
       }), {
-        status: 200,
+        status: 500,
         headers: { 'Content-Type': 'application/json' }
       });
+    }
 
-    } else {
-      // Create a single product entry from the main transaction - try to get actual product info
-      let productName = 'Purchase Order Item';
+    // Create product details from purchase order items
+    const productDetails: ProductDetail[] = (purchaseOrderItems || []).map((item: any) => {
+      // Since individual item prices aren't stored, calculate from the total purchase order
+      // Distribute the total purchase order amount proportionally based on quantity
+      const totalQuantityInOrder = purchaseOrderData.total_quantity || 1;
+      const proportionalAmount = (purchaseOrderData.total_price / totalQuantityInOrder) * item.quantity;
+      const unitPrice = proportionalAmount / item.quantity;
+      const totalPrice = proportionalAmount;
       
-      if (transactionData.item_id) {
-        try {
-          const { data: itemData, error: itemError } = await supabase
-            .from('items')
-            .select('name, sku')
-            .eq('id', transactionData.item_id)
-            .single();
-          
-          if (!itemError && itemData) {
-            productName = `${itemData.name} (${itemData.sku})`;
-          }
-        } catch (itemLookupError) {
-          console.log('Could not fetch item details:', itemLookupError);
-        }
-      }
+      // Get the actual product name from the joined items table
+      const productName = item.items 
+        ? `${item.items.name} (${item.items.sku})`
+        : `Product ID ${item.item_id}`;
       
-      const unitPrice = (transactionData.total_price || 0) / (transactionData.quantity || 1);
-      productDetails = [{
-        id: transactionData.id,
+      // Get supplier name
+      const supplierName = item.suppliers?.name || 'To be determined';
+      
+      return {
+        id: item.id,
         name: productName,
-        supplier: 'To be determined',
-        quantity: transactionData.quantity || 0,
+        supplier: supplierName,
+        quantity: item.quantity,
         unitPrice: new Intl.NumberFormat('en-US', {
           style: 'currency',
           currency: 'USD'
@@ -192,36 +120,36 @@ export const GET: APIRoute = async ({ url }) => {
         totalPrice: new Intl.NumberFormat('en-US', {
           style: 'currency',
           currency: 'USD'
-        }).format(transactionData.total_price || 0)
-      }];
-
-      // Format response data (single transaction fallback)
-      const responseData = {
-        id: transactionData.id,
-        poNumber: transactionData.invoice_no || `PO-${transactionData.id}`,
-        dateCreated: new Date(transactionData.transaction_datetime).toLocaleDateString('en-US', {
-          year: 'numeric',
-          month: 'short',
-          day: 'numeric'
-        }),
-        totalQuantity: transactionData.quantity || 0,
-        totalAmount: new Intl.NumberFormat('en-US', {
-          style: 'currency',
-          currency: 'USD'
-        }).format(transactionData.total_price || 0),
-        status: transactionData.status || 'Unknown',
-        createdBy: transactionData.source || 'System',
-        items: productDetails
+        }).format(totalPrice)
       };
+    });
 
-      return new Response(JSON.stringify({
-        success: true,
-        data: responseData
-      }), {
-        status: 200,
-        headers: { 'Content-Type': 'application/json' }
-      });
-    }
+    // Format response data
+    const responseData = {
+      id: purchaseOrderData.id,
+      poNumber: purchaseOrderData.invoice_no,
+      dateCreated: new Date(purchaseOrderData.date_created).toLocaleDateString('en-US', {
+        year: 'numeric',
+        month: 'short',
+        day: 'numeric'
+      }),
+      totalQuantity: purchaseOrderData.total_quantity,
+      totalAmount: new Intl.NumberFormat('en-US', {
+        style: 'currency',
+        currency: 'USD'
+      }).format(purchaseOrderData.total_price),
+      status: purchaseOrderData.status,
+      createdBy: purchaseOrderData.created_by,
+      items: productDetails
+    };
+
+    return new Response(JSON.stringify({
+      success: true,
+      data: responseData
+    }), {
+      status: 200,
+      headers: { 'Content-Type': 'application/json' }
+    });
 
   } catch (error) {
     console.error('API Error:', error);

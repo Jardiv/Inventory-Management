@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 
 export default function WarehouseStorage({ initialItems, total, limit, page }) {
-  const [items, setItems] = useState(initialItems);
+  const [items, setItems] = useState(initialItems || []);
   const [selectedWarehouse, setSelectedWarehouse] = useState('1');
   const [loading, setLoading] = useState(false);
   const [showModal, setShowModal] = useState(false);
@@ -235,7 +235,7 @@ export default function WarehouseStorage({ initialItems, total, limit, page }) {
             </tr>
           </thead>
           <tbody>
-            {items.slice(0, 10).map((item, index) => (
+            {(items || []).slice(0, 10).map((item, index) => (
               <tr
                 key={index}
                 className={`border-t border-border_color ${index === 9 ? 'border-b-0' : 'border-b border-border_color'}`}

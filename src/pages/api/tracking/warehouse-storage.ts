@@ -41,7 +41,7 @@ export const GET: APIRoute = async ({ request }) => {
     });
   }
 
-  return new Response(JSON.stringify({ data, count }), {
+  return new Response(JSON.stringify({ data: data || [], count: count || 0 }), {
     status: 200,
   });
 };

@@ -17,7 +17,7 @@ export const GET: APIRoute = async ({ request }) => {
       date,
       status,
       items:item_id (
-        id,
+        id, 
         name,
         sku
       ),

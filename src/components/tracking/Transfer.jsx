@@ -9,6 +9,26 @@ const TransferList = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1); // update from API
   const [totalCount, setTotalCount] = useState(0);
+  const [warehouses, setWarehouses] = useState([]);
+
+  useEffect(() => {
+    const fetchWarehouses = async () => {
+      try {
+        const res = await fetch("/api/tracking/warehouse");
+        const result = await res.json();
+
+        if (res.ok) {
+          setWarehouses(result.data);
+        } else {
+          console.error("Failed to load warehouses:", result.error);
+        }
+      } catch (err) {
+        console.error("Fetch error:", err);
+      }
+    };
+
+    fetchWarehouses();
+  }, []);
 
   useEffect(() => {
     const fetchTransfers = async () => {
@@ -216,9 +236,9 @@ const TransferList = () => {
                     <label className="text-lg mb-2 block">{label}:</label>
                     <select className="w-full border border-border_color rounded-md px-4 py-3 bg-primary text-white appearance-none">
                       <option value="" disabled selected>Select Warehouse</option>
-                      <option value="wh1">Warehouse 1</option>
-                      <option value="wh2">Warehouse 2</option>
-                      <option value="wh3">Warehouse 3</option>
+                      {warehouses.map((wh) => (
+                        <option key={wh.id} value={wh.id}>{wh.name}</option>
+                      ))}
                     </select>
                     <div className="pointer-events-none absolute translate-y-[19%] inset-y-0 right-3 flex items-center">
                       <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
