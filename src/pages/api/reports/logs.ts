@@ -29,10 +29,37 @@ export const GET: APIRoute = async ({ url }) => {
       });
     }
 
-    // Transform the data to match the expected format for the frontend
-    const purchaseOrderLogs = (transactionData || []).map(transaction => {
+    // Group transactions by invoice_no to avoid duplicates
+    const groupedTransactions = new Map();
+    
+    (transactionData || []).forEach(transaction => {
+      const invoiceNo = transaction.invoice_no;
+      
+      if (groupedTransactions.has(invoiceNo)) {
+        // Add to existing group
+        const existing = groupedTransactions.get(invoiceNo);
+        existing.totalQuantity += transaction.quantity || 0;
+        existing.totalAmount += transaction.total_price || 0;
+        existing.transactionIds.push(transaction.id);
+      } else {
+        // Create new group
+        groupedTransactions.set(invoiceNo, {
+          id: transaction.id, // Use the first transaction ID as representative
+          invoice_no: transaction.invoice_no,
+          transaction_datetime: transaction.transaction_datetime,
+          totalQuantity: transaction.quantity || 0,
+          totalAmount: transaction.total_price || 0,
+          status: transaction.status,
+          source: transaction.source,
+          transactionIds: [transaction.id]
+        });
+      }
+    });
+
+    // Transform the grouped data to match the expected format for the frontend
+    const purchaseOrderLogs = Array.from(groupedTransactions.values()).map(groupedTransaction => {
       // Format the date to a readable format
-      const formattedDate = new Date(transaction.transaction_datetime).toLocaleDateString('en-US', {
+      const formattedDate = new Date(groupedTransaction.transaction_datetime).toLocaleDateString('en-US', {
         year: 'numeric',
         month: 'short',
         day: 'numeric'
@@ -42,10 +69,10 @@ export const GET: APIRoute = async ({ url }) => {
       const formattedAmount = new Intl.NumberFormat('en-US', {
         style: 'currency',
         currency: 'USD'
-      }).format(transaction.total_price || 0);
+      }).format(groupedTransaction.totalAmount || 0);
 
       // Determine status display - normalize status values
-      let displayStatus = transaction.status || 'Unknown';
+      let displayStatus = groupedTransaction.status || 'Unknown';
       switch (displayStatus.toLowerCase()) {
         case 'completed':
         case 'complete':
@@ -62,22 +89,25 @@ export const GET: APIRoute = async ({ url }) => {
           displayStatus = 'Cancelled';
           break;
         default:
-          displayStatus = transaction.status || 'Unknown';
+          displayStatus = groupedTransaction.status || 'Unknown';
       }
 
       return {
-        id: transaction.id,
-        poNumber: transaction.invoice_no || `PO-${transaction.id}`,
+        id: groupedTransaction.id,
+        poNumber: groupedTransaction.invoice_no || `PO-${groupedTransaction.id}`,
         dateCreated: formattedDate,
-        rawDate: transaction.transaction_datetime,
+        rawDate: groupedTransaction.transaction_datetime,
         supplier: 'N/A', // This would need to come from a separate suppliers table if available
-        totalQuantity: transaction.quantity || 0,
+        totalQuantity: groupedTransaction.totalQuantity || 0,
         totalAmount: formattedAmount,
-        rawAmount: transaction.total_price || 0,
+        rawAmount: groupedTransaction.totalAmount || 0,
         status: displayStatus,
-        createdBy: transaction.source || 'System'
+        createdBy: groupedTransaction.source || 'System'
       };
     });
+
+    // Sort by date (most recent first) since we might have lost the original order due to grouping
+    purchaseOrderLogs.sort((a, b) => new Date(b.rawDate).getTime() - new Date(a.rawDate).getTime());
 
     // Return all purchase order logs (client-side pagination will handle display)
     return new Response(JSON.stringify({

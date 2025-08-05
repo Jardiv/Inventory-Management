@@ -84,7 +84,7 @@ export const GET: APIRoute = async ({ url }) => {
     // we'll create product details based on the transaction data itself
     let productDetails: ProductDetail[] = [];
 
-    // Get all related transactions with the same invoice number and actual product details
+    // Get all related transactions with the same invoice number to calculate overall totals
     const { data: relatedTransactions, error: relatedError } = await supabase
       .from('transactions')
       .select(`
@@ -103,6 +103,10 @@ export const GET: APIRoute = async ({ url }) => {
       .eq('transaction_type_id', 1);
 
     if (!relatedError && relatedTransactions && relatedTransactions.length > 0) {
+      // Calculate overall totals for all items with the same invoice number
+      const overallTotalQuantity = relatedTransactions.reduce((sum, transaction) => sum + (transaction.quantity || 0), 0);
+      const overallTotalAmount = relatedTransactions.reduce((sum, transaction) => sum + (transaction.total_price || 0), 0);
+      
       // Create product details from transaction data with actual product information
       productDetails = relatedTransactions.map((transaction: any, index: number) => {
         const unitPrice = (transaction.total_price || 0) / (transaction.quantity || 1);
@@ -127,6 +131,34 @@ export const GET: APIRoute = async ({ url }) => {
           }).format(transaction.total_price || 0)
         };
       });
+
+      // Format response data with overall totals
+      const responseData = {
+        id: transactionData.id,
+        poNumber: transactionData.invoice_no || `PO-${transactionData.id}`,
+        dateCreated: new Date(transactionData.transaction_datetime).toLocaleDateString('en-US', {
+          year: 'numeric',
+          month: 'short',
+          day: 'numeric'
+        }),
+        totalQuantity: overallTotalQuantity, // Overall total quantity for all items with same invoice
+        totalAmount: new Intl.NumberFormat('en-US', {
+          style: 'currency',
+          currency: 'USD'
+        }).format(overallTotalAmount), // Overall total amount for all items with same invoice
+        status: transactionData.status || 'Unknown',
+        createdBy: transactionData.source || 'System',
+        items: productDetails
+      };
+
+      return new Response(JSON.stringify({
+        success: true,
+        data: responseData
+      }), {
+        status: 200,
+        headers: { 'Content-Type': 'application/json' }
+      });
+
     } else {
       // Create a single product entry from the main transaction - try to get actual product info
       let productName = 'Purchase Order Item';
@@ -162,34 +194,34 @@ export const GET: APIRoute = async ({ url }) => {
           currency: 'USD'
         }).format(transactionData.total_price || 0)
       }];
+
+      // Format response data (single transaction fallback)
+      const responseData = {
+        id: transactionData.id,
+        poNumber: transactionData.invoice_no || `PO-${transactionData.id}`,
+        dateCreated: new Date(transactionData.transaction_datetime).toLocaleDateString('en-US', {
+          year: 'numeric',
+          month: 'short',
+          day: 'numeric'
+        }),
+        totalQuantity: transactionData.quantity || 0,
+        totalAmount: new Intl.NumberFormat('en-US', {
+          style: 'currency',
+          currency: 'USD'
+        }).format(transactionData.total_price || 0),
+        status: transactionData.status || 'Unknown',
+        createdBy: transactionData.source || 'System',
+        items: productDetails
+      };
+
+      return new Response(JSON.stringify({
+        success: true,
+        data: responseData
+      }), {
+        status: 200,
+        headers: { 'Content-Type': 'application/json' }
+      });
     }
-
-    // Format response data
-    const responseData = {
-      id: transactionData.id,
-      poNumber: transactionData.invoice_no || `PO-${transactionData.id}`,
-      dateCreated: new Date(transactionData.transaction_datetime).toLocaleDateString('en-US', {
-        year: 'numeric',
-        month: 'short',
-        day: 'numeric'
-      }),
-      totalQuantity: transactionData.quantity || 0,
-      totalAmount: new Intl.NumberFormat('en-US', {
-        style: 'currency',
-        currency: 'USD'
-      }).format(transactionData.total_price || 0),
-      status: transactionData.status || 'Unknown',
-      createdBy: transactionData.source || 'System',
-      items: productDetails
-    };
-
-    return new Response(JSON.stringify({
-      success: true,
-      data: responseData
-    }), {
-      status: 200,
-      headers: { 'Content-Type': 'application/json' }
-    });
 
   } catch (error) {
     console.error('API Error:', error);
