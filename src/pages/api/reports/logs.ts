@@ -3,20 +3,19 @@ import { supabase } from '../../../utils/supabaseClient.ts';
 
 export const GET: APIRoute = async ({ url }) => {
   try {
-    // Get purchase order logs from transactions table - filter by transaction_type_id
-    const { data: transactionData, error } = await supabase
-      .from('transactions')
+    // Get purchase order logs from purchase_orders table
+    const { data: purchaseOrderData, error } = await supabase
+      .from('purchase_orders')
       .select(`
         id,
         invoice_no,
-        transaction_datetime,
-        quantity,
+        date_created,
+        total_quantity,
         total_price,
         status,
-        source
+        created_by
       `)
-      .eq('transaction_type_id', 1) // Filter for Purchase Orders only (ID 1 based on your screenshot)
-      .order('transaction_datetime', { ascending: false }); // Order by most recent first
+      .order('date_created', { ascending: false }); // Order by most recent first
 
     if (error) {
       console.error('Supabase error:', error);
@@ -29,37 +28,10 @@ export const GET: APIRoute = async ({ url }) => {
       });
     }
 
-    // Group transactions by invoice_no to avoid duplicates
-    const groupedTransactions = new Map();
-    
-    (transactionData || []).forEach(transaction => {
-      const invoiceNo = transaction.invoice_no;
-      
-      if (groupedTransactions.has(invoiceNo)) {
-        // Add to existing group
-        const existing = groupedTransactions.get(invoiceNo);
-        existing.totalQuantity += transaction.quantity || 0;
-        existing.totalAmount += transaction.total_price || 0;
-        existing.transactionIds.push(transaction.id);
-      } else {
-        // Create new group
-        groupedTransactions.set(invoiceNo, {
-          id: transaction.id, // Use the first transaction ID as representative
-          invoice_no: transaction.invoice_no,
-          transaction_datetime: transaction.transaction_datetime,
-          totalQuantity: transaction.quantity || 0,
-          totalAmount: transaction.total_price || 0,
-          status: transaction.status,
-          source: transaction.source,
-          transactionIds: [transaction.id]
-        });
-      }
-    });
-
-    // Transform the grouped data to match the expected format for the frontend
-    const purchaseOrderLogs = Array.from(groupedTransactions.values()).map(groupedTransaction => {
+    // Transform the purchase order data to match the expected format for the frontend
+    const purchaseOrderLogs = (purchaseOrderData || []).map(purchaseOrder => {
       // Format the date to a readable format
-      const formattedDate = new Date(groupedTransaction.transaction_datetime).toLocaleDateString('en-US', {
+      const formattedDate = new Date(purchaseOrder.date_created).toLocaleDateString('en-US', {
         year: 'numeric',
         month: 'short',
         day: 'numeric'
@@ -69,10 +41,10 @@ export const GET: APIRoute = async ({ url }) => {
       const formattedAmount = new Intl.NumberFormat('en-US', {
         style: 'currency',
         currency: 'USD'
-      }).format(groupedTransaction.totalAmount || 0);
+      }).format(purchaseOrder.total_price || 0);
 
       // Determine status display - normalize status values
-      let displayStatus = groupedTransaction.status || 'Unknown';
+      let displayStatus = purchaseOrder.status || 'Unknown';
       switch (displayStatus.toLowerCase()) {
         case 'completed':
         case 'complete':
@@ -89,25 +61,22 @@ export const GET: APIRoute = async ({ url }) => {
           displayStatus = 'Cancelled';
           break;
         default:
-          displayStatus = groupedTransaction.status || 'Unknown';
+          displayStatus = purchaseOrder.status || 'Unknown';
       }
 
       return {
-        id: groupedTransaction.id,
-        poNumber: groupedTransaction.invoice_no || `PO-${groupedTransaction.id}`,
+        id: purchaseOrder.id,
+        poNumber: purchaseOrder.invoice_no || `PO-${purchaseOrder.id}`,
         dateCreated: formattedDate,
-        rawDate: groupedTransaction.transaction_datetime,
+        rawDate: purchaseOrder.date_created,
         supplier: 'N/A', // This would need to come from a separate suppliers table if available
-        totalQuantity: groupedTransaction.totalQuantity || 0,
+        totalQuantity: purchaseOrder.total_quantity || 0,
         totalAmount: formattedAmount,
-        rawAmount: groupedTransaction.totalAmount || 0,
+        rawAmount: purchaseOrder.total_price || 0,
         status: displayStatus,
-        createdBy: groupedTransaction.source || 'System'
+        createdBy: purchaseOrder.created_by || 'System'
       };
     });
-
-    // Sort by date (most recent first) since we might have lost the original order due to grouping
-    purchaseOrderLogs.sort((a, b) => new Date(b.rawDate).getTime() - new Date(a.rawDate).getTime());
 
     // Return all purchase order logs (client-side pagination will handle display)
     return new Response(JSON.stringify({

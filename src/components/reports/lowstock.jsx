@@ -275,7 +275,7 @@ const LowStockTable = ({ currentPage = 1 }) => {
                 },
                 body: JSON.stringify({
                     items: purchaseOrderSummary.items,
-                    source: sourceInput.trim(),
+                    createdBy: sourceInput.trim(),
                     totalQuantity: purchaseOrderSummary.totalQuantity,
                     totalAmount: purchaseOrderSummary.totalAmount
                 })

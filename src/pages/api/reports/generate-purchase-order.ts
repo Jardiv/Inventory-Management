@@ -13,7 +13,7 @@ interface PurchaseOrderItem {
 
 interface PurchaseOrderRequest {
   items: PurchaseOrderItem[];
-  source: string;
+  createdBy: string;
   totalQuantity: number;
   totalAmount: number;
 }
@@ -21,7 +21,7 @@ interface PurchaseOrderRequest {
 export const POST: APIRoute = async ({ request }) => {
   try {
     const body: PurchaseOrderRequest = await request.json();
-    const { items, source, totalQuantity, totalAmount } = body;
+    const { items, createdBy, totalQuantity, totalAmount } = body;
 
     if (!items || items.length === 0) {
       return new Response(JSON.stringify({
@@ -66,10 +66,10 @@ export const POST: APIRoute = async ({ request }) => {
       }
     }
 
-    if (!source || source.trim() === '') {
+    if (!createdBy || createdBy.trim() === '') {
       return new Response(JSON.stringify({
         success: false,
-        error: 'Source is required for purchase order generation'
+        error: 'createdBy is required for purchase order generation'
       }), {
         status: 400,
         headers: { 'Content-Type': 'application/json' }
@@ -81,52 +81,36 @@ export const POST: APIRoute = async ({ request }) => {
     const randomSuffix = Math.random().toString(36).substring(2, 5).toUpperCase();
     const invoiceNo = `PO-${timestamp}-${randomSuffix}`;
 
-    // Get the current timestamp for all transactions (single timestamp for all items)
-    const transactionDateTime = new Date().toISOString();
+    // Get the current timestamp for the purchase order
+    const dateCreated = new Date().toISOString();
 
-    // Get purchase order transaction type (assuming id = 1 based on user requirement)
-    const { data: transactionType, error: typeError } = await supabase
-      .from('transaction_types')
-      .select('id, name')
-      .eq('id', 1)
+    console.log('🔨 Generating purchase order:', { invoiceNo, itemCount: items.length, totalAmount, createdBy });
+
+    // First, create the main purchase order record
+    const { data: purchaseOrder, error: poError } = await supabase
+      .from('purchase_orders')
+      .insert({
+        invoice_no: invoiceNo,
+        date_created: dateCreated,
+        created_by: createdBy.trim(),
+        total_quantity: totalQuantity,
+        total_price: totalAmount,
+        status: 'Pending'
+      })
+      .select('*')
       .single();
 
-    if (typeError || !transactionType) {
-      return new Response(JSON.stringify({
-        success: false,
-        error: 'Purchase order transaction type not found'
-      }), {
-        status: 500,
-        headers: { 'Content-Type': 'application/json' }
-      });
+    if (poError || !purchaseOrder) {
+      console.error('❌ Error creating purchase order:', poError);
+      throw new Error(`Failed to create purchase order: ${poError?.message || 'Unknown error'}`);
     }
 
-    console.log('🔨 Generating purchase order:', { invoiceNo, itemCount: items.length, totalAmount, source });
+    console.log('✅ Purchase order created:', purchaseOrder);
 
-    // Get the current maximum ID from transactions table to avoid duplicates
-    let nextTransactionId = 1;
-    try {
-      const { data: maxIdResult, error: maxIdError } = await supabase
-        .from('transactions')
-        .select('id')
-        .order('id', { ascending: false })
-        .limit(1)
-        .single();
-
-      if (!maxIdError && maxIdResult) {
-        nextTransactionId = maxIdResult.id + 1;
-        console.log(`🔍 Found max transaction ID: ${maxIdResult.id}, next will be: ${nextTransactionId}`);
-      } else {
-        console.log('🔍 No existing transactions found, starting from ID 1');
-      }
-    } catch (idError) {
-      console.log('⚠️  Could not fetch max ID, starting from 1:', idError);
-    }
-
-    // Prepare transaction data for all items using the same invoice number and timestamp
-    const transactionDataArray = [];
+    // Prepare purchase order items data
+    const purchaseOrderItems = [];
     
-    console.log(`🔨 Preparing transactions for ${items.length} items under invoice: ${invoiceNo}`);
+    console.log(`🔨 Preparing purchase order items for ${items.length} items under invoice: ${invoiceNo}`);
     
     for (let i = 0; i < items.length; i++) {
       const item = items[i];
@@ -134,7 +118,7 @@ export const POST: APIRoute = async ({ request }) => {
       console.log(`🔨 Processing item ${i + 1}/${items.length}:`, { id: item.id, sku: item.sku, quantity: item.quantity });
       
       // Find a supplier for this item
-      let supplierId = null;
+      let supplierId = 1; // Default supplier ID, you might want to adjust this
       if (item.supplier && item.supplier !== 'To be determined' && item.supplier !== 'ABC Suppliers Inc.') {
         try {
           const { data: supplierData, error: supplierError } = await supabase
@@ -157,93 +141,79 @@ export const POST: APIRoute = async ({ request }) => {
         }
       }
 
-      // Create transaction record with explicit ID to avoid auto-increment conflicts
-      const currentTransactionId = nextTransactionId + i;
-      const transactionData = {
-        id: currentTransactionId, // Explicitly set the ID
-        invoice_no: invoiceNo, // Same invoice number for all items
+      // Create purchase order item record
+      const purchaseOrderItem = {
         item_id: item.id,
         quantity: item.quantity,
-        total_price: item.totalPrice,
-        transaction_datetime: transactionDateTime, // Same timestamp for all items
-        transaction_type_id: transactionType.id,
         supplier_id: supplierId,
-        source: source.trim(),
-        status: 'Pending',
-        destination: null,
-        expiration_date: null
+        invoice_no: invoiceNo
       };
 
-      console.log(`Transaction data for item ${item.sku} with ID ${currentTransactionId}:`, transactionData);
-      transactionDataArray.push(transactionData);
+      console.log(`Purchase order item data for ${item.sku}:`, purchaseOrderItem);
+      purchaseOrderItems.push(purchaseOrderItem);
     }
 
-    console.log(`💾 Inserting ${transactionDataArray.length} transactions as a batch with invoice: ${invoiceNo}`);
+    console.log(`💾 Inserting ${purchaseOrderItems.length} purchase order items as a batch with invoice: ${invoiceNo}`);
 
-    // Insert all transactions at once
-    const { data: transactions, error: insertError } = await supabase
-      .from('transactions')
-      .insert(transactionDataArray)
+    // Insert all purchase order items at once
+    const { data: poItems, error: itemsError } = await supabase
+      .from('purchase_orders_items')
+      .insert(purchaseOrderItems)
       .select('*');
 
-    if (insertError) {
-      console.error('❌ Error creating transactions:', insertError);
+    if (itemsError) {
+      console.error('❌ Error creating purchase order items:', itemsError);
       
-      if (insertError.code === '23503') {
-        throw new Error(`Foreign key constraint violated. Invalid item_id or transaction_type_id.`);
-      } else if (insertError.code === '23505') {
+      // If items creation fails, we should clean up the purchase order
+      await supabase
+        .from('purchase_orders')
+        .delete()
+        .eq('id', purchaseOrder.id);
+      
+      if (itemsError.code === '23503') {
+        throw new Error(`Foreign key constraint violated. Invalid item_id or supplier_id.`);
+      } else if (itemsError.code === '23505') {
         throw new Error(`Duplicate entry error. Please try again.`);
       } else {
-        throw new Error(`Database error: ${insertError.message}`);
+        throw new Error(`Database error: ${itemsError.message}`);
       }
     }
 
-    if (!transactions || transactions.length === 0) {
-      throw new Error('No transactions were created');
-    }
-
-    // Update the database sequence to be in sync with our manually set IDs
-    try {
-      const finalMaxId = Math.max(...transactions.map(t => t.id));
-      const { error: seqError } = await supabase.rpc('setval', {
-        sequence_name: 'transactions_id_seq',
-        new_value: finalMaxId,
-        is_called: true
-      });
-      
-      if (seqError) {
-        console.log('⚠️ Could not update sequence (non-critical):', seqError);
-      } else {
-        console.log(`🔧 Updated sequence to ${finalMaxId}`);
-      }
-    } catch (seqUpdateError) {
-      console.log('⚠️ Sequence update failed (non-critical):', seqUpdateError);
+    if (!poItems || poItems.length === 0) {
+      // Clean up the purchase order if no items were created
+      await supabase
+        .from('purchase_orders')
+        .delete()
+        .eq('id', purchaseOrder.id);
+      throw new Error('No purchase order items were created');
     }
 
     console.log('✅ Purchase order generated successfully:', { 
       invoiceNo, 
-      transactionCount: transactions.length,
+      itemCount: poItems.length,
       totalAmount,
-      timestamp: transactionDateTime
+      dateCreated
     });
 
     // Return success response with purchase order details
     return new Response(JSON.stringify({
       success: true,
       data: {
+        id: purchaseOrder.id,
         invoiceNo,
-        transactionDateTime,
+        dateCreated,
+        createdBy: createdBy.trim(),
         totalQuantity,
         totalAmount,
-        itemCount: transactions.length,
-        source,
-        message: `Purchase order created with ${transactions.length} items under single invoice: ${invoiceNo}`,
-        transactions: transactions.map(t => ({
-          id: t.id,
-          item_id: t.item_id,
-          quantity: t.quantity,
-          total_price: t.total_price,
-          invoice_no: t.invoice_no
+        itemCount: poItems.length,
+        status: purchaseOrder.status,
+        message: `Purchase order created with ${poItems.length} items under invoice: ${invoiceNo}`,
+        purchaseOrderItems: poItems.map(item => ({
+          id: item.id,
+          item_id: item.item_id,
+          quantity: item.quantity,
+          supplier_id: item.supplier_id,
+          invoice_no: item.invoice_no
         }))
       }
     }), {
