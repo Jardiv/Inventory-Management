@@ -21,9 +21,9 @@ const { data: latestPurchaseData, error: latestPurchaseError } = await supabase
     id,
     supplier_id,
     supplier ( name, contact_number, location ),
-    transaction_datetime,
+    transaction_datetime,\
     transaction_type ( direction )
-  `)
+  `) 
   .eq('item_id', itemId)
   .order('transaction_datetime', { ascending: false });
 
