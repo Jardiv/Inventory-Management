@@ -13,7 +13,7 @@ export const GET: APIRoute = async ({ request }) => {
 
   let query = supabase
     .from('warehouse_items')
-    .select(`
+    .select(` 
       id,
       quantity,
       date_assigned,

@@ -1,5 +1,6 @@
 ---
 import Layout from '../../layouts/Layout.astro';
+import WarehouseSummary from '../../components/tracking/warehouse-summary.jsx';
 
 // Quick Summary Data
 const quickSummaryData = [
@@ -43,73 +44,7 @@ const { data: recentTransfers = [] } = await transferRes.json();
       </div>
   </div>
 
-  <!-- Warehouse Summary -->
-  <div class="w-full bg-primary rounded-lg p-6 mb-4 text-textColor-primary font-[Poppins]">
-    <!-- Header Row -->
-    <div class="flex justify-between items-center mb-6">
-      <!-- Left: Title + Dropdown -->
-      <div class="flex items-center gap-4">
-        <h2 class="text-2xl font-semibold">Warehouse Summary</h2>
-
-          <!-- Dropdown -->
-          <div class="relative">
-            <div class="relative inline-block text-left">
-              <button id="select-button"
-                class="flex justify-between items-center bg-primary text-textColor-primary rounded px-4 py-2 text-sm w-auto min-w-[160px] whitespace-nowrap border border-transparent hover:border-btn-hover active:border-btn-hover">
-                <span id="selected-text">Select Warehouse</span>
-                <svg class="w-4 h-4 ml-2 text-textColor-primary" viewBox="0 0 20 20" fill="currentColor">
-                  <path fill-rule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 10.939l3.71-3.71a.75.75 0 111.06 1.06l-4.24 4.25a.75.75 0 01-1.06 0L5.21 8.27a.75.75 0 01.02-1.06z" clip-rule="evenodd" />
-                </svg>
-              </button>
-
-              <div id="dropdown" class="hidden absolute mt-2 bg-primary border border-border_color rounded shadow-md z-10 w-[160px]">
-                <ul class="py-1 text-sm text-textColor-primary">
-                  <li><a href="#" class="dropdown-item block px-4 py-2 hover:bg-btn-hover hover:text-textColor-secondary cursor-pointer">Warehouse 1</a></li>
-                  <li><a href="#" class="dropdown-item block px-4 py-2 hover:bg-btn-hover hover:text-textColor-secondary cursor-pointer">Warehouse 2</a></li>
-                  <li><a href="#" class="dropdown-item block px-4 py-2 hover:bg-btn-hover hover:text-textColor-secondary cursor-pointer">Warehouse 3</a></li>
-                </ul>
-              </div>
-            </div>
-          </div>
-      </div>
-
-      <!-- Right: See All -->
-      <a href="/tracking/warehouse-storage" class="text-btn-primary text-sm hover:underline">See All</a>
-    </div>
-
-    <!-- Table Header -->
-    <div class="grid grid-cols-4 text-lg font-semibold border-b border-border_color py-3">
-      <div class="text-center w-full">Item ID</div>
-      <div class="text-center w-full">Name</div>
-      <div class="text-center w-full">Quantity</div>
-      <div class="text-center w-full">Category</div>
-    </div>
-
-    <!-- Table Rows -->
-    <div class="divide-y divide-border_color">
-      {warehouseItems.map(item => (
-        <div class="grid grid-cols-4 py-4 text-center text-lg">
-          <div class="w-full min-w-0">{item.items?.sku}</div>
-          <div class="w-full min-w-0">{item.items?.name}</div>
-          <div class="w-full min-w-0">{item.quantity}</div>
-          <div class="w-full min-w-0 font-semibold text-base">{item.items?.category?.name}</div>
-        </div>
-      ))}
-
-      {/* Empty rows to make it always 5 */}
-      {Array.from({ length: Math.max(0, 5 - warehouseItems.length) }).map(() => (
-        <div class="grid grid-cols-4 py-4 text-center text-lg text-transparent">
-          <div class="w-full min-w-0">-</div>
-          <div class="w-full min-w-0">-</div>
-          <div class="w-full min-w-0">-</div>
-          <div class="w-full min-w-0">-</div>
-        </div>
-      ))}
-    </div>
-  </div>
-
-
-
+  <WarehouseSummary client:load />
 
   <div class="w-full flex gap-6">
     <!-- Recent Shipments Table -->
