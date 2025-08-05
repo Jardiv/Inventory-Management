@@ -30,11 +30,15 @@ export const GET: APIRoute = async ({ url }) => {
 
     // Transform the purchase order data to match the expected format for the frontend
     const purchaseOrderLogs = (purchaseOrderData || []).map(purchaseOrder => {
-      // Format the date to a readable format
-      const formattedDate = new Date(purchaseOrder.date_created).toLocaleDateString('en-US', {
+      // Format the date to include full timestamp
+      const formattedDate = new Date(purchaseOrder.date_created).toLocaleString('en-US', {
         year: 'numeric',
         month: 'short',
-        day: 'numeric'
+        day: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit',
+        second: '2-digit',
+        hour12: true
       });
 
       // Format the total price as currency

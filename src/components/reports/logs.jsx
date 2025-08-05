@@ -15,6 +15,9 @@ const PurchaseOrderLogs = () => {
   const [poDetails, setPODetails] = useState(null);
   const [loadingDetails, setLoadingDetails] = useState(false);
   
+  // Modal table sorting state
+  const [modalSortConfig, setModalSortConfig] = useState({ column: null, direction: null });
+  
   // Debug logging - this should show loading: true initially
   console.log('=== PurchaseOrderLogs RENDER ===');
   console.log('loading:', loading);
@@ -427,7 +430,98 @@ const PurchaseOrderLogs = () => {
     setShowDetailsModal(false);
     setSelectedPO(null);
     setPODetails(null);
+    setModalSortConfig({ column: null, direction: null }); // Reset modal sorting
   };
+
+  // Modal table sorting function
+  const handleModalSort = useCallback((column) => {
+    let direction = 'asc';
+    
+    if (modalSortConfig.column === column) {
+      if (modalSortConfig.direction === 'asc') {
+        direction = 'desc';
+      } else if (modalSortConfig.direction === 'desc') {
+        direction = null;
+      }
+    }
+    
+    setModalSortConfig({ column, direction });
+  }, [modalSortConfig]);
+
+  // Get modal sort icon
+  const getModalSortIcon = (column) => {
+    if (modalSortConfig.column !== column) {
+      return (
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth="1.5" stroke="currentColor" className="w-3 h-3 text-gray-500">
+          <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 15L12 18.75 15.75 15m-7.5-6L12 5.25 15.75 9" />
+        </svg>
+      );
+    }
+
+    if (modalSortConfig.direction === 'asc') {
+      return (
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth="1.5" stroke="currentColor" className="w-3 h-3 text-btn-primary">
+          <path strokeLinecap="round" strokeLinejoin="round" d="m4.5 15.75 7.5-7.5 7.5 7.5" />
+        </svg>
+      );
+    }
+
+    if (modalSortConfig.direction === 'desc') {
+      return (
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth="1.5" stroke="currentColor" className="w-3 h-3 text-btn-primary">
+          <path strokeLinecap="round" strokeLinejoin="round" d="m19.5 8.25-7.5 7.5-7.5-7.5" />
+        </svg>
+      );
+    }
+
+    return (
+      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth="1.5" stroke="currentColor" className="w-3 h-3 text-gray-500">
+        <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 15L12 18.75 15.75 15m-7.5-6L12 5.25 15.75 9" />
+      </svg>
+    );
+  };
+
+  // Get sorted modal data
+  const getSortedModalData = useCallback(() => {
+    if (!poDetails?.items || !modalSortConfig.column || !modalSortConfig.direction) {
+      return poDetails?.items || [];
+    }
+
+    return [...poDetails.items].sort((a, b) => {
+      let aValue, bValue;
+
+      switch (modalSortConfig.column) {
+        case 'name':
+          aValue = (a.name || '').toLowerCase();
+          bValue = (b.name || '').toLowerCase();
+          break;
+        case 'supplier':
+          aValue = (a.supplier || '').toLowerCase();
+          bValue = (b.supplier || '').toLowerCase();
+          break;
+        case 'quantity':
+          aValue = a.quantity || 0;
+          bValue = b.quantity || 0;
+          break;
+        case 'unitPrice':
+          // Extract numeric value from formatted currency string
+          aValue = parseFloat((a.unitPrice || '$0').replace(/[$,]/g, '')) || 0;
+          bValue = parseFloat((b.unitPrice || '$0').replace(/[$,]/g, '')) || 0;
+          break;
+        case 'totalPrice':
+          // Extract numeric value from formatted currency string
+          aValue = parseFloat((a.totalPrice || '$0').replace(/[$,]/g, '')) || 0;
+          bValue = parseFloat((b.totalPrice || '$0').replace(/[$,]/g, '')) || 0;
+          break;
+        default:
+          return 0;
+      }
+
+      if (aValue < bValue) return modalSortConfig.direction === 'asc' ? -1 : 1;
+      if (aValue > bValue) return modalSortConfig.direction === 'asc' ? 1 : -1;
+      return 0;
+    });
+  }, [poDetails?.items, modalSortConfig]);
 
   if (loading) {
     console.log('🟡 SHOWING SKELETON SCREEN - loading is true');
@@ -806,9 +900,9 @@ const PurchaseOrderLogs = () => {
       {/* Purchase Order Details Modal */}
       {showDetailsModal && (
         <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-4">
-          <div className="bg-primary rounded-lg w-full max-w-4xl max-h-[90vh] overflow-y-auto">
+          <div className="bg-primary rounded-lg w-full max-w-4xl max-h-[90vh] flex flex-col">
             {/* Modal Header */}
-            <div className="flex justify-between items-center p-6 border-b border-gray-700">
+            <div className="flex justify-between items-center p-4 border-b border-gray-700 flex-shrink-0">
               <h2 className="text-textColor-primary text-xl font-semibold">
                 Purchase Order Details
               </h2>
@@ -822,39 +916,38 @@ const PurchaseOrderLogs = () => {
               </button>
             </div>
 
-            {/* Modal Content */}
-            <div className="p-6">
-              {loadingDetails ? (
-                <div className="flex justify-center items-center h-64">
-                  <div className="text-textColor-primary">Loading purchase order details...</div>
-                </div>
-              ) : selectedPO && (
-                <div className="space-y-6">
-                  {/* Primary Details Section */}
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <div className="space-y-4">
-                      <h3 className="text-textColor-primary text-lg font-medium border-b border-gray-700 pb-2">
+            {loadingDetails ? (
+              <div className="flex justify-center items-center flex-1">
+                <div className="text-textColor-primary">Loading purchase order details...</div>
+              </div>
+            ) : selectedPO && (
+              <>
+                {/* Fixed Header Section - Primary Details and Summary */}
+                <div className="p-4 border-b border-gray-700 flex-shrink-0">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="space-y-3">
+                      <h3 className="text-textColor-primary text-base font-medium border-b border-gray-700 pb-1">
                         Primary Details
                       </h3>
                       
-                      <div className="space-y-3">
+                      <div className="grid grid-cols-2 gap-2 text-sm">
                         <div>
-                          <label className="block text-textColor-tertiary text-sm">Invoice Number</label>
+                          <label className="block text-textColor-tertiary text-xs">Invoice Number</label>
                           <p className="text-textColor-primary font-medium">{poDetails?.poNumber || selectedPO.poNumber}</p>
                         </div>
                         
                         <div>
-                          <label className="block text-textColor-tertiary text-sm">Date Generated</label>
+                          <label className="block text-textColor-tertiary text-xs">Date Generated</label>
                           <p className="text-textColor-primary">{poDetails?.dateCreated || selectedPO.dateCreated}</p>
                         </div>
                         
                         <div>
-                          <label className="block text-textColor-tertiary text-sm">Transaction Type</label>
+                          <label className="block text-textColor-tertiary text-xs">Transaction Type</label>
                           <p className="text-textColor-primary">Purchase Order</p>
                         </div>
                         
                         <div>
-                          <label className="block text-textColor-tertiary text-sm">Status</label>
+                          <label className="block text-textColor-tertiary text-xs">Status</label>
                           <span className={getStatusBadgeClass(poDetails?.status || selectedPO.status)}>
                             {poDetails?.status || selectedPO.status}
                           </span>
@@ -862,56 +955,112 @@ const PurchaseOrderLogs = () => {
                       </div>
                     </div>
                     
-                    <div className="space-y-4">
-                      <h3 className="text-textColor-primary text-lg font-medium border-b border-gray-700 pb-2">
+                    <div className="space-y-3">
+                      <h3 className="text-textColor-primary text-base font-medium border-b border-gray-700 pb-1">
                         Summary
                       </h3>
                       
-                      <div className="space-y-3">
+                      <div className="grid grid-cols-2 gap-2 text-sm">
                         <div>
-                          <label className="block text-textColor-tertiary text-sm">Total Quantity</label>
+                          <label className="block text-textColor-tertiary text-xs">Total Quantity</label>
                           <p className="text-textColor-primary font-medium">{poDetails?.totalQuantity || selectedPO.totalQuantity} pcs</p>
                         </div>
                         
                         <div>
-                          <label className="block text-textColor-tertiary text-sm">Total Amount</label>
-                          <p className="text-textColor-primary font-medium text-lg">{poDetails?.totalAmount || selectedPO.totalAmount}</p>
+                          <label className="block text-textColor-tertiary text-xs">Total Amount</label>
+                          <p className="text-textColor-primary font-medium">{poDetails?.totalAmount || selectedPO.totalAmount}</p>
                         </div>
                         
-                        <div>
-                          <label className="block text-textColor-tertiary text-sm">Created By</label>
+                        <div className="col-span-2">
+                          <label className="block text-textColor-tertiary text-xs">Created By</label>
                           <p className="text-textColor-primary">{poDetails?.createdBy || selectedPO.createdBy}</p>
                         </div>
                       </div>
                     </div>
                   </div>
+                </div>
 
-                  {/* Purchased Products Table */}
-                  <div className="space-y-4">
-                    <h3 className="text-textColor-primary text-lg font-medium border-b border-gray-700 pb-2">
+                {/* Scrollable Body Section - Purchased Products */}
+                <div className="flex-1 min-h-0 flex flex-col overflow-auto">
+                  {/* Fixed Section Title */}
+                  <div className="px-4 pt-4 pb-2 flex-shrink-0 ">
+                    <h3 className="text-textColor-primary text-base font-medium">
                       Purchased Products
                     </h3>
-                    
+                  </div>
+                  
+                  {/* Scrollable Table Content */}
+                  <div className="flex-1 min-h-0 px-4">
                     {poDetails?.error ? (
                       <div className="text-center py-8">
                         <div className="text-red-400 mb-2">Error loading product details</div>
                         <div className="text-textColor-tertiary text-sm">{poDetails.error}</div>
                       </div>
                     ) : (
-                      <div className="overflow-x-auto">
+                      <div className="flex-1">
                         <table className="w-full text-sm">
-                          <thead className="bg-background">
+                          <thead className="sticky top-0 bg-primary z-10">
                             <tr className="border-b border-gray-700">
-                              <th className="px-4 py-3 text-left text-textColor-primary font-medium">Product Name</th>
-                              <th className="px-4 py-3 text-left text-textColor-primary font-medium">Supplier</th>
-                              <th className="px-4 py-3 text-left text-textColor-primary font-medium">Quantity</th>
-                              <th className="px-4 py-3 text-left text-textColor-primary font-medium">Unit Price</th>
-                              <th className="px-4 py-3 text-left text-textColor-primary font-medium">Total Price</th>
+                              <th className="px-4 py-3 text-left text-textColor-primary font-medium">
+                                <button
+                                  onClick={() => handleModalSort('name')}
+                                  className={`flex items-center gap-1 hover:text-btn-primary transition-colors ${
+                                    modalSortConfig.column === 'name' ? 'text-btn-primary' : ''
+                                  }`}
+                                >
+                                  Product Name
+                                  {getModalSortIcon('name')}
+                                </button>
+                              </th>
+                              <th className="px-4 py-3 text-left text-textColor-primary font-medium">
+                                <button
+                                  onClick={() => handleModalSort('supplier')}
+                                  className={`flex items-center gap-1 hover:text-btn-primary transition-colors ${
+                                    modalSortConfig.column === 'supplier' ? 'text-btn-primary' : ''
+                                  }`}
+                                >
+                                  Supplier
+                                  {getModalSortIcon('supplier')}
+                                </button>
+                              </th>
+                              <th className="px-4 py-3 text-left text-textColor-primary font-medium">
+                                <button
+                                  onClick={() => handleModalSort('quantity')}
+                                  className={`flex items-center gap-1 hover:text-btn-primary transition-colors ${
+                                    modalSortConfig.column === 'quantity' ? 'text-btn-primary' : ''
+                                  }`}
+                                >
+                                  Quantity
+                                  {getModalSortIcon('quantity')}
+                                </button>
+                              </th>
+                              <th className="px-4 py-3 text-left text-textColor-primary font-medium">
+                                <button
+                                  onClick={() => handleModalSort('unitPrice')}
+                                  className={`flex items-center gap-1 hover:text-btn-primary transition-colors ${
+                                    modalSortConfig.column === 'unitPrice' ? 'text-btn-primary' : ''
+                                  }`}
+                                >
+                                  Unit Price
+                                  {getModalSortIcon('unitPrice')}
+                                </button>
+                              </th>
+                              <th className="px-4 py-3 text-left text-textColor-primary font-medium">
+                                <button
+                                  onClick={() => handleModalSort('totalPrice')}
+                                  className={`flex items-center gap-1 hover:text-btn-primary transition-colors ${
+                                    modalSortConfig.column === 'totalPrice' ? 'text-btn-primary' : ''
+                                  }`}
+                                >
+                                  Total Price
+                                  {getModalSortIcon('totalPrice')}
+                                </button>
+                              </th>
                             </tr>
                           </thead>
                           <tbody>
-                            {poDetails?.items && poDetails.items.length > 0 ? (
-                              poDetails.items.map((item, index) => (
+                            {getSortedModalData().length > 0 ? (
+                              getSortedModalData().map((item, index) => (
                                 <tr key={item.id || index} className="border-b border-gray-800 hover:bg-tbl-hover transition-colors">
                                   <td className="px-4 py-3 text-textColor-primary">{item.name}</td>
                                   <td className="px-4 py-3 text-textColor-primary">{item.supplier}</td>
@@ -933,11 +1082,11 @@ const PurchaseOrderLogs = () => {
                     )}
                   </div>
                 </div>
-              )}
-            </div>
+              </>
+            )}
 
             {/* Modal Footer */}
-            <div className="flex justify-end gap-3 p-6 border-t border-gray-700">
+            <div className="flex justify-end gap-3 p-4 border-t border-gray-700 flex-shrink-0">
               <button
                 onClick={() => handleDownloadPDF(selectedPO)}
                 className="px-4 py-2 bg-green hover:bg-green/80 text-white rounded font-medium transition-colors"
