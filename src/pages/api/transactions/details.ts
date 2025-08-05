@@ -5,78 +5,87 @@ export const GET: APIRoute = async ({ url }) => {
     const transactionId = url.searchParams.get("id");
 
     if (!transactionId) {
-        return new Response(
-            JSON.stringify({ error: "Transaction ID is required" }),
-            {
-                status: 400,
-                headers: { "Content-Type": "application/json" },
-            }
-        );
+        return new Response(JSON.stringify({ error: "Transaction ID is required" }), { 
+            status: 400, 
+            headers: { "Content-Type": "application/json" } 
+        });
     }
 
     try {
-        const { data, error } = await supabase
+        // 1. Fetch the main transaction details
+        const { data: transactionData, error: transactionError } = await supabase
             .from("transactions")
-            .select(
-                `
-        *,
-        items ( * ),
-        transaction_types ( * ),
-        suppliers ( * )
-      `
-            )
+            .select("*")
             .eq("id", transactionId)
             .single();
 
-        if (error) {
-            // This also handles the case where no rows are found, as .single() throws an error.
-            console.error("Supabase error:", error.message);
-            return new Response(
-                JSON.stringify({ error: "Transaction not found" }),
-                {
-                    status: 404,
-                    headers: { "Content-Type": "application/json" },
-                }
-            );
+        if (transactionError) {
+            console.error("Error fetching transaction:", transactionError.message);
+            return new Response(JSON.stringify({ error: "Transaction not found" }), { 
+                status: 404, 
+                headers: { "Content-Type": "application/json" } 
+            });
         }
 
-        // Transform the data to include all details and match frontend expectations
+        const { invoice_no } = transactionData;
+
+        // 2. Fetch associated items from transaction_items and item details
+        const { data: itemsData, error: itemsError } = await supabase
+            .from("transaction_items")
+            .select(`
+                quantity,
+                expiration_date,
+                items ( sku, name, unit_price )
+            `)
+            .eq("invoice_no", invoice_no);
+
+        if (itemsError) {
+            console.error("Error fetching transaction items:", itemsError.message);
+            return new Response(JSON.stringify({ error: "Failed to fetch transaction items" }), { 
+                status: 500, 
+                headers: { "Content-Type": "application/json" } 
+            });
+        }
+
+        // 3. Fetch supplier details from stock_in and suppliers
+        const { data: stockInData, error: stockInError } = await supabase
+            .from("stock_in")
+            .select(`
+                suppliers ( name, phone_num, location )
+            `)
+            .eq("transaction_id", transactionId)
+            .single();
+        
+        if (stockInError && stockInError.code !== 'PGRST116') { // PGRST116: no rows returned
+             console.error("Error fetching stock in data:", stockInError.message);
+        }
+
+        // 4. Assemble the response
         const responseData = {
-            // Transaction details
-            ...data,
-
-            // Aliases for frontend convenience
-            item_name: data.items?.name ?? "N/A",
-            unit_price: data.items?.unit_price,
-
-            type_name: data.transaction_types?.name ?? "N/A",
-            direction: data.transaction_types?.direction,
-
-            supplier_name: data.suppliers?.name,
-            supplier_contact: data.suppliers?.contact,
-            supplier_location: data.suppliers?.location,
-
-            expiry_date: data.expiration_date,
-            remarks: data.destination || "No remarks",
+            ...transactionData,
+            items: itemsData.map(item => ({
+                sku: item.items.sku,
+                name: item.items.name,
+                unit_price: item.items.unit_price,
+                quantity: item.quantity,
+                expiration_date: item.expiration_date,
+            })),
+            supplier_name: stockInData?.suppliers?.name ?? null,
+            supplier_contact: stockInData?.suppliers?.phone_num ?? null,
+            supplier_location: stockInData?.suppliers?.location ?? null,
         };
 
         return new Response(JSON.stringify(responseData), {
             status: 200,
             headers: { "Content-Type": "application/json" },
         });
+
     } catch (err) {
-        console.error("Error fetching transaction details:", err);
-        const errorMessage =
-            err instanceof Error ? err.message : "An unknown error occurred";
-        return new Response(
-            JSON.stringify({
-                error: "Internal Server Error",
-                details: errorMessage,
-            }),
-            {
-                status: 500,
-                headers: { "Content-Type": "application/json" },
-            }
-        );
+        console.error("Error processing transaction details:", err);
+        const errorMessage = err instanceof Error ? err.message : "An unknown error occurred";
+        return new Response(JSON.stringify({ error: "Internal Server Error", details: errorMessage }), { 
+            status: 500, 
+            headers: { "Content-Type": "application/json" } 
+        });
     }
 };
