@@ -1,3 +1,16 @@
+/* Product Status Theme Classes */
+.status-ok {
+  color: var(--color-green);
+  background: var(--color-primary);
+}
+.status-low {
+  color: var(--color-orange);
+  background: var(--color-primary);
+}
+.status-out {
+  color: var(--color-red);
+  background: var(--color-primary);
+}
 @import "tailwindcss";
 
 @keyframes themeRotate {
