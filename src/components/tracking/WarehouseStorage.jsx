@@ -1,20 +1,34 @@
 import { useEffect, useState } from 'react';
 
-
-
-
 export default function WarehouseStorage({ initialItems, total, limit, page }) {
   const [items, setItems] = useState(initialItems);
-  const [selectedWarehouse, setSelectedWarehouse] = useState('1'); // default to 'Warehouse 1'
+  const [selectedWarehouse, setSelectedWarehouse] = useState('1');
   const [loading, setLoading] = useState(false);
   const [showModal, setShowModal] = useState(false);
   const [warehouseList, setWarehouseList] = useState([]);
 
 
-  const currentPage = page || 1;
+  const [currentPage, setCurrentPage] = useState(page);
   const [filteredTotal, setFilteredTotal] = useState(total || 0);
   const totalPages = Math.ceil(filteredTotal / limit);
+  const [currentDate, setCurrentDate] = useState('');
+  const [filterOpen, setFilterOpen] = useState(false);
 
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const urlParams = new URLSearchParams(window.location.search);
+      const parsedPage = parseInt(urlParams.get('page')) || 1;
+      setCurrentPage(parsedPage);
+    }
+  }, []);
+
+  useEffect(() => {
+      const urlParams = new URLSearchParams(window.location.search);
+      const warehouseId = urlParams.get('warehouse_id');
+      if (warehouseId) {
+        setSelectedWarehouse(warehouseId);
+      }
+    }, []);
 
   useEffect(() => {
     const fetchWarehouses = async () => {
@@ -24,7 +38,12 @@ export default function WarehouseStorage({ initialItems, total, limit, page }) {
         setWarehouseList(result.data || []);
         
         if (result.data && result.data.length > 0) {
-          setSelectedWarehouse(result.data[0].id); // Set the first warehouse as default
+          const urlParams = new URLSearchParams(window.location.search);
+          const warehouseIdFromURL = urlParams.get('warehouse_id');
+
+          if (!warehouseIdFromURL) {
+            setSelectedWarehouse(result.data[0].id);
+          }
         }
       } catch (err) {
         console.error("Error fetching warehouses", err);
@@ -52,13 +71,23 @@ export default function WarehouseStorage({ initialItems, total, limit, page }) {
     fetchItems();
   }, [selectedWarehouse, page]);
 
+  useEffect(() => {
+    const today = new Date();
+    const formatted = today.toLocaleDateString(undefined, {
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric',
+    });
+    setCurrentDate(formatted);
+  }, []);
+
   return (
     <div>
       {/* Top Bar with Buttons */}
       <div className="flex justify-between items-center mb-6">
         <div className="flex gap-4 items-center">
           <h2 className="text-2xl font-semibold">
-            {warehouseList.find(w => w.id === selectedWarehouse)?.name}
+            {warehouseList.find(w => String(w.id) === selectedWarehouse)?.name}
           </h2>
 
           {/* Select Warehouse */}
@@ -86,6 +115,7 @@ export default function WarehouseStorage({ initialItems, total, limit, page }) {
                       onClick={() => {
                         setSelectedWarehouse(w.id);
                         document.getElementById('warehouse-dropdown')?.classList.add('hidden');
+                        window.location.href = `?page=1&warehouse_id=${w.id}`;
                       }}
                       className="block w-full text-left px-4 py-2 hover:bg-btn-hover"
                     >
@@ -115,7 +145,34 @@ export default function WarehouseStorage({ initialItems, total, limit, page }) {
             Add Warehouse
           </button>
 
-          {/* Other Buttons */}
+          {/* ✅ Filter Button (Insert here) */}
+            <div className="relative">
+              <button onClick={() => setFilterOpen(!filterOpen)} className="bg-primary text-secondary rounded px-3 py-2 text-sm hover:text-textColor-secondary hover:bg-violet-600">
+                <svg width="24" height="24" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                  <line x1="3" y1="6" x2="21" y2="6" />
+                  <line x1="6" y1="12" x2="18" y2="12" />
+                  <line x1="9" y1="18" x2="15" y2="18" />
+                </svg>
+              </button>
+              {filterOpen && (
+                <div className="absolute left-1/2 -translate-x-1/2 mt-2 bg-primary border border-border_color rounded shadow-md z-10 w-[130px]">
+                  <ul className="py-1 text-sm text-textColor-primary text-left">
+                    <li><a href="#" className="block px-4 py-2 hover:bg-btn-hover">Date</a></li>
+                    <li><a href="#" className="block px-4 py-2 hover:bg-btn-hover">Warehouse</a></li>
+                    <li><a href="#" className="block px-4 py-2 hover:bg-btn-hover">Transfer ID</a></li>
+                  </ul>
+                </div>
+              )}
+            </div>
+
+          {/* ❌ Cancel Button with Link to Dashboard */}
+          <a href="/tracking/Dashboard">
+            <button className="bg-primary text-secondary rounded px-3 py-2 text-sm hover:text-textColor-secondary hover:bg-violet-600">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="w-5 h-5">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M6 18 18 6M6 6l12 12" />
+              </svg>
+            </button>
+          </a>
         </div>
       </div>
 
@@ -125,25 +182,27 @@ export default function WarehouseStorage({ initialItems, total, limit, page }) {
           <div className="bg-primary text-textColor-primary rounded-md w-[400px] p-6 shadow-lg border border-border_color relative">
             <h2 className="text-xl font-semibold mb-4">Add New Warehouse</h2>
 
-            <form>
-              {/* Warehouse Name Select */}
-              <label className="block mb-1">Select Warehouse</label>
-              <select
-                onChange={(e) => setSelectedWarehouse(e.target.value)}
-                value={selectedWarehouse}
+            <form onSubmit={(e) => e.preventDefault()}>
+              {/* Warehouse Name Input */}
+              <label className="block mb-1">Warehouse Name</label>
+              <input
+                type="text"
+                placeholder="Enter warehouse name"
                 className="w-full border border-border_color rounded px-3 py-2 mb-4 bg-primary text-textColor-primary"
-              >
-                {warehouseList.map((w) => (
-                  <option key={w.id} value={w.id}>
-                    {w.name}
-                  </option>
-                ))}
-              </select>
+              />
+
+              {/* Description Input */}
+              <label className="block mb-1">Description</label>
+              <textarea
+                placeholder="Enter warehouse description"
+                className="w-full border border-border_color rounded px-3 py-2 mb-4 bg-primary text-textColor-primary"
+                rows={3}
+              />
 
               {/* Other Form Fields */}
               <div className="text-sm text-textColor-tertiary mb-4">
                 Requested By: <span className="font-medium text-textColor-primary">Inventory module</span><br />
-                Requested Date: <span className="font-medium text-textColor-primary">Current Date</span>
+                Requested Date: <span className="font-medium text-textColor-primary">{currentDate}</span>
               </div>
 
               <div className="flex justify-end gap-2">
@@ -208,13 +267,13 @@ export default function WarehouseStorage({ initialItems, total, limit, page }) {
       {/* Pagination UI */}
       <div className="flex justify-between items-center border-t border-border_color pt-4 mt-4">
         <div>
-          Showing <span className="font-medium">{(page - 1) * limit + 1}</span>–
-          <span className="font-medium">{Math.min(page * limit, filteredTotal)}</span> of{' '}
+          Showing <span className="font-medium">{(currentPage - 1) * limit + 1}</span>–
+          <span className="font-medium">{Math.min(currentPage * limit, filteredTotal)}</span> of{' '}
           <span className="font-medium">{filteredTotal}</span> products
         </div>
         <nav className="flex items-center gap-1">
           {page > 1 && (
-            <a href={`?page=${page - 1}`} className="px-2 py-1 hover:text-gray-700">
+            <a href={`?page=${page - 1}&warehouse_id=${selectedWarehouse}`} className="px-2 py-1 hover:text-gray-700">
               <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" /></svg>
             </a>
           )}
@@ -222,7 +281,7 @@ export default function WarehouseStorage({ initialItems, total, limit, page }) {
             const current = i + 1;
             if (current === 1 || current === totalPages || Math.abs(current - page) <= 1) {
               return (
-                <a key={current}href={`?page=${current}`}className={`px-3 py-1.5 rounded-lg transition-colors duration-200 ${page === current ? "bg-[#8A00C4] font-medium text-white": "hover:bg-tbl-hover hover:text-[#8A00C4] text-textColor-primary"}`}>{current}</a>
+                <a key={current} href={`?page=${current}&warehouse_id=${selectedWarehouse}`} className={`px-3 py-1.5 rounded-lg transition-colors duration-200 ${page === current ? "bg-[#8A00C4] font-medium text-white": "hover:bg-tbl-hover hover:text-[#8A00C4] text-textColor-primary"}`}>{current}</a>
               );
             } else if ((current === page - 2 && current !== 1) || (current === page + 2 && current !== totalPages)) {
               return <span key={`ellipsis-${current}`} className="px-2 py-1 ">...</span>;
@@ -230,7 +289,7 @@ export default function WarehouseStorage({ initialItems, total, limit, page }) {
             return null;
           })}
           {page < totalPages && (
-            <a href={`?page=${page + 1}`} className="px-2 py-1 hover:text-gray-700">
+            <a href={`?page=${page + 1}&warehouse_id=${selectedWarehouse}`} className="px-2 py-1 hover:text-gray-700">
               <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" /></svg>
             </a>
           )}
