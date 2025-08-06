@@ -1,4 +1,5 @@
 import React from 'react';
+import PaginationSkeleton from './PaginationSkeleton';
 
 // Function to generate an array of page numbers for pagination display
 const generatePaginationPages = (currentPage, totalPages) => {
@@ -10,7 +11,7 @@ const generatePaginationPages = (currentPage, totalPages) => {
         pageSet.add(1);
     } // Always include the first page
 
-    if (currentPage > 4) {
+    if (currentPage > 3) {
         pages.push("...");
     } // Add ellipsis if current page is far from the beginning
 
@@ -37,7 +38,11 @@ const generatePaginationPages = (currentPage, totalPages) => {
 };
 
 
-export default function Pagination({ paginationData, handlePageChange, startItem, endItem }) {
+export default function Pagination({ paginationData, handlePageChange, startItem, endItem, loading }) {
+    if (loading) {
+        return <PaginationSkeleton />;
+    }
+    
     const paginationPages = generatePaginationPages(paginationData.currentPage, paginationData.totalPages);
 
     return (

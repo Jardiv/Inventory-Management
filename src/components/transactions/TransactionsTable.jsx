@@ -195,7 +195,7 @@ export default function TransactionsTable({
 				</tbody>
 			</table>
 
-			{showPagination && !loading && <Pagination paginationData={paginationData} handlePageChange={handlePageChange} startItem={startItem} endItem={endItem} />}
+			{showPagination && <Pagination paginationData={paginationData} handlePageChange={handlePageChange} startItem={startItem} endItem={endItem} loading={loading} />}
 		</div>
 	);
 }

@@ -4,7 +4,7 @@ const columns = [
 	{ header: "Invoice no", accessor: "invoice_no", sortable: true },
 	{ header: "Date", accessor: "transaction_datetime", sortable: true },
 	{ header: "Supplier", accessor: "supplier_name", sortable: false, render: (log) => log.supplier_name || "- - -" },
-	{ header: "Total Items", accessor: "items_count", sortable: false },
+	{ header: "Total Items", accessor: "total_quantity", sortable: true },
 	{
 		header: "Total Price",
 		accessor: "total_price",

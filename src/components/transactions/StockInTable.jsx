@@ -4,7 +4,7 @@ const columns = [
     { header: 'Invoice no', accessor: 'invoice_no', sortable: true },
     { header: 'Date', accessor: 'transaction_datetime', sortable: true },
     { header: 'Supplier', accessor: 'supplier_name', sortable: false },
-    { header: 'Total Items', accessor: 'items_count', sortable: true, sortKey: 'total_quantity' },
+    { header: 'Total Items', accessor: 'total_quantity', sortable: true, sortKey: 'total_quantity' },
     { 
         header: 'Total Price', 
         accessor: 'total_price', 
@@ -33,5 +33,6 @@ const columns = [
 ];
 
 export default function StockInTable(props) {
+
     return <TransactionsTable {...props} columns={columns} direction="in" />;
 }
