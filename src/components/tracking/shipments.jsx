@@ -3,8 +3,18 @@ import React, { useEffect, useState } from 'react';
 const Shipments = () => {
   const [shipments, setShipments] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [showModal, setShowModal] = useState(false);
+  const [showModal, setShowModal] = useState(false); 
   const [showDropdown, setShowDropdown] = useState(false);
+  const [selectedWarehouse, setSelectedWarehouse] = useState('');
+  const [warehouseCapacity, setWarehouseCapacity] = useState({ current: 0, max: 0 });
+  const [selectedProducts, setSelectedProducts] = useState(
+    Array(5).fill('') // Assuming 5 products initially
+  );
+  const [assignedProducts, setAssignedProducts] = useState([]);
+  const [warehouses, setWarehouses] = useState([]); 
+  const [shipmentProducts, setShipmentProducts] = useState([]);
+
+
 
   useEffect(() => {
     const fetchShipments = async () => {
@@ -14,6 +24,20 @@ const Shipments = () => {
 
         if (res.ok) {
           setShipments(data);
+
+          // Extract unique products
+          // Keep name and quantity of each product from shipments
+          const uniqueProductsMap = new Map();
+          data.forEach(item => {
+            if (!uniqueProductsMap.has(item.name)) {
+              uniqueProductsMap.set(item.name, {
+                name: item.name,
+                quantity: item.qty, // preserve quantity
+                item_id: item.item_id // optional but useful later
+              });
+            }
+          });
+          setShipmentProducts(Array.from(uniqueProductsMap.values()));
         } else {
           console.error('Error fetching shipments:', data.error);
         }
@@ -24,8 +48,47 @@ const Shipments = () => {
       }
     };
 
+    const fetchWarehouses = async () => {
+      try {
+        const res = await fetch('/api/tracking/warehouses');
+        const data = await res.json();
+
+        console.log('Fetched warehouse data:', data);
+
+        if (res.ok && Array.isArray(data.data)) {
+          setWarehouses(data.data); // ✅ Correct!
+        } else {
+          console.error('Error fetching warehouses:', data.error || 'Invalid response format');
+        }
+      } catch (err) {
+        console.error('Fetch failed:', err);
+      }
+    };
+
     fetchShipments();
+    fetchWarehouses();
   }, []);
+
+  useEffect(() => {
+    const fetchWarehouseCapacity = async () => {
+      if (!selectedWarehouse) return;
+
+      try {
+        const res = await fetch(`/api/tracking/warehouse-capacity?warehouse_id=${selectedWarehouse}`);
+        const data = await res.json();
+
+        if (res.ok) {
+          setWarehouseCapacity({ current: data.current_quantity, max: data.max_capacity });
+        } else {
+          console.error('Failed to fetch capacity:', data.error);
+        }
+      } catch (err) {
+        console.error('Error fetching warehouse capacity:', err);
+      }
+    };
+
+    fetchWarehouseCapacity();
+  }, [selectedWarehouse, showModal]);
 
   const emptyRows = 11 - shipments.length;
   return (
@@ -38,7 +101,7 @@ const Shipments = () => {
             onClick={() => setShowModal(true)}
             className="flex items-center gap-2 px-4 py-2 border border-transparent rounded hover:border-btn-hover hover:text-textColor-secondary transition"
           >
-            <span>Receive Items</span>
+            <span>Assign Items</span>
             <svg xmlns="http://www.w3.org/2000/svg" className="size-6" viewBox="0 0 24 24" fill="currentColor">
               <path d="M3.375 3C2.339 3 1.5 3.84 1.5 4.875v.75c0 1.036.84 1.875 1.875 1.875h17.25c1.035 0 1.875-.84 1.875-1.875v-.75C22.5 3.839 21.66 3 20.625 3H3.375Z" />
               <path fillRule="evenodd" d="m3.087 9 .54 9.176A3 3 0 0 0 6.62 21h10.757a3 3 0 0 0 2.995-2.824L20.913 9H3.087ZM12 10.5a.75.75 0 0 1 .75.75v4.94l1.72-1.72a.75.75 0 1 1 1.06 1.06l-3 3a.75.75 0 0 1-1.06 0l-3-3a.75.75 0 1 1 1.06-1.06l1.72 1.72v-4.94a.75.75 0 0 1 .75-.75Z" clipRule="evenodd" />
@@ -86,26 +149,24 @@ const Shipments = () => {
       {/* Table */}
       <div className="overflow-x-auto">
         <div className="min-w-[700px]">
-          <div className="grid grid-cols-5 text-center text-lg border-b border-border_color py-2 font-medium">
+          <div className="grid grid-cols-4 text-center text-lg border-b border-border_color py-2 font-medium">
             <div className="min-w-[150px]">Shipment ID</div>
-            <div className="min-w-[200px]">Warehouse</div>
             <div className="min-w-[150px]">Item name</div>
             <div className="min-w-[200px]">Quantity</div>
             <div className="min-w-[150px]">Status</div>
           </div>
           <div className="divide-y divide-border_color">
             {shipments.map((t, i) => (
-              <div key={i} className="grid grid-cols-5 text-center text-lg py-4 font-normal">
+              <div key={i} className="grid grid-cols-4 text-center text-lg py-4 font-normal">
                 <div>{t.id}</div>
-                <div>{t.warehouse}</div>
                 <div>{t.name}</div>
                 <div>{t.qty}</div>
                 <div>{t.status}</div>
               </div>
             ))}
             {Array.from({ length: emptyRows > 0 ? emptyRows : 0 }).map((_, i) => (
-              <div key={i} className="grid grid-cols-5 text-center text-lg h-[56px] font-normal opacity-50">
-                <div>&nbsp;</div><div>&nbsp;</div><div>&nbsp;</div><div>&nbsp;</div><div>&nbsp;</div>
+              <div key={i} className="grid grid-cols-4 text-center text-lg h-[56px] font-normal opacity-50">
+                <div>&nbsp;</div><div>&nbsp;</div><div>&nbsp;</div><div>&nbsp;</div>
               </div>
             ))}
           </div>
@@ -136,21 +197,171 @@ const Shipments = () => {
       {/* Modal */}
       {showModal && (
         <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50">
-          <div className="bg-primary border border-border_color rounded-lg shadow-lg w-[711px] h-[800px] p-6 relative flex flex-col">
-            <h2 className="text-2xl font-semibold mb-6">Receive Items</h2>
+          <div className="relative bg-[#121212] border border-[#676767] shadow-[0_4px_4px_797px_rgba(0,0,0,0.49)] rounded-lg w-[711px] h-[854px] text-white font-poppins overflow-hidden">
+            {/* Close Button */}
+            <button onClick={() => setShowModal(false)} className="absolute top-4 right-4 w-[34px] h-[34px] flex items-center justify-center">
+              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth="1.5" stroke="currentColor" className="w-5 h-5 mx-auto">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M6 18 18 6M6 6l12 12" />
+              </svg>
+            </button>
 
-            {/* Scrollable form body (omit for now or implement from original) */}
-            <div className="flex-1 overflow-auto mb-4">
-              <p className="text-lg text-center text-textColor-secondary">Modal content goes here</p>
+            {/* Header */}
+            <h2 className="absolute top-5 left-7 text-2xl font-semibold">Assign Items</h2>
+
+            {/* Warehouse Section */}
+            <div className="absolute top-[95px] left-10 text-white text-xl">Warehouse</div>
+            <div className="absolute top-[133px] left-[39px] w-[636px] h-[65px]">
+              <div className="relative w-full h-full">
+                <select
+                  value={selectedWarehouse}
+                  onChange={async (e) => {
+                    const warehouseId = e.target.value;
+                    setSelectedWarehouse(warehouseId);
+
+                    try {
+                      const res = await fetch(`/api/tracking/warehouse-capacity?warehouse_id=${warehouseId}`);
+                      const data = await res.json();
+
+                      if (res.ok) {
+                        setWarehouseCapacity({ current: data.current_quantity, max: data.max_capacity });
+                      } else {
+                        console.error('Failed to fetch capacity:', data.error);
+                      }
+                    } catch (err) {
+                      console.error('Error fetching warehouse capacity:', err);
+                    }
+                  }}
+                  className="w-full h-full bg-[#121212] border border-white rounded-md text-white text-lg px-4 appearance-none"
+                >
+                  <option value="" disabled>Select a warehouse</option>
+                  {warehouses?.map((wh) => (
+                    <option key={wh.id} value={wh.id}>
+                      {wh.name}
+                    </option>
+                  ))}
+                </select>
+                {/* Down Arrow Icon */}
+                <div className="pointer-events-none absolute top-1/2 right-4 transform -translate-y-1/2 text-white">
+                  <svg xmlns="http://www.w3.org/2000/svg"fill="none"viewBox="0 0 24 24"strokeWidth="1.5"stroke="currentColor"className="w-4 h-4">
+                    <path strokeLinecap="round"strokeLinejoin="round"d="M19 9l-7 7-7-7"/>
+                  </svg>
+                </div>
+              </div>
+            </div>
+            {/* Product Section */}
+            <div className="absolute top-[223px] left-10 text-white text-xl">Product</div>
+            <div className="absolute top-[267px] left-[39px] w-[513px] h-[65px]">
+              <div className="relative w-full h-full">
+                <select
+                  value={selectedProducts[0]}
+                  onChange={(e) => {
+                    const updated = [...selectedProducts];
+                    updated[0] = e.target.value;
+                    setSelectedProducts(updated);
+                  }}
+                  className="w-full h-full bg-[#121212] border border-white rounded-md text-white text-lg px-4 appearance-none"
+                >
+                  <option value="" disabled>Select a product</option>
+                  {shipmentProducts.map((product, idx) => (
+                    <option key={idx} value={product.name}>
+                      {product.name}
+                    </option>
+                  ))}
+                </select>
+
+                {/* Down arrow icon */}
+                <div className="pointer-events-none absolute top-1/2 right-4 transform -translate-y-1/2 text-white">
+                  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
+                      strokeWidth="1.5" stroke="currentColor" className="w-4 h-4">
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
+                  </svg>
+                </div>
+              </div>
+            </div>
+            {/* Add Button */}
+            <button
+              onClick={() => {
+                const selectedName = selectedProducts[0];
+                const productDetails = shipmentProducts.find(p => p.name === selectedName);
+
+                if (productDetails) {
+                  setAssignedProducts((prev) => [
+                    ...prev,
+                    {
+                      name: productDetails.name,
+                      quantity: productDetails.quantity, // ✅ use the real quantity
+                      item_id: productDetails.item_id    // optional for DB logic later
+                    }
+                  ]);
+
+                  const updated = [...selectedProducts];
+                  updated[0] = '';
+                  setSelectedProducts(updated);
+                }
+              }}
+              className="absolute top-[279px] right-[25px] w-[116px] h-[42px] bg-[#029F37] rounded-md text-white text-[17px] font-medium"
+            >
+              Add
+            </button>
+
+            {/* Products Table */}
+            <div className="absolute top-[378px] left-[41px] w-[644px] h-[335px] border border-white rounded-md overflow-y-auto px-4 pt-6">
+              {/* Table Header */}
+              <div className="grid grid-cols-3 text-xl mb-4 px-2">
+                <div className="text-left">Product</div>
+                <div className="text-center">Quantity</div>
+                <div className="text-right">Action</div>
+              </div>
+              <hr className="border-white opacity-50" />
+
+              {/* Sample Product Rows */}
+              {assignedProducts.map((product, idx) => (
+                <div key={idx}>
+                  <div className="grid grid-cols-3 items-center my-4 px-2">
+                    <div className="text-lg text-left">{product.name}</div>
+                    <div className="text-lg text-center">{product.quantity}</div>
+                    <div className="flex justify-end">
+                      <button
+                        className="text-red-500 hover:text-red-700 transition"
+                        onClick={() =>
+                          setAssignedProducts((prev) => prev.filter((_, i) => i !== idx))
+                        }
+                      >
+                        <svg
+                          xmlns="http://www.w3.org/2000/svg"
+                          fill="none"
+                          viewBox="0 0 24 24"
+                          strokeWidth="1.5"
+                          stroke="currentColor"
+                          className="w-6 h-6"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            d="M15 12H9m12 0a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"
+                          />
+                        </svg>
+                      </button>
+                    </div>
+                  </div>
+                  <hr className="border-white opacity-50" />
+                </div>
+              ))}
             </div>
 
-            {/* Footer */}
-            <div className="mt-auto pt-4 border-t border-border_color">
-              <p className="text-center text-lg mb-4">Warehouse Capacity: 0/100</p>
-              <div className="flex justify-end gap-4">
-                <button onClick={() => setShowModal(false)} className="bg-red-600 text-white px-6 py-2 rounded hover:bg-red-700">Cancel</button>
-                <button className="bg-green-600 text-white px-6 py-2 rounded hover:bg-green-700">OK</button>
-              </div>
+            {/* Zone Capacity (now outside the scrollable product list) */}
+            <div className="absolute top-[723px] right-[39px] text-white text-lg text-right">
+              Warehouse Capacity: {warehouseCapacity.current}/{warehouseCapacity.max}
+            </div>
+
+            {/* Modal Footer Buttons */}
+            <div className="absolute bottom-[32px] right-[32px] flex gap-4">
+              <button onClick={() => setShowModal(false)} className="bg-[#FF2C2C] w-[153px] h-[42px] rounded-md text-white text-[17px] font-medium">
+                Cancel
+              </button>
+              <button className="bg-[#029F37] w-[153px] h-[42px] rounded-md text-white text-[17px] font-medium">
+                Assign
+              </button>
             </div>
           </div>
         </div>
