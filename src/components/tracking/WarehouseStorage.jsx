@@ -144,7 +144,16 @@ export default function WarehouseStorage({ initialItems, total, limit, page }) {
             </svg>
             Add Warehouse
           </button>
-
+          
+          {/* Download button */}
+          <a href={`/tracking/warehouse-overview?warehouse_id=${selectedWarehouse}`}>
+            <button className="bg-primary text-secondary rounded px-3 py-2 text-sm hover:text-textColor-secondary hover:bg-violet-600">
+              <svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" className="w-5 h-5" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5"
+                  d="M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5M16.5 12 12 16.5m0 0L7.5 12m4.5 4.5V3" />
+              </svg>
+            </button>
+          </a>       
           {/* ✅ Filter Button (Insert here) */}
             <div className="relative">
               <button onClick={() => setFilterOpen(!filterOpen)} className="bg-primary text-secondary rounded px-3 py-2 text-sm hover:text-textColor-secondary hover:bg-violet-600">
