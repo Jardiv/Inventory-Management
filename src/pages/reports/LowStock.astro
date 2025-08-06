@@ -12,7 +12,11 @@ const currentPage = 1; // Default value, actual pagination handled client-side
     <div class="w-full h-full flex flex-col">
         <div class="bg-primary flex-1 rounded-lg p-6 flex flex-col min-h-0">
             <div class="flex justify-between items-center mb-4">
-                <h2 class="text-textColor-primary text-xl font-semibold">Low Stock Items - Purchase Order</h2>
+                <div class="flex items-center gap-3">
+                    <h2 class="text-textColor-primary text-xl font-semibold">Low Stock Items - Purchase Order</h2>
+                    <!-- Placeholder for restore notification button - will be populated by React component -->
+                    <div id="restore-notification-placeholder" class="flex items-center"></div>
+                </div>
                 <div class="flex gap-2">
                     <button id="filterBtn" class="p-2 text-textColor-primary hover:bg-btn-hover hover:text-white rounded transition-colors">
                         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5">
