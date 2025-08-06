@@ -13,8 +13,7 @@ const Shipments = () => {
   const [assignedProducts, setAssignedProducts] = useState([]);
   const [warehouses, setWarehouses] = useState([]); 
   const [shipmentProducts, setShipmentProducts] = useState([]);
-
-
+  const [isAssigning, setIsAssigning] = useState(false);
 
   useEffect(() => {
     const fetchShipments = async () => {
@@ -89,6 +88,83 @@ const Shipments = () => {
 
     fetchWarehouseCapacity();
   }, [selectedWarehouse, showModal]);
+
+  const handleAssignItems = async () => {
+    if (!selectedWarehouse) {
+      alert('Please select a warehouse first');
+      return;
+    }
+
+    if (assignedProducts.length === 0) {
+      alert('Please add at least one product to assign');
+      return;
+    }
+
+    setIsAssigning(true);
+
+    try {
+      console.log('Sending assignment request:', {
+        warehouseId: selectedWarehouse,
+        items: assignedProducts.map(product => ({
+          name: product.name,
+          quantity: product.quantity
+        }))
+      });
+
+      const response = await fetch('/api/tracking/assign-items', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          warehouseId: selectedWarehouse,
+          items: assignedProducts.map(product => ({
+            name: product.name,
+            quantity: product.quantity
+          }))
+        })
+      });
+
+      const data = await response.json();
+      console.log('Assignment response:', data);
+
+      if (response.ok) {
+        alert(`Successfully assigned ${assignedProducts.length} items to warehouse!`);
+        
+        // Reset modal state
+        setAssignedProducts([]);
+        setSelectedWarehouse('');
+        setSelectedProducts(Array(5).fill(''));
+        setWarehouseCapacity({ current: 0, max: 0 });
+        setShowModal(false);
+
+        // Refresh shipments data to show updated status
+        const res = await fetch('/api/tracking/shipments');
+        const shipmentsData = await res.json();
+        if (res.ok) {
+          setShipments(shipmentsData);
+        }
+
+        // Show success message with details if available
+        if (data.errors && data.errors.length > 0) {
+          console.warn('Some items had warnings:', data.errors);
+        }
+        
+      } else {
+        console.error('Assignment failed:', data);
+        alert(`Failed to assign items: ${data.error || 'Unknown error'}`);
+        
+        if (data.details) {
+          console.error('Details:', data.details);
+        }
+      }
+    } catch (error) {
+      console.error('Error assigning items:', error);
+      alert('Failed to assign items. Please try again.');
+    } finally {
+      setIsAssigning(false);
+    }
+  };
 
   const emptyRows = 11 - shipments.length;
   return (
@@ -199,7 +275,11 @@ const Shipments = () => {
         <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50">
           <div className="relative bg-[#121212] border border-[#676767] shadow-[0_4px_4px_797px_rgba(0,0,0,0.49)] rounded-lg w-[711px] h-[854px] text-white font-poppins overflow-hidden">
             {/* Close Button */}
-            <button onClick={() => setShowModal(false)} className="absolute top-4 right-4 w-[34px] h-[34px] flex items-center justify-center">
+            <button 
+              onClick={() => setShowModal(false)} 
+              disabled={isAssigning}
+              className="absolute top-4 right-4 w-[34px] h-[34px] flex items-center justify-center disabled:opacity-50"
+            >
               <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth="1.5" stroke="currentColor" className="w-5 h-5 mx-auto">
                 <path strokeLinecap="round" strokeLinejoin="round" d="M6 18 18 6M6 6l12 12" />
               </svg>
@@ -231,7 +311,8 @@ const Shipments = () => {
                       console.error('Error fetching warehouse capacity:', err);
                     }
                   }}
-                  className="w-full h-full bg-[#121212] border border-white rounded-md text-white text-lg px-4 appearance-none"
+                  disabled={isAssigning}
+                  className="w-full h-full bg-[#121212] border border-white rounded-md text-white text-lg px-4 appearance-none disabled:opacity-50"
                 >
                   <option value="" disabled>Select a warehouse</option>
                   {warehouses?.map((wh) => (
@@ -259,7 +340,8 @@ const Shipments = () => {
                     updated[0] = e.target.value;
                     setSelectedProducts(updated);
                   }}
-                  className="w-full h-full bg-[#121212] border border-white rounded-md text-white text-lg px-4 appearance-none"
+                  disabled={isAssigning}
+                  className="w-full h-full bg-[#121212] border border-white rounded-md text-white text-lg px-4 appearance-none disabled:opacity-50"
                 >
                   <option value="" disabled>Select a product</option>
                   {shipmentProducts.map((product, idx) => (
@@ -299,7 +381,8 @@ const Shipments = () => {
                   setSelectedProducts(updated);
                 }
               }}
-              className="absolute top-[279px] right-[25px] w-[116px] h-[42px] bg-[#029F37] rounded-md text-white text-[17px] font-medium"
+              disabled={isAssigning}
+              className="absolute top-[279px] right-[25px] w-[116px] h-[42px] bg-[#029F37] rounded-md text-white text-[17px] font-medium disabled:opacity-50"
             >
               Add
             </button>
@@ -322,7 +405,8 @@ const Shipments = () => {
                     <div className="text-lg text-center">{product.quantity}</div>
                     <div className="flex justify-end">
                       <button
-                        className="text-red-500 hover:text-red-700 transition"
+                        className="text-red-500 hover:text-red-700 transition disabled:opacity-50"
+                        disabled={isAssigning}
                         onClick={() =>
                           setAssignedProducts((prev) => prev.filter((_, i) => i !== idx))
                         }
@@ -356,11 +440,19 @@ const Shipments = () => {
 
             {/* Modal Footer Buttons */}
             <div className="absolute bottom-[32px] right-[32px] flex gap-4">
-              <button onClick={() => setShowModal(false)} className="bg-[#FF2C2C] w-[153px] h-[42px] rounded-md text-white text-[17px] font-medium">
+              <button 
+                onClick={() => setShowModal(false)} 
+                disabled={isAssigning}
+                className="bg-[#FF2C2C] w-[153px] h-[42px] rounded-md text-white text-[17px] font-medium disabled:opacity-50"
+              >
                 Cancel
               </button>
-              <button className="bg-[#029F37] w-[153px] h-[42px] rounded-md text-white text-[17px] font-medium">
-                Assign
+              <button 
+                onClick={handleAssignItems}
+                disabled={isAssigning || !selectedWarehouse || assignedProducts.length === 0}
+                className="bg-[#029F37] w-[153px] h-[42px] rounded-md text-white text-[17px] font-medium disabled:opacity-50 flex items-center justify-center"
+              >
+                {isAssigning ? 'Assigning...' : 'Assign'}
               </button>
             </div>
           </div>
