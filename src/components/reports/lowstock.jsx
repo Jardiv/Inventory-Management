@@ -1072,7 +1072,7 @@ const LowStockTable = ({ currentPage = 1 }) => {
                             </div>
                             <div className="flex items-center gap-2 ml-4 flex-shrink-0 p-2">
                                 <button 
-                                    onClick={() => window.location.href = '/reports/PurchaseOrderLogs'}
+                                    onClick={() => window.location.href = '/reports/Logs'}
                                     className="text-purple hover:text-purple-300 text-sm font-medium transition-colors"
                                 >
                                     View Pending Orders
