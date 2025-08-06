@@ -10,7 +10,7 @@ const TransferList = () => {
   const [totalPages, setTotalPages] = useState(1); // update from API
   const [totalCount, setTotalCount] = useState(0);
   const [warehouses, setWarehouses] = useState([]);
-
+ 
   useEffect(() => {
     const fetchWarehouses = async () => {
       try {
@@ -41,7 +41,7 @@ const TransferList = () => {
             id: t.id,
             name: t.items?.name || "Unknown",
             qty: t.quantity,
-            date: new Date(t.date).toLocaleDateString(),
+            date: new Date(t.transfer_date).toLocaleDateString(),
             from: t.from_warehouse?.name || "N/A",
             to: t.to_warehouse?.name || "N/A",
           }));

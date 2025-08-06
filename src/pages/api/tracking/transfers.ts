@@ -10,11 +10,11 @@ export const GET: APIRoute = async ({ request }) => {
 
   // 1. Get paginated data
   const { data, error } = await supabase
-    .from("transfers")
+    .from("transfers") 
     .select(`
       id, 
       quantity,
-      date,
+      transfer_date,
       status,
       items:item_id (
         id, 

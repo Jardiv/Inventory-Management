@@ -1,6 +1,10 @@
 ---
 import Layout from '../../layouts/Layout.astro';
 import WarehouseSummary from '../../components/tracking/warehouse-summary.jsx';
+import QuickSummaryCard from '../../components/tracking/QuickSummaryCard.jsx';
+import RecentShipments from '../../components/tracking/RecentShipments.jsx';
+
+
 
 // Quick Summary Data
 const quickSummaryData = [
@@ -25,24 +29,8 @@ const { data: recentTransfers = [] } = await transferRes.json();
 
 <!-- TRACKING DASHBOARD -->
 <Layout>
-  <!----Quick summary card---->
-  <div class="w-full grid grid-cols-5 grid-rows-1 gap-4 mb-4">
-      <!-- Quick Summary Section -->
-      <div class="bg-primary col-span-5 row-span-1 p-6 rounded-lg">
-          <div class="flex justify-between items-center mb-4">
-              <h2 class="text-textColor-primary text-lg sm:text-xl lg:text-2xl font-semibold">Quick Summary</h2>
-          </div>
-          <div class="grid grid-cols-2 sm:grid-cols-4 gap-4">
-              {quickSummaryData.map((item, index) => (
-                  <div class="bg-background rounded-lg p-4 text-center">
-                      <div class="text-2xl mb-2">{summaryIcons[index]}</div>
-                      <div class={`text-xl font-bold ${item.color} mb-1`}>{item.value}</div>
-                      <div class="text-textColor-primary text-sm">{item.label}</div>
-                  </div>
-              ))}
-          </div>
-      </div>
-  </div>
+
+  <QuickSummaryCard client:load />
 
   <WarehouseSummary client:load />
 
@@ -65,34 +53,7 @@ const { data: recentTransfers = [] } = await transferRes.json();
           <span>Quantity</span>
           <span>Status</span>
         </div>
-        <div class="space-y-2 text-sm">
-          <div class="grid grid-cols-4 items-center border-b border-border_color py-2">
-            <span>A2B1</span>
-            <span>Sardines</span>
-            <span>120</span>
-            <span class="text-green-500 font-semibold">RECEIVED</span>
-          </div>
-          <div class="grid grid-cols-4 items-center border-b border-border_color py-2">
-            <span>A2B1</span>
-            <span>Sardines</span>
-            <span>120</span>
-            <span class="text-green-500 font-semibold">RECEIVED</span>
-          </div>
-          <div class="grid grid-cols-4 items-center border-b border-border_color py-2">
-            <span>A2B1</span>
-            <span>Sardines</span>
-            <span>120</span>
-            <span class="text-green-500 font-semibold">RECEIVED</span>
-          </div>
-          <div class="grid grid-cols-4 items-center py-2">
-            <span>A2B1</span>
-            <span>Sardines</span>
-            <span>120</span>
-            <span class="text-green-500 font-semibold">RECEIVED</span>
-          </div>
-          
-          <!-- More rows... -->
-        </div>
+        <RecentShipments client:load />
       </div>
     </div>
 

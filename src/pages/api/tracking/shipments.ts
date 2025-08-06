@@ -1,6 +1,6 @@
 // src/pages/api/tracking/shipments.ts
 import { supabase } from "../../../utils/supabaseClient";
-import type { APIRoute } from 'astro';
+import type { APIRoute } from 'astro'; 
 
 export const GET: APIRoute = async () => {
   const { data, error } = await supabase
@@ -12,7 +12,7 @@ export const GET: APIRoute = async () => {
       date,
       item_id,
       items (
-        name
+        name 
       )
     `)
     .order('date', { ascending: false });
