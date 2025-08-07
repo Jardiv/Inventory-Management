@@ -54,5 +54,6 @@ export function getUrlParams(request: Request) {
         sortOrder: url.searchParams.get("sortOrder") || "desc",
         startDate: url.searchParams.get("startDate"),
         endDate: url.searchParams.get("endDate"),
+		search: url.searchParams.get("search"),
     };
 }

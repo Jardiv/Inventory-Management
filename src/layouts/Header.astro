@@ -39,14 +39,18 @@
 <script>
 	document.addEventListener('DOMContentLoaded', () => {
 		const searchbar = document.getElementById('searchbar');
-		searchbar.addEventListener('keydown', (e) => {
-			if (e.key === 'Enter') {
-				const query = searchbar.value.trim();
-				if (query) {
-					window.location.href = `/stockTransaction/Logs?search=${encodeURIComponent(query)}`;
+		const currentPath = window.location.pathname;
+
+		if (currentPath.startsWith('/stock-transaction')) {
+			searchbar.addEventListener('keydown', (e) => {
+				if (e.key === 'Enter') {
+					const query = searchbar.value.trim();
+					if (query) {
+						window.location.href = `/stock-transaction/logs?search=${encodeURIComponent(query)}`;
+					}
 				}
-			}
-		});
+			});
+		}
 	});
 </script>
 

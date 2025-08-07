@@ -4,10 +4,10 @@ import type { APIContext } from "astro";
 
 let counter = 0;
 export async function GET({ request }: APIContext) {
-    counter++;
-    const { limit, offset, status, sortBy, sortOrder, startDate, endDate, delivered, completed, received, pending } = getUrlParams(request);
+	counter++;
+	const { limit, offset, status, sortBy, sortOrder, startDate, endDate, delivered, completed, received, pending } = getUrlParams(request);
 
-    console.log(`
+	console.log(`
         Counter: ${counter}
         limit: ${limit}
         offset: ${offset}
@@ -24,54 +24,81 @@ export async function GET({ request }: APIContext) {
         pending: ${pending}
     `);
 
-    // COUNT QUERY
+	// COUNT QUERY
 	let countQuery = supabase.from("stock_out").select("transactions!inner(id)", { count: "exact", head: true });
 
-    if (startDate) {countQuery = countQuery.gte('transactions.transaction_datetime', startDate); console.log("startDate:", startDate);};
-    if (endDate) {countQuery = countQuery.lte('transactions.transaction_datetime', endDate); console.log("endDate:", endDate);};
+	if (startDate) {
+		countQuery = countQuery.gte("transactions.transaction_datetime", startDate);
+		console.log("startDate:", startDate);
+	}
+	if (endDate) {
+		countQuery = countQuery.lte("transactions.transaction_datetime", endDate);
+		console.log("endDate:", endDate);
+	}
 
-	let {count, error: countError} = await countQuery;
+	let { count, error: countError } = await countQuery;
 
 	if (countError) {
-        console.log("Count error:", countError.message);
+		console.log("Count error:", countError.message);
 		return jsonResponse({ error: countError.message }, 500);
 	}
 
 	let query = supabase.from("transactions").select(`
-            id, 
-            invoice_no, 
-            transaction_datetime, 
-            total_quantity,
-            total_price, 
-            status
-        `);
+    id, 
+    invoice_no, 
+    transaction_datetime, 
+    total_quantity,
+    total_price,
+    status,
+    stock_out!inner (
+      warehouse:warehouse_id (
+        name
+      )
+    )
+  `);
+  
 
-    if (status) query = query.eq("status", status);
-    if (startDate) {query = query.gte("transaction_datetime", startDate); console.log("startDate:", startDate);};
-    if (endDate) {query = query.lte("transaction_datetime", endDate); console.log("endDate:", endDate);};
-    query = query.order(sortBy, { ascending: sortOrder === 'asc' });
-    query = query.range(offset, offset + limit - 1);
-    let { data, error: queryError } = await query;
+	if (status) query = query.eq("status", status);
+	if (startDate) {
+		query = query.gte("transaction_datetime", startDate);
+		console.log("startDate:", startDate);
+	}
+	if (endDate) {
+		query = query.lte("transaction_datetime", endDate);
+		console.log("endDate:", endDate);
+	}
+	query = query.order(sortBy, { ascending: sortOrder === "asc" });
+	query = query.range(offset, offset + limit - 1);
+	let { data, error: queryError } = await query;
 
-    if (queryError) {
-        console.log("Query error:", queryError.message);
-        return jsonResponse({ error: queryError.message }, 500);
-    }
+	if (queryError) {
+		console.log("Query error:", queryError.message);
+		return jsonResponse({ error: queryError.message }, 500);
+	}
 
-    if(!data){
-        return jsonResponse({ error: "No data found" }, 404);
-    }
+	if (!data) {
+		return jsonResponse({ error: "No data found" }, 404);
+	}
 
-    for (const transaction of data) {
-        transaction.transaction_datetime = formatDateTime(transaction.transaction_datetime);
-    }
+	for (const transaction of data) {
+		transaction.transaction_datetime = formatDateTime(transaction.transaction_datetime);
+	}
+    const flattened = data.map(t => ({
+        id: t.id,
+        invoice_no: t.invoice_no,
+        transaction_datetime: t.transaction_datetime,
+        total_quantity: t.total_quantity,
+        total_price: t.total_price,
+        status: t.status,
+        warehouse_name: t.stock_out?.[0]?.warehouse?.name
+    }));
 
 	return jsonResponse(
 		{
-            transactions: data || [],
+			transactions: flattened || [],
 			total: count || 0,
-            limit: limit,
-            offset: offset,
+			limit: limit,
+			offset: offset,
 		},
 		200
 	);
