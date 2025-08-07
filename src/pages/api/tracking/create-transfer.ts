@@ -1,4 +1,4 @@
-// src/pages/api/tracking/create-transfer.ts
+// src/pages/api/tracking/create-transfer.ts - Debug Version
 import { supabase } from "../../../utils/supabaseClient";
 import type { APIRoute } from 'astro';
 
@@ -6,6 +6,9 @@ export const POST: APIRoute = async ({ request }) => {
   try {
     const body = await request.json();
     const { fromWarehouse, toWarehouse, items, createdBy } = body;
+
+    console.log("=== TRANSFER API DEBUG ===");
+    console.log("Request body:", JSON.stringify(body, null, 2));
 
     // Validate required fields
     if (!fromWarehouse || !toWarehouse || !items || !Array.isArray(items) || items.length === 0) {
@@ -20,31 +23,62 @@ export const POST: APIRoute = async ({ request }) => {
       }), { status: 400 });
     }
 
-    // Start a transaction by creating multiple transfer records
-    const transferPromises = items.map(async (item) => {
+    console.log(`Processing transfer: ${fromWarehouse} -> ${toWarehouse} (${items.length} items)`);
+
+    // Process each item
+    const transferResults = [];
+    
+    for (const item of items) {
       const { itemId, quantity } = item;
+      
+      console.log(`\n--- Processing item ${itemId} ---`);
+      console.log("Item details:", { itemId, quantity });
 
       if (!itemId || !quantity || quantity <= 0) {
         throw new Error(`Invalid item data: itemId=${itemId}, quantity=${quantity}`);
       }
 
-      // First, check if the item exists and has enough quantity in the source warehouse
+      // Debug: Check what's in warehouse_items for this warehouse
+      console.log("Checking all items in warehouse", fromWarehouse);
+      const { data: allWarehouseItems, error: debugError } = await supabase
+        .from('warehouse_items')
+        .select('*')
+        .eq('warehouse_id', fromWarehouse);
+      
+      console.log("All items in source warehouse:", allWarehouseItems);
+      if (debugError) console.log("Debug query error:", debugError);
+
+      // Check if the item exists in source warehouse
+      console.log(`Looking for item_id=${itemId} in warehouse_id=${fromWarehouse}`);
       const { data: warehouseItem, error: checkError } = await supabase
         .from('warehouse_items')
-        .select('quantity, item_id')
+        .select('quantity, item_id, id')
         .eq('warehouse_id', fromWarehouse)
         .eq('item_id', itemId)
         .single();
 
-      if (checkError || !warehouseItem) {
-        throw new Error(`Item ${itemId} not found in source warehouse`);
+      console.log("Query result:", { warehouseItem, checkError });
+
+      if (checkError) {
+        console.error("Database error:", checkError);
+        if (checkError.code === 'PGRST116') {
+          throw new Error(`Item ${itemId} not found in source warehouse ${fromWarehouse}`);
+        }
+        throw new Error(`Database error: ${checkError.message}`);
       }
+
+      if (!warehouseItem) {
+        throw new Error(`Item ${itemId} not found in source warehouse ${fromWarehouse}`);
+      }
+
+      console.log(`Found warehouse item:`, warehouseItem);
 
       if (warehouseItem.quantity < quantity) {
         throw new Error(`Insufficient quantity for item ${itemId}. Available: ${warehouseItem.quantity}, Requested: ${quantity}`);
       }
 
-      // Create transfer record with better error handling
+      // Create transfer record
+      console.log("Creating transfer record...");
       const { data: transfer, error: transferError } = await supabase
         .from('transfers')
         .insert({
@@ -52,9 +86,7 @@ export const POST: APIRoute = async ({ request }) => {
           from_warehouse: fromWarehouse,
           to_warehouse: toWarehouse,
           quantity: quantity,
-          status: 'Pending'
-          // Remove transfer_date to let database use DEFAULT CURRENT_TIMESTAMP
-          // Remove created_by since it's not in your schema
+          status: 'Completed'
         })
         .select()
         .single();
@@ -64,52 +96,57 @@ export const POST: APIRoute = async ({ request }) => {
         throw new Error(`Failed to create transfer record: ${transferError.message}`);
       }
 
-      if (!transfer) {
-        throw new Error('Transfer was created but could not retrieve the record');
-      }
+      console.log("Transfer created:", transfer);
 
       // Update source warehouse quantity (decrease)
+      console.log(`Updating source warehouse: ${warehouseItem.quantity} - ${quantity} = ${warehouseItem.quantity - quantity}`);
       const { error: decreaseError } = await supabase
         .from('warehouse_items')
         .update({ 
           quantity: warehouseItem.quantity - quantity
-          // Remove last_updated since it's not in your schema
         })
         .eq('warehouse_id', fromWarehouse)
         .eq('item_id', itemId);
 
       if (decreaseError) {
+        console.error('Decrease error:', decreaseError);
         throw new Error(`Failed to update source warehouse quantity: ${decreaseError.message}`);
       }
 
       // Check if item exists in destination warehouse
+      console.log(`Checking if item ${itemId} exists in destination warehouse ${toWarehouse}`);
       const { data: destItem, error: destCheckError } = await supabase
         .from('warehouse_items')
-        .select('quantity')
+        .select('quantity, id')
         .eq('warehouse_id', toWarehouse)
         .eq('item_id', itemId)
         .single();
 
-      if (destCheckError && destCheckError.code !== 'PGRST116') { // PGRST116 = no rows returned
+      console.log("Destination check result:", { destItem, destCheckError });
+
+      if (destCheckError && destCheckError.code !== 'PGRST116') {
         throw new Error(`Error checking destination warehouse: ${destCheckError.message}`);
       }
 
       if (destItem) {
         // Item exists in destination, update quantity
+        console.log(`Updating destination warehouse: ${destItem.quantity} + ${quantity} = ${destItem.quantity + quantity}`);
         const { error: increaseError } = await supabase
           .from('warehouse_items')
           .update({ 
             quantity: destItem.quantity + quantity
-            // Remove last_updated since it's not in your schema
           })
           .eq('warehouse_id', toWarehouse)
           .eq('item_id', itemId);
 
         if (increaseError) {
+          console.error('Increase error:', increaseError);
           throw new Error(`Failed to update destination warehouse quantity: ${increaseError.message}`);
         }
+        console.log("Destination warehouse updated successfully");
       } else {
         // Item doesn't exist in destination, create new record
+        console.log(`Creating new item in destination warehouse with quantity ${quantity}`);
         const { error: insertError } = await supabase
           .from('warehouse_items')
           .insert({
@@ -117,45 +154,34 @@ export const POST: APIRoute = async ({ request }) => {
             warehouse_id: toWarehouse,
             quantity: quantity,
             status: 'Active'
-            // date_assigned will use DEFAULT CURRENT_TIMESTAMP
-            // Remove last_updated since it's not in your schema
           });
 
         if (insertError) {
+          console.error('Insert error:', insertError);
           throw new Error(`Failed to create item in destination warehouse: ${insertError.message}`);
         }
+        console.log("New item created in destination warehouse successfully");
       }
 
-      // Update transfer status to completed
-      const { error: statusError } = await supabase
-        .from('transfers')
-        .update({ 
-          status: 'Completed'
-          // Remove completed_date since it's not in your schema
-        })
-        .eq('id', transfer.id);
+      transferResults.push(transfer);
+      console.log(`✅ Successfully processed item ${itemId}`);
+    }
 
-      if (statusError) {
-        console.warn(`Failed to update transfer status: ${statusError.message}`);
-      }
-
-      return transfer;
-    });
-
-    // Execute all transfer operations
-    const results = await Promise.all(transferPromises);
-
+    console.log("=== TRANSFER COMPLETED SUCCESSFULLY ===");
     return new Response(JSON.stringify({ 
       success: true,
-      message: `Successfully transferred ${items.length} item(s) from warehouse ${fromWarehouse} to warehouse ${toWarehouse}`,
-      transfers: results
+      message: `Successfully transferred ${items.length} item(s)`,
+      transfers: transferResults
     }), { 
       status: 200,
       headers: { "Content-Type": "application/json" }
     });
 
   } catch (error) {
-    console.error("Transfer error:", error);
+    console.error("=== TRANSFER FAILED ===");
+    console.error("Error details:", error);
+    console.error("Error stack:", error.stack);
+    
     return new Response(JSON.stringify({ 
       error: error.message || "An unexpected error occurred during transfer" 
     }), { 

@@ -160,30 +160,26 @@ const TransferList = () => {
         console.log(`Processing item with id ${itemId}:`, item);
         console.log("Item structure keys:", item ? Object.keys(item) : 'item is null/undefined');
         
-        // Try different possible field names for item_id
+        // With your API structure, item_id should be directly available
         let actualItemId = null;
         if (item) {
-          actualItemId = item.item_id || item.itemId || item.items?.id || item.id;
-          console.log("Trying to find item_id:", {
-            'item.item_id': item.item_id,
-            'item.itemId': item.itemId,
-            'item.items?.id': item.items?.id,
-            'item.id': item.id,
-            'actualItemId chosen': actualItemId
-          });
+          actualItemId = item.item_id; // This should now be available from the API
+          
+          console.log("Found actualItemId:", actualItemId);
         }
         
         if (!actualItemId) {
           console.error("❌ No item_id found for warehouse item:", item);
+          console.error("Available fields:", item ? Object.keys(item) : 'none');
         } else {
           console.log("✅ Found actualItemId:", actualItemId);
         }
         
         return {
           id: itemId, // This is the warehouse_items.id
-          itemId: actualItemId, // This should be the items.id
-          productId: item?.items?.sku || item?.sku || 'N/A',
-          name: item?.items?.name || item?.name || 'Unknown',
+          itemId: actualItemId, // This should be the items.id from warehouse_items.item_id
+          productId: item?.items?.sku || 'N/A', // From the nested items object
+          name: item?.items?.name || 'Unknown', // From the nested items object
           availableQty: item?.quantity || 0,
           selectedQty: quantities[itemId] || 0
         };
@@ -263,7 +259,7 @@ const TransferList = () => {
     return warehouse ? warehouse.name : 'Select Warehouse';
   };
 
-  // Handle transfer initiation
+  // Handle transfer initiation - FIXED VERSION
   const handleInitiateTransfer = async () => {
     if (!fromWarehouse || !toWarehouse || selectedItems.length === 0) {
       setTransferError('Please select warehouses and items for transfer');
@@ -283,18 +279,20 @@ const TransferList = () => {
     setTransferMessage('');
 
     try {
-      // Prepare transfer data
+      // Prepare transfer data - ENSURE PROPER DATA TYPES
       const transferData = {
         fromWarehouse: parseInt(fromWarehouse),
         toWarehouse: parseInt(toWarehouse),
         items: selectedItems.map(item => ({
-          itemId: item.itemId,
-          quantity: item.selectedQty
+          itemId: parseInt(item.itemId), // ✅ ENSURE INTEGER
+          quantity: parseInt(item.selectedQty) // ✅ ENSURE INTEGER
         })),
-        createdBy: 'System User' // You can replace this with actual user info
+        createdBy: 'System User'
       };
 
-      console.log("Transfer data being sent:", transferData); // Debug log
+      console.log("=== FRONTEND DEBUG ===");
+      console.log("Transfer data being sent:", transferData);
+      console.log("Selected items raw:", selectedItems);
 
       const response = await fetch('/api/tracking/create-transfer', {
         method: 'POST',
@@ -305,6 +303,7 @@ const TransferList = () => {
       });
 
       const result = await response.json();
+      console.log("API Response:", result);
 
       if (response.ok) {
         setTransferMessage(result.message || 'Transfer completed successfully!');
