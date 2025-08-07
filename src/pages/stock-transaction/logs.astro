@@ -1,11 +1,10 @@
 ---
 import Layout from '../../layouts/Layout.astro';
-import DateTimeInput from '../../components/transactions/DateTimeInput.astro';
+import DateTimeInput from '../../components/transactions/utils/DateTimeInput.astro';
 import LogsTable from '../../components/transactions/LogsTable.jsx';
 
 // Get current page from URL parameters
 const currentPage = parseInt(Astro.url.searchParams.get('page') || '1');
-const itemsPerPage = 10;
 ---
 
 <Layout>
@@ -39,7 +38,7 @@ const itemsPerPage = 10;
 		</div>
 
 		<div class="p-2 flex flex-col gap-4">
-			<LogsTable showPagination="{true}" currentPage="{currentPage}" itemsPerPage="{itemsPerPage}" client:load />
+			<LogsTable showPagination="true" currentPage="{currentPage}" client:load />
 		</div>
 	</div>
 </Layout>

@@ -12,7 +12,6 @@ export const GET: APIRoute = async ({ url }) => {
     }
 
     try {
-        // 1. Fetch the main transaction details
         const { data: transactionData, error: transactionError } = await supabase
             .from("transactions")
             .select("*")
@@ -38,7 +37,7 @@ export const GET: APIRoute = async ({ url }) => {
                 items ( sku, name, unit_price )
             `)
             .eq("invoice_no", invoice_no);
-
+        console.log("itemsData:", itemsData);
         if (itemsError) {
             console.error("Error fetching transaction items:", itemsError.message);
             return new Response(JSON.stringify({ error: "Failed to fetch transaction items" }), { 
@@ -60,6 +59,22 @@ export const GET: APIRoute = async ({ url }) => {
              console.error("Error fetching stock in data:", stockInError.message);
         }
 
+        const {data: stockOutData, error: stockOutError} = await supabase
+            .from("stock_out")
+            .select(`
+                warehouse ( name )
+            `)
+            .eq("transaction_id", transactionId)
+            .single();
+
+        if (stockOutError && stockOutError.code !== 'PGRST116') { // PGRST116: no rows returned
+            console.error("Error fetching stock in data:", stockOutError.message);
+        }
+
+        console.log("stockInData:", stockInData);
+        console.log("stockOutData:", stockOutData);
+        
+
         // 4. Assemble the response
         const responseData = {
             ...transactionData,
@@ -73,7 +88,10 @@ export const GET: APIRoute = async ({ url }) => {
             supplier_name: stockInData?.suppliers?.name ?? null,
             supplier_contact: stockInData?.suppliers?.phone_num ?? null,
             supplier_location: stockInData?.suppliers?.location ?? null,
+            warehouse_name: stockOutData?.warehouse?.name ?? null,
         };
+        console.log("responseData:", responseData);
+        
 
         return new Response(JSON.stringify(responseData), {
             status: 200,

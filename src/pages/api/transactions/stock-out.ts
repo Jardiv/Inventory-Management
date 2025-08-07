@@ -1,67 +1,78 @@
 import { supabase } from "../../../utils/supabaseClient.ts";
 import { jsonResponse, getUrlParams, formatDateTime } from "./utils.ts";
-import type { APIContext } from 'astro';
+import type { APIContext } from "astro";
 
+let counter = 0;
 export async function GET({ request }: APIContext) {
-    const { limit, offset, status, sortBy, sortOrder, startDate, endDate } = getUrlParams(request);
+    counter++;
+    const { limit, offset, status, sortBy, sortOrder, startDate, endDate, delivered, completed, received, pending } = getUrlParams(request);
 
-    // Base query for counting total items
-    let countQuery = supabase
-        .from('stock_out')
-        .select('*, transactions!inner(*)', { count: 'exact', head: true });
+    console.log(`
+        Counter: ${counter}
+        limit: ${limit}
+        offset: ${offset}
+        status: ${status}
+        sortBy: ${sortBy}
+        sortOrder: ${sortOrder}
 
-    // Apply filters to count query
-    if (status) countQuery = countQuery.eq('transactions.status', status);
-    if (startDate) countQuery = countQuery.gte('transactions.transaction_datetime', startDate);
-    if (endDate) countQuery = countQuery.lte('transactions.transaction_datetime', endDate);
-    
-    // Execute count query
-    const { count, error: countError } = await countQuery;
-    if (countError) {
-        console.error("Count error:", countError.message);
-        return jsonResponse({ error: countError.message }, 500);
-    }
+        filters:
+        startDate: ${startDate}
+        endDate: ${endDate}
+        delivered: ${delivered}
+        completed: ${completed}
+        received: ${received}
+        pending: ${pending}
+    `);
 
-    // Main query to fetch data
-    let query = supabase
-        .from('stock_out')
-        .select(`
-            transactions!inner (id, invoice_no, transaction_datetime, total_quantity, total_price, status)
+    // COUNT QUERY
+	let countQuery = supabase.from("stock_out").select("transactions!inner(id)", { count: "exact", head: true });
+
+    if (startDate) {countQuery = countQuery.gte('transactions.transaction_datetime', startDate); console.log("startDate:", startDate);};
+    if (endDate) {countQuery = countQuery.lte('transactions.transaction_datetime', endDate); console.log("endDate:", endDate);};
+
+	let {count, error: countError} = await countQuery;
+
+	if (countError) {
+        console.log("Count error:", countError.message);
+		return jsonResponse({ error: countError.message }, 500);
+	}
+
+	let query = supabase.from("transactions").select(`
+            id, 
+            invoice_no, 
+            transaction_datetime, 
+            total_quantity,
+            total_price, 
+            status
         `);
 
-    // Apply filters to main query
-    if (status) query = query.eq('transactions.status', status);
-    if (startDate) query = query.gte('transactions.transaction_datetime', startDate);
-    if (endDate) query = query.lte('transactions.transaction_datetime', endDate);
-
-    // Apply sorting
-    const validSortBy = ['invoice_no', 'transaction_datetime', 'total_price', 'status', 'total_quantity'];
-    const sortColumn = validSortBy.includes(sortBy) ? sortBy : 'transaction_datetime';
-    query = query.order(sortColumn, { foreignTable: 'transactions', ascending: sortOrder === 'asc' });
-
-    // Apply pagination
+    if (status) query = query.eq("status", status);
+    if (startDate) {query = query.gte("transaction_datetime", startDate); console.log("startDate:", startDate);};
+    if (endDate) {query = query.lte("transaction_datetime", endDate); console.log("endDate:", endDate);};
+    query = query.order(sortBy, { ascending: sortOrder === 'asc' });
     query = query.range(offset, offset + limit - 1);
+    let { data, error: queryError } = await query;
 
-    const { data, error } = await query;
-
-    if (error) {
-        console.error("Database error:", error.message);
-        return jsonResponse({ error: error.message }, 500);
+    if (queryError) {
+        console.log("Query error:", queryError.message);
+        return jsonResponse({ error: queryError.message }, 500);
     }
 
-    const transformedData = data.map(item => ({
-        id: item.transactions.id,
-        invoice_no: item.transactions.invoice_no,
-        transaction_datetime: formatDateTime(item.transactions.transaction_datetime),
-        items_count: item.transactions.total_quantity,
-        total_price: item.transactions.total_price,
-        status: item.transactions.status,
-    }));
+    if(!data){
+        return jsonResponse({ error: "No data found" }, 404);
+    }
 
-    return jsonResponse({
-        transactions: transformedData,
-        total: count || 0,
-        limit,
-        offset
-    }, 200);
+    for (const transaction of data) {
+        transaction.transaction_datetime = formatDateTime(transaction.transaction_datetime);
+    }
+
+	return jsonResponse(
+		{
+            transactions: data || [],
+			total: count || 0,
+            limit: limit,
+            offset: offset,
+		},
+		200
+	);
 }

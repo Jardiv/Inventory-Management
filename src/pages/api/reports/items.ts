@@ -54,11 +54,11 @@ export async function GET({ request }: { request: Request }) {
                 quantity = item.warehouse_items[0].quantity || 0;
             }
             
-            let status = 'OK';
+            let status = 'Normal';
             if (quantity === 0) {
-                status = 'OUT OF STOCK';
+                status = 'Out of Stock';
             } else if (quantity <= (item.min_quantity || 0)) {
-                status = 'LOW';
+                status = 'Low Stock';
             }
 
             return {
