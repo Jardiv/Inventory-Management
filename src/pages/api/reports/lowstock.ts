@@ -10,7 +10,31 @@ export const GET: APIRoute = async ({ url }) => {
     const limit = requestedLimit > 0 ? requestedLimit : 10; // Use dynamic limit or default to 10
     const offset = (page - 1) * limit;
 
-    // First, get ALL items with warehouse quantities (no pagination limit yet)
+    // First, get all items that have pending purchase orders
+    // This will help us exclude them from the low stock list
+    const { data: pendingPurchaseOrderItems, error: pendingPOError } = await supabase
+      .from('purchase_orders_items')
+      .select(`
+        item_id,
+        purchase_orders!inner (
+          status
+        )
+      `)
+      .eq('purchase_orders.status', 'Pending');
+
+    if (pendingPOError) {
+      console.error('Error fetching pending purchase orders:', pendingPOError);
+      // Continue without filtering if there's an error - better to show all items than fail
+    }
+
+    // Create a Set of item IDs that have pending purchase orders for quick lookup
+    const itemsWithPendingOrders = new Set(
+      (pendingPurchaseOrderItems || []).map(po => po.item_id)
+    );
+
+    console.log('Items with pending purchase orders:', Array.from(itemsWithPendingOrders));
+
+    // Now get ALL items with warehouse quantities (no pagination limit yet)
     const { data: allItems, error } = await supabase
       .from('items')
       .select(`
@@ -36,8 +60,16 @@ export const GET: APIRoute = async ({ url }) => {
       });
     }
 
-    // Process ALL data to filter low stock items FIRST
+    // Process ALL data to filter low stock items FIRST, excluding items with pending orders
     const allLowStockItems = allItems
+      .filter(item => {
+        // Exclude items that already have pending purchase orders
+        if (itemsWithPendingOrders.has(item.id)) {
+          console.log(`Filtering out item ${item.sku} - has pending purchase order`);
+          return false;
+        }
+        return true;
+      })
       .map(item => {
         // Handle case where warehouse_items might be null or empty array (same logic as items.ts)
         let totalQuantity = 0;
@@ -99,7 +131,12 @@ export const GET: APIRoute = async ({ url }) => {
           hasNextPage: false,
           hasPrevPage: false
         },
-        debug: { totalItemsInDb: allItems.length, lowStockFound: 0 }
+        debug: { 
+          totalItemsInDb: allItems.length, 
+          lowStockFound: 0,
+          itemsWithPendingOrders: itemsWithPendingOrders.size,
+          filteredOutDueToPendingOrders: itemsWithPendingOrders.size
+        }
       }), {
         status: 200,
         headers: { 'Content-Type': 'application/json' }
@@ -111,7 +148,12 @@ export const GET: APIRoute = async ({ url }) => {
       return new Response(JSON.stringify({
         success: true,
         allIds: allLowStockItems.map(item => item.id),
-        totalItems: allLowStockItems.length
+        totalItems: allLowStockItems.length,
+        debug: {
+          totalItemsInDb: allItems.length,
+          itemsWithPendingOrders: itemsWithPendingOrders.size,
+          lowStockItemsAfterFiltering: allLowStockItems.length
+        }
       }), {
         status: 200,
         headers: { 'Content-Type': 'application/json' }
@@ -137,6 +179,11 @@ export const GET: APIRoute = async ({ url }) => {
         itemsPerPage: limit,
         hasNextPage,
         hasPrevPage
+      },
+      debug: {
+        totalItemsInDb: allItems.length,
+        itemsWithPendingOrders: itemsWithPendingOrders.size,
+        lowStockItemsAfterFiltering: totalLowStockItems
       }
     }), {
       status: 200,

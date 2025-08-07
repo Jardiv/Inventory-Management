@@ -902,7 +902,7 @@ const PurchaseOrderLogs = () => {
         <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-4">
           <div className="bg-primary rounded-lg w-full max-w-4xl max-h-[90vh] flex flex-col">
             {/* Modal Header */}
-            <div className="flex justify-between items-center p-4 border-b border-gray-700 flex-shrink-0">
+            <div className="flex justify-between items-center pl-4 pt-4 pr-4 flex-shrink-0">
               <h2 className="text-textColor-primary text-xl font-semibold">
                 Purchase Order Details
               </h2>
@@ -917,13 +917,119 @@ const PurchaseOrderLogs = () => {
             </div>
 
             {loadingDetails ? (
-              <div className="flex justify-center items-center flex-1">
-                <div className="text-textColor-primary">Loading purchase order details...</div>
-              </div>
+              <>
+                {/* Skeleton for Fixed Header Section - Primary Details and Summary */}
+                <div className="ml-4 mr-4 pt-4 pb-4 border-b border-gray-700 flex-shrink-0">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="space-y-3">
+                      <div className="h-6 w-32 bg-gray-700 rounded animate-pulse border-b border-gray-700 pb-1"></div>
+                      
+                      <div className="grid grid-cols-2 gap-2 text-sm">
+                        <div>
+                          <div className="h-3 w-20 bg-gray-700 rounded animate-pulse mb-1"></div>
+                          <div className="h-4 w-24 bg-gray-700 rounded animate-pulse"></div>
+                        </div>
+                        
+                        <div>
+                          <div className="h-3 w-20 bg-gray-700 rounded animate-pulse mb-1"></div>
+                          <div className="h-4 w-28 bg-gray-700 rounded animate-pulse"></div>
+                        </div>
+                        
+                        <div>
+                          <div className="h-3 w-24 bg-gray-700 rounded animate-pulse mb-1"></div>
+                          <div className="h-4 w-32 bg-gray-700 rounded animate-pulse"></div>
+                        </div>
+                        
+                        <div>
+                          <div className="h-3 w-12 bg-gray-700 rounded animate-pulse mb-1"></div>
+                          <div className="h-6 w-20 bg-gray-700 rounded-full animate-pulse"></div>
+                        </div>
+                      </div>
+                    </div>
+                    
+                    <div className="space-y-3">
+                      <div className="h-6 w-20 bg-gray-700 rounded animate-pulse border-b border-gray-700 pb-1"></div>
+                      
+                      <div className="grid grid-cols-2 gap-2 text-sm">
+                        <div>
+                          <div className="h-3 w-24 bg-gray-700 rounded animate-pulse mb-1"></div>
+                          <div className="h-4 w-16 bg-gray-700 rounded animate-pulse"></div>
+                        </div>
+                        
+                        <div>
+                          <div className="h-3 w-24 bg-gray-700 rounded animate-pulse mb-1"></div>
+                          <div className="h-4 w-20 bg-gray-700 rounded animate-pulse"></div>
+                        </div>
+                        
+                        <div className="col-span-2">
+                          <div className="h-3 w-20 bg-gray-700 rounded animate-pulse mb-1"></div>
+                          <div className="h-4 w-32 bg-gray-700 rounded animate-pulse"></div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Skeleton for Scrollable Body Section - Purchased Products */}
+                <div className="flex-1 min-h-0 flex flex-col overflow-auto">
+                  {/* Skeleton for Fixed Section Title */}
+                  <div className="px-4 pt-4 pb-2 flex-shrink-0">
+                    <div className="h-6 w-40 bg-gray-700 rounded animate-pulse"></div>
+                  </div>
+                  
+                  {/* Skeleton for Scrollable Table Content */}
+                  <div className="flex-1 min-h-0 px-4">
+                    <div className="flex-1">
+                      <table className="w-full text-sm">
+                        <thead className="sticky top-0 bg-primary z-10">
+                          <tr className="border-b border-gray-700">
+                            <th className="px-4 py-3 text-left">
+                              <div className="h-4 w-24 bg-gray-700 rounded animate-pulse"></div>
+                            </th>
+                            <th className="px-4 py-3 text-left">
+                              <div className="h-4 w-16 bg-gray-700 rounded animate-pulse"></div>
+                            </th>
+                            <th className="px-4 py-3 text-left">
+                              <div className="h-4 w-16 bg-gray-700 rounded animate-pulse"></div>
+                            </th>
+                            <th className="px-4 py-3 text-left">
+                              <div className="h-4 w-20 bg-gray-700 rounded animate-pulse"></div>
+                            </th>
+                            <th className="px-4 py-3 text-left">
+                              <div className="h-4 w-20 bg-gray-700 rounded animate-pulse"></div>
+                            </th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {Array.from({ length: 5 }, (_, index) => (
+                            <tr key={`modal-skeleton-${index}`} className="border-b border-gray-800">
+                              <td className="px-4 py-3">
+                                <div className="h-4 w-32 bg-gray-700 rounded animate-pulse"></div>
+                              </td>
+                              <td className="px-4 py-3">
+                                <div className="h-4 w-24 bg-gray-700 rounded animate-pulse"></div>
+                              </td>
+                              <td className="px-4 py-3">
+                                <div className="h-4 w-16 bg-gray-700 rounded animate-pulse"></div>
+                              </td>
+                              <td className="px-4 py-3">
+                                <div className="h-4 w-20 bg-gray-700 rounded animate-pulse"></div>
+                              </td>
+                              <td className="px-4 py-3">
+                                <div className="h-4 w-20 bg-gray-700 rounded animate-pulse"></div>
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+                </div>
+              </>
             ) : selectedPO && (
               <>
                 {/* Fixed Header Section - Primary Details and Summary */}
-                <div className="p-4 border-b border-gray-700 flex-shrink-0">
+                <div className="ml-4 mr-4 pt-4 pb-4 border-b border-gray-700 flex-shrink-0">
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div className="space-y-3">
                       <h3 className="text-textColor-primary text-base font-medium border-b border-gray-700 pb-1">
@@ -1086,7 +1192,7 @@ const PurchaseOrderLogs = () => {
             )}
 
             {/* Modal Footer */}
-            <div className="flex justify-end gap-3 p-4 border-t border-gray-700 flex-shrink-0">
+            <div className="flex justify-end gap-3 p-4 flex-shrink-0">
               <button
                 onClick={() => handleDownloadPDF(selectedPO)}
                 className="px-4 py-2 bg-green hover:bg-green/80 text-white rounded font-medium transition-colors"

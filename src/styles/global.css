@@ -1,5 +1,5 @@
 /* Product Status Theme Classes */
-.status-ok {
+.status-normal {
   color: var(--color-green);
   background: var(--color-primary);
 }
@@ -59,7 +59,7 @@
 	--color-red: #ff243a;
 	--color-green: #00e34c;
 	--color-blue: #82C8E5;
-	--color-purple: #BF00FF;
+	--color-purple: #d34dff;
 
 	--color-check: hsl(from var(--color-primary) h calc(s + 20) calc(l + 40));
 

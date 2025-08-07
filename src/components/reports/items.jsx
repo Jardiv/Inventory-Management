@@ -34,11 +34,11 @@ const InventoryTable = ({ itemsPerPage: initialItemsPerPage = 10 }) => {
     // Function to get status styling using themed colors
     const getStatusStyle = (status) => {
         switch (status) {
-            case 'OK':
+            case 'Normal':
                 return 'text-green bg-green/10';
-            case 'LOW':
+            case 'Low Stock':
                 return 'text-orange bg-orange/10';
-            case 'OUT OF STOCK':
+            case 'Out of Stock':
                 return 'text-red bg-red/10';
             default:
                 return 'text-textColor-tertiary bg-textColor-tertiary/10';
@@ -82,32 +82,32 @@ const InventoryTable = ({ itemsPerPage: initialItemsPerPage = 10 }) => {
             
             // Fallback to mock data for development
             const mockData = [
-                { id: 1, code: 'PRD001', name: 'Laptop Computer', current: 50, min: 20, max: 100, status: 'OK', isVisible: true },
-                { id: 2, code: 'PRD002', name: 'Office Chair', current: 15, min: 20, max: 100, status: 'LOW', isVisible: true },
-                { id: 3, code: 'PRD003', name: 'Wireless Mouse', current: 0, min: 10, max: 200, status: 'OUT OF STOCK', isVisible: true },
-                { id: 4, code: 'PRD004', name: 'Monitor Display', current: 75, min: 30, max: 150, status: 'OK', isVisible: true },
-                { id: 5, code: 'PRD005', name: 'Keyboard', current: 8, min: 15, max: 80, status: 'LOW', isVisible: true },
-                { id: 6, code: 'PRD006', name: 'Desk Lamp', current: 120, min: 25, max: 200, status: 'OK', isVisible: true },
-                { id: 7, code: 'PRD007', name: 'USB Cable', current: 200, min: 50, max: 300, status: 'OK', isVisible: true },
-                { id: 8, code: 'PRD008', name: 'Phone Charger', current: 5, min: 20, max: 100, status: 'LOW', isVisible: true },
-                { id: 9, code: 'PRD009', name: 'Tablet Stand', current: 0, min: 10, max: 50, status: 'OUT OF STOCK', isVisible: true },
-                { id: 10, code: 'PRD010', name: 'Webcam', current: 30, min: 15, max: 60, status: 'OK', isVisible: true },
-                { id: 11, code: 'PRD011', name: 'Headphones', current: 12, min: 20, max: 80, status: 'LOW', isVisible: true },
-                { id: 12, code: 'PRD012', name: 'Printer Paper', current: 150, min: 100, max: 500, status: 'OK', isVisible: true },
+                { id: 1, code: 'PRD001', name: 'Laptop Computer', current: 50, min: 20, max: 100, status: 'Normal', isVisible: true },
+                { id: 2, code: 'PRD002', name: 'Office Chair', current: 15, min: 20, max: 100, status: 'Low Stock', isVisible: true },
+                { id: 3, code: 'PRD003', name: 'Wireless Mouse', current: 0, min: 10, max: 200, status: 'Out of Stock', isVisible: true },
+                { id: 4, code: 'PRD004', name: 'Monitor Display', current: 75, min: 30, max: 150, status: 'Normal', isVisible: true },
+                { id: 5, code: 'PRD005', name: 'Keyboard', current: 8, min: 15, max: 80, status: 'Low Stock', isVisible: true },
+                { id: 6, code: 'PRD006', name: 'Desk Lamp', current: 120, min: 25, max: 200, status: 'Normal', isVisible: true },
+                { id: 7, code: 'PRD007', name: 'USB Cable', current: 200, min: 50, max: 300, status: 'Normal', isVisible: true },
+                { id: 8, code: 'PRD008', name: 'Phone Charger', current: 5, min: 20, max: 100, status: 'Low Stock', isVisible: true },
+                { id: 9, code: 'PRD009', name: 'Tablet Stand', current: 0, min: 10, max: 50, status: 'Out of Stock', isVisible: true },
+                { id: 10, code: 'PRD010', name: 'Webcam', current: 30, min: 15, max: 60, status: 'Normal', isVisible: true },
+                { id: 11, code: 'PRD011', name: 'Headphones', current: 12, min: 20, max: 80, status: 'Low Stock', isVisible: true },
+                { id: 12, code: 'PRD012', name: 'Printer Paper', current: 150, min: 100, max: 500, status: 'Normal', isVisible: true },
                 // Add more mock data to test pagination
-                { id: 13, code: 'PRD013', name: 'USB Drive', current: 35, min: 25, max: 100, status: 'OK', isVisible: true },
-                { id: 14, code: 'PRD014', name: 'Network Cable', current: 45, min: 30, max: 150, status: 'OK', isVisible: true },
-                { id: 15, code: 'PRD015', name: 'Power Strip', current: 8, min: 15, max: 50, status: 'LOW', isVisible: true },
-                { id: 16, code: 'PRD016', name: 'Ethernet Switch', current: 22, min: 10, max: 40, status: 'OK', isVisible: true },
-                { id: 17, code: 'PRD017', name: 'Router', current: 0, min: 5, max: 20, status: 'OUT OF STOCK', isVisible: true },
-                { id: 18, code: 'PRD018', name: 'Wireless Adapter', current: 18, min: 20, max: 60, status: 'LOW', isVisible: true },
-                { id: 19, code: 'PRD019', name: 'Bluetooth Speaker', current: 25, min: 15, max: 80, status: 'OK', isVisible: true },
-                { id: 20, code: 'PRD020', name: 'External Hard Drive', current: 12, min: 10, max: 30, status: 'OK', isVisible: true },
-                { id: 21, code: 'PRD021', name: 'Wireless Keyboard', current: 7, min: 15, max: 50, status: 'LOW', isVisible: true },
-                { id: 22, code: 'PRD022', name: 'Gaming Mouse', current: 33, min: 20, max: 75, status: 'OK', isVisible: true },
-                { id: 23, code: 'PRD023', name: 'Monitor Stand', current: 0, min: 10, max: 30, status: 'OUT OF STOCK', isVisible: true },
-                { id: 24, code: 'PRD024', name: 'Desk Organizer', current: 28, min: 15, max: 60, status: 'OK', isVisible: true },
-                { id: 25, code: 'PRD025', name: 'Cable Management', current: 41, min: 25, max: 100, status: 'OK', isVisible: true },
+                { id: 13, code: 'PRD013', name: 'USB Drive', current: 35, min: 25, max: 100, status: 'Normal', isVisible: true },
+                { id: 14, code: 'PRD014', name: 'Network Cable', current: 45, min: 30, max: 150, status: 'Normal', isVisible: true },
+                { id: 15, code: 'PRD015', name: 'Power Strip', current: 8, min: 15, max: 50, status: 'Low Stock', isVisible: true },
+                { id: 16, code: 'PRD016', name: 'Ethernet Switch', current: 22, min: 10, max: 40, status: 'Normal', isVisible: true },
+                { id: 17, code: 'PRD017', name: 'Router', current: 0, min: 5, max: 20, status: 'Out of Stock', isVisible: true },
+                { id: 18, code: 'PRD018', name: 'Wireless Adapter', current: 18, min: 20, max: 60, status: 'Low Stock', isVisible: true },
+                { id: 19, code: 'PRD019', name: 'Bluetooth Speaker', current: 25, min: 15, max: 80, status: 'Normal', isVisible: true },
+                { id: 20, code: 'PRD020', name: 'External Hard Drive', current: 12, min: 10, max: 30, status: 'Normal', isVisible: true },
+                { id: 21, code: 'PRD021', name: 'Wireless Keyboard', current: 7, min: 15, max: 50, status: 'Low Stock', isVisible: true },
+                { id: 22, code: 'PRD022', name: 'Gaming Mouse', current: 33, min: 20, max: 75, status: 'Normal', isVisible: true },
+                { id: 23, code: 'PRD023', name: 'Monitor Stand', current: 0, min: 10, max: 30, status: 'Out of Stock', isVisible: true },
+                { id: 24, code: 'PRD024', name: 'Desk Organizer', current: 28, min: 15, max: 60, status: 'Normal', isVisible: true },
+                { id: 25, code: 'PRD025', name: 'Cable Management', current: 41, min: 25, max: 100, status: 'Normal', isVisible: true },
             ];
             setAllInventoryData(mockData);
             setInventoryData(mockData);
@@ -568,9 +568,9 @@ const InventoryTable = ({ itemsPerPage: initialItemsPerPage = 10 }) => {
                                     className="w-full px-3 py-2 bg-background text-textColor-primary rounded border border-textColor-tertiary focus:border-btn-primary text-sm"
                                 >
                                     <option value="">All Status</option>
-                                    <option value="OK">OK</option>
-                                    <option value="LOW">LOW</option>
-                                    <option value="OUT OF STOCK">OUT OF STOCK</option>
+                                    <option value="Normal">Normal</option>
+                                    <option value="Low Stock">Low Stock</option>
+                                    <option value="Out of Stock">Out of Stock</option>
                                 </select>
                             </div>
                         </div>

@@ -14,6 +14,11 @@ const Shipments = () => {
   const [warehouses, setWarehouses] = useState([]); 
   const [shipmentProducts, setShipmentProducts] = useState([]);
   const [isAssigning, setIsAssigning] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 10;
+  const [filterStatus, setFilterStatus] = useState('All');
+
+
 
   useEffect(() => {
     const fetchShipments = async () => {
@@ -22,17 +27,24 @@ const Shipments = () => {
         const data = await res.json();
 
         if (res.ok) {
-          setShipments(data);
+          // Sort so that Pending shipments appear at the top
+          const sortedShipments = data.sort((a, b) => {
+            if (a.status === 'Pending' && b.status !== 'Pending') return -1;
+            if (a.status !== 'Pending' && b.status === 'Pending') return 1;
+            return 0; // maintain original order otherwise
+          });
+
+          setShipments(sortedShipments);
 
           // Extract unique products
           // Keep name and quantity of each product from shipments
           const uniqueProductsMap = new Map();
           data.forEach(item => {
-            if (!uniqueProductsMap.has(item.name)) {
+            if (item.status !== 'Delivered' && !uniqueProductsMap.has(item.name)) {
               uniqueProductsMap.set(item.name, {
                 name: item.name,
-                quantity: item.qty, // preserve quantity
-                item_id: item.item_id // optional but useful later
+                quantity: item.qty,
+                item_id: item.item_id
               });
             }
           });
@@ -166,7 +178,18 @@ const Shipments = () => {
     }
   };
 
-  const emptyRows = 11 - shipments.length;
+  const filteredShipments = filterStatus === 'All'
+    ? shipments
+    : shipments.filter(shipment => shipment.status === filterStatus);
+
+  const paginatedShipments = filteredShipments.slice(
+    (currentPage - 1) * itemsPerPage,
+    currentPage * itemsPerPage
+  );
+
+  const emptyRows = itemsPerPage - paginatedShipments.length;
+
+
   return (
     <div className="w-full max-w-[100%] bg-primary rounded-md mx-auto p-6 text-textColor-primary font-poppins">
       {/* Title & Buttons */}
@@ -202,9 +225,42 @@ const Shipments = () => {
               {showDropdown && (
                 <div className="absolute left-1/2 -translate-x-1/2 mt-2 bg-primary border border-border_color rounded shadow-md z-10 w-[130px]">
                   <ul className="py-1 text-sm text-textColor-primary text-left">
-                    <li><a href="#" className="block px-4 py-2 hover:bg-btn-hover">Received</a></li>
-                    <li><a href="#" className="block px-4 py-2 hover:bg-btn-hover">Delivered</a></li>
-                    <li><a href="#" className="block px-4 py-2 hover:bg-btn-hover">Pending</a></li>
+                    <li>
+                      <button
+                        onClick={() => {
+                          setFilterStatus('Pending');
+                          setShowDropdown(false);
+                          setCurrentPage(1); // reset to first page
+                        }}
+                        className="block w-full text-left px-4 py-2 hover:bg-btn-hover"
+                      >
+                        Pending
+                      </button>
+                    </li>
+                    <li>
+                      <button
+                        onClick={() => {
+                          setFilterStatus('Delivered');
+                          setShowDropdown(false);
+                          setCurrentPage(1); // reset to first page
+                        }}
+                        className="block w-full text-left px-4 py-2 hover:bg-btn-hover"
+                      >
+                        Delivered
+                      </button>
+                    </li>
+                    <li>
+                      <button
+                        onClick={() => {
+                          setFilterStatus('All');
+                          setShowDropdown(false);
+                          setCurrentPage(1); // reset to first page
+                        }}
+                        className="block w-full text-left px-4 py-2 hover:bg-btn-hover"
+                      >
+                        All
+                      </button>
+                    </li>
                   </ul>
                 </div>
               )}
@@ -232,7 +288,7 @@ const Shipments = () => {
             <div className="min-w-[150px]">Status</div>
           </div>
           <div className="divide-y divide-border_color">
-            {shipments.map((t, i) => (
+            {paginatedShipments.map((t, i) => (
               <div key={i} className="grid grid-cols-4 text-center text-lg py-4 font-normal">
                 <div>{t.id}</div>
                 <div>{t.name}</div>
@@ -251,22 +307,64 @@ const Shipments = () => {
 
       {/* Pagination */}
       <div className="flex justify-between items-center border-t border-border_color pt-4 mt-4 text-sm text-gray-700">
-        <div>Showing <span className="font-medium">1</span>-<span className="font-medium">10</span> of <span className="font-medium">45</span> products</div>
+        <div>
+          Showing <span className="font-medium">{(currentPage - 1) * itemsPerPage + 1}</span>–
+          <span className="font-medium">{Math.min(currentPage * itemsPerPage, filteredShipments.length)}</span> of
+          <span className="font-medium"> {filteredShipments.length} </span> shipments
+        </div>
         <nav className="flex items-center gap-1">
-          <a href="?page=1" className="px-2 py-1 text-gray-500 hover:text-gray-700">
-            <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
-            </svg>
-          </a>
-          <a href="?page=1" className="px-3 py-1.5 bg-[#8A00C4] text-white rounded-lg font-medium">1</a>
-          <a href="?page=2" className="px-3 py-1.5 text-gray-700 hover:bg-gray-100 rounded-lg">2</a>
-          <span className="px-2 py-1 text-gray-500">...</span>
-          <a href="?page=5" className="px-3 py-1.5 text-gray-700 hover:bg-gray-100 rounded-lg">5</a>
-          <a href="?page=2" className="px-2 py-1 text-gray-500 hover:text-gray-700">
-            <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
-            </svg>
-          </a>
+          {currentPage > 1 && (
+            <button
+              onClick={() => setCurrentPage(currentPage - 1)}
+              className="px-2 py-1 hover:text-gray-700 flex items-center justify-center rounded-full"
+            >
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
+              </svg>
+            </button>
+          )}
+          {Array.from({ length: Math.ceil(shipments.length / itemsPerPage) }).map((_, i) => {
+            const page = i + 1;
+            if (
+              page === 1 ||
+              page === Math.ceil(shipments.length / itemsPerPage) ||
+              Math.abs(page - currentPage) <= 1
+            ) {
+              return (
+                <button
+                  key={page}
+                  onClick={() => setCurrentPage(page)}
+                  className={`px-3 py-1.5 rounded-lg transition-colors duration-200 ${
+                    currentPage === page
+                      ? "bg-[#8A00C4] font-medium text-white"
+                      : "hover:bg-tbl-hover hover:text-[#8A00C4] text-textColor-primary"
+                  }`}
+                >
+                  {page}
+                </button>
+              );
+            } else if (
+              (page === currentPage - 2 && page !== 1) ||
+              (page === currentPage + 2 && page !== Math.ceil(shipments.length / itemsPerPage))
+            ) {
+              return (
+                <span key={`ellipsis-${page}`} className="px-2 py-1">
+                  ...
+                </span>
+              );
+            }
+            return null;
+          })}
+          {currentPage < Math.ceil(shipments.length / itemsPerPage) && (
+            <button
+              onClick={() => setCurrentPage(currentPage + 1)}
+              className="px-2 py-1 hover:text-gray-700 flex items-center justify-center rounded-full"
+            >
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
+              </svg>
+            </button>
+          )}
         </nav>
       </div>
 
@@ -331,7 +429,7 @@ const Shipments = () => {
             </div>
             {/* Product Section */}
             <div className="absolute top-[223px] left-10 text-white text-xl">Product</div>
-            <div className="absolute top-[267px] left-[39px] w-[513px] h-[65px]">
+            <div className="absolute top-[267px] left-[39px] w-[565px] h-[65px]">
               <div className="relative w-full h-full">
                 <select
                   value={selectedProducts[0]}
@@ -371,8 +469,8 @@ const Shipments = () => {
                     ...prev,
                     {
                       name: productDetails.name,
-                      quantity: productDetails.quantity, // ✅ use the real quantity
-                      item_id: productDetails.item_id    // optional for DB logic later
+                      quantity: productDetails.quantity,
+                      item_id: productDetails.item_id
                     }
                   ]);
 
@@ -382,9 +480,11 @@ const Shipments = () => {
                 }
               }}
               disabled={isAssigning}
-              className="absolute top-[279px] right-[25px] w-[116px] h-[42px] bg-[#029F37] rounded-md text-white text-[17px] font-medium disabled:opacity-50"
+              className="absolute top-[267px] right-[25px] w-[65px] h-[65px] bg-[#029F37] rounded-md flex items-center justify-center disabled:opacity-50"
             >
-              Add
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-6 h-6">
+                <path fillRule="evenodd" d="M12 3.75a.75.75 0 0 1 .75.75v6.75h6.75a.75.75 0 0 1 0 1.5h-6.75v6.75a.75.75 0 0 1-1.5 0v-6.75H4.5a.75.75 0 0 1 0-1.5h6.75V4.5a.75.75 0 0 1 .75-.75Z" clipRule="evenodd" />
+              </svg>
             </button>
 
             {/* Products Table */}
