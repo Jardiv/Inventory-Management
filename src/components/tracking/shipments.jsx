@@ -22,7 +22,14 @@ const Shipments = () => {
         const data = await res.json();
 
         if (res.ok) {
-          setShipments(data);
+          // Sort so that Pending shipments appear at the top
+          const sortedShipments = data.sort((a, b) => {
+            if (a.status === 'Pending' && b.status !== 'Pending') return -1;
+            if (a.status !== 'Pending' && b.status === 'Pending') return 1;
+            return 0; // maintain original order otherwise
+          });
+
+          setShipments(sortedShipments);
 
           // Extract unique products
           // Keep name and quantity of each product from shipments
