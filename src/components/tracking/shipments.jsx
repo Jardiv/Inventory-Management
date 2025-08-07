@@ -28,11 +28,11 @@ const Shipments = () => {
           // Keep name and quantity of each product from shipments
           const uniqueProductsMap = new Map();
           data.forEach(item => {
-            if (!uniqueProductsMap.has(item.name)) {
+            if (item.status !== 'Delivered' && !uniqueProductsMap.has(item.name)) {
               uniqueProductsMap.set(item.name, {
                 name: item.name,
-                quantity: item.qty, // preserve quantity
-                item_id: item.item_id // optional but useful later
+                quantity: item.qty,
+                item_id: item.item_id
               });
             }
           });

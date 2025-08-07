@@ -39,6 +39,25 @@ export const POST: APIRoute = async ({ request }) => {
         const itemId = itemData.id;
         console.log(`Found item_id: ${itemId} for ${item.name}`);
 
+        // 🚫 Check shipment status before continuing
+        const { data: shipmentRecord, error: shipmentError } = await supabase
+          .from('shipments')
+          .select('status')
+          .eq('item_id', itemId)
+          .maybeSingle();
+
+        if (shipmentError) {
+          console.error(`Error fetching shipment for item ${item.name}:`, shipmentError);
+          errors.push(`Error checking shipment status for ${item.name}`);
+          continue;
+        }
+
+        if (!shipmentRecord || shipmentRecord.status === 'Delivered') {
+          console.warn(`Skipping delivered item: ${item.name}`);
+          errors.push(`Item ${item.name} is already delivered and cannot be reassigned.`);
+          continue;
+        }
+
         // Check if this item already exists in the warehouse_items table
         const { data: existingWarehouseItem, error: existingError } = await supabase
           .from('warehouse_items')
