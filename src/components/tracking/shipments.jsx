@@ -14,6 +14,9 @@ const Shipments = () => {
   const [warehouses, setWarehouses] = useState([]); 
   const [shipmentProducts, setShipmentProducts] = useState([]);
   const [isAssigning, setIsAssigning] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 10;
+
 
   useEffect(() => {
     const fetchShipments = async () => {
@@ -173,7 +176,13 @@ const Shipments = () => {
     }
   };
 
-  const emptyRows = 11 - shipments.length;
+  const paginatedShipments = shipments.slice(
+    (currentPage - 1) * itemsPerPage,
+    currentPage * itemsPerPage
+  );
+
+  const emptyRows = itemsPerPage - paginatedShipments.length;
+
   return (
     <div className="w-full max-w-[100%] bg-primary rounded-md mx-auto p-6 text-textColor-primary font-poppins">
       {/* Title & Buttons */}
@@ -239,7 +248,7 @@ const Shipments = () => {
             <div className="min-w-[150px]">Status</div>
           </div>
           <div className="divide-y divide-border_color">
-            {shipments.map((t, i) => (
+            {paginatedShipments.map((t, i) => (
               <div key={i} className="grid grid-cols-4 text-center text-lg py-4 font-normal">
                 <div>{t.id}</div>
                 <div>{t.name}</div>
@@ -258,22 +267,64 @@ const Shipments = () => {
 
       {/* Pagination */}
       <div className="flex justify-between items-center border-t border-border_color pt-4 mt-4 text-sm text-gray-700">
-        <div>Showing <span className="font-medium">1</span>-<span className="font-medium">10</span> of <span className="font-medium">45</span> products</div>
+        <div>
+          Showing <span className="font-medium">{(currentPage - 1) * itemsPerPage + 1}</span>–
+          <span className="font-medium">{Math.min(currentPage * itemsPerPage, shipments.length)}</span> of
+          <span className="font-medium"> {shipments.length} </span> shipments
+        </div>
         <nav className="flex items-center gap-1">
-          <a href="?page=1" className="px-2 py-1 text-gray-500 hover:text-gray-700">
-            <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
-            </svg>
-          </a>
-          <a href="?page=1" className="px-3 py-1.5 bg-[#8A00C4] text-white rounded-lg font-medium">1</a>
-          <a href="?page=2" className="px-3 py-1.5 text-gray-700 hover:bg-gray-100 rounded-lg">2</a>
-          <span className="px-2 py-1 text-gray-500">...</span>
-          <a href="?page=5" className="px-3 py-1.5 text-gray-700 hover:bg-gray-100 rounded-lg">5</a>
-          <a href="?page=2" className="px-2 py-1 text-gray-500 hover:text-gray-700">
-            <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
-            </svg>
-          </a>
+          {currentPage > 1 && (
+            <button
+              onClick={() => setCurrentPage(currentPage - 1)}
+              className="px-2 py-1 hover:text-gray-700 flex items-center justify-center rounded-full"
+            >
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
+              </svg>
+            </button>
+          )}
+          {Array.from({ length: Math.ceil(shipments.length / itemsPerPage) }).map((_, i) => {
+            const page = i + 1;
+            if (
+              page === 1 ||
+              page === Math.ceil(shipments.length / itemsPerPage) ||
+              Math.abs(page - currentPage) <= 1
+            ) {
+              return (
+                <button
+                  key={page}
+                  onClick={() => setCurrentPage(page)}
+                  className={`px-3 py-1.5 rounded-lg transition-colors duration-200 ${
+                    currentPage === page
+                      ? "bg-[#8A00C4] font-medium text-white"
+                      : "hover:bg-tbl-hover hover:text-[#8A00C4] text-textColor-primary"
+                  }`}
+                >
+                  {page}
+                </button>
+              );
+            } else if (
+              (page === currentPage - 2 && page !== 1) ||
+              (page === currentPage + 2 && page !== Math.ceil(shipments.length / itemsPerPage))
+            ) {
+              return (
+                <span key={`ellipsis-${page}`} className="px-2 py-1">
+                  ...
+                </span>
+              );
+            }
+            return null;
+          })}
+          {currentPage < Math.ceil(shipments.length / itemsPerPage) && (
+            <button
+              onClick={() => setCurrentPage(currentPage + 1)}
+              className="px-2 py-1 hover:text-gray-700 flex items-center justify-center rounded-full"
+            >
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
+              </svg>
+            </button>
+          )}
         </nav>
       </div>
 
