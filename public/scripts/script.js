@@ -98,6 +98,18 @@ function initializeSidebar() {
     applySidebarModeInternal(savedMode);
 }
 
+// Initialize sidebar immediately and on DOM ready
+function earlyInitializeSidebar() {
+    const sidebar = document.getElementById('sidebar');
+    if (sidebar) {
+        const savedMode = localStorage.getItem('sidebarMode') || 'expanded';
+        applySidebarModeInternal(savedMode);
+    } else {
+        // If sidebar not found, try again after a brief delay
+        setTimeout(earlyInitializeSidebar, 10);
+    }
+}
+
 // Open sidebar control modal
 function openSidebarModal() {
     const modal = document.getElementById('sidebarModal');
@@ -183,6 +195,9 @@ document.addEventListener('click', function(event) {
 
 // Initialize sidebar when DOM is loaded
 document.addEventListener('DOMContentLoaded', initializeSidebar);
+
+// Also initialize immediately to prevent flashing
+earlyInitializeSidebar();
 
 // Expose sidebar functions globally
 window.openSidebarModal = openSidebarModal;
