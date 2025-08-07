@@ -3,13 +3,6 @@ import { SkeletonRow } from "./utils/SkeletonRow";
 import { BlankRow } from "./utils/BlankRow";
 import Pagination from "./utils/Pagination";
 
-const statusColorMap = {
-	Delivered: "bg-green/10 text-green",
-	Completed: "bg-green/10 text-green",
-	"In Transit": "bg-orange/10 text-orange",
-	Pending: "bg-yellow-500/20 text-yellow-400",
-	Canceled: "bg-red/10 text-red",
-};
 
 export default function TransactionsTable({
 	columns,
@@ -19,6 +12,8 @@ export default function TransactionsTable({
 	showPagination = false,
 	currentPage = 1,
 	itemsPerPage = 10,
+	statusFilters = [],
+	searchTerm = ''
 }) {
 	const [transactions, setTransactions] = useState([]);
 	const [loading, setLoading] = useState(true);
@@ -88,6 +83,14 @@ export default function TransactionsTable({
 
                 if (dateRange.startDate) params.append('startDate', dateRange.startDate);
                 if (dateRange.endDate) params.append('endDate', dateRange.endDate);
+                if (searchTerm) params.append('search', searchTerm);
+				
+                // Add status filters if they exist
+                if (statusFilters && statusFilters.length > 0) {
+                    statusFilters.forEach(status => {
+                        params.append('status', status);
+                    });
+                }
 
 				const res = await fetch(`${basePath}?${params.toString()}`, { signal });
 				const data = await res.json();
@@ -123,7 +126,7 @@ export default function TransactionsTable({
 		return () => {
 			controller.abort();
 		};
-	}, [limit, clientCurrentPage, itemsPerPage, showPagination, sortConfig, dateRange, direction]);
+	}, [limit, clientCurrentPage, itemsPerPage, showPagination, sortConfig, dateRange, direction, statusFilters?.length, searchTerm]);
 
 	const requestSort = (key) => {
 		if (!isAbleToSort) return;
@@ -157,25 +160,40 @@ export default function TransactionsTable({
 		window.location.href = `/stock-transaction/details?id=${id}`;
 	};
 
+	// Determine if there are no transactions to display
+	const noTransactions = !loading && transactions.length === 0;
+
 	return (
 		<div className="flex flex-col">
 			<table className="stock-table">
 				<thead>
 					<tr>
-						{columns.map((col) => (
-							<th
-								key={col.accessor}
-								className={`table-header ${col.sortable && isAbleToSort ? "cursor-pointer" : ""} ${col.className || ""}`}
-								onClick={() => col.sortable && requestSort(col.sortKey || col.accessor)}>
-								{col.header}
-								{col.sortable && getSortIndicator(col.sortKey || col.accessor)}
-							</th>
-						))}
+						{columns.map((col) => {
+							// Disable sorting if no transactions are found
+							const canSort = col.sortable && isAbleToSort && !noTransactions;
+							return (
+								<th
+									key={col.accessor}
+									// Apply cursor-pointer only if sorting is enabled
+									className={`table-header ${canSort ? "cursor-pointer" : ""} ${col.className || ""}`}
+									// Prevent onClick if sorting is disabled
+									onClick={() => canSort && requestSort(col.sortKey || col.accessor)}>
+									{typeof col.header === 'function' ? col.header() : col.header}
+									{col.sortable && getSortIndicator(col.sortKey || col.accessor)}
+								</th>
+							);
+						})}
 					</tr>
 				</thead>
 				<tbody>
 					{loading ? (
 						Array.from({ length: tableLimit }).map((_, index) => <SkeletonRow key={index} columns={columns.length} />)
+					) : noTransactions ? ( // If no transactions are found, display a message in the table body
+						<tr>
+							<td colSpan={columns.length} className="text-center py-4">
+								No transactions found.
+							</td>
+						</tr>
 					) : (
 						<>
 							{transactions.map((log) => (
@@ -195,7 +213,10 @@ export default function TransactionsTable({
 				</tbody>
 			</table>
 
-			{showPagination && <Pagination paginationData={paginationData} handlePageChange={handlePageChange} startItem={startItem} endItem={endItem} loading={loading} />}
+			{/* Hide pagination if no transactions are found */}
+			{showPagination && !noTransactions && (
+				<Pagination paginationData={paginationData} handlePageChange={handlePageChange} startItem={startItem} endItem={endItem} loading={loading} />
+			)}
 		</div>
 	);
 }

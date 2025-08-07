@@ -3,8 +3,10 @@ import Layout from '../../layouts/Layout.astro';
 import DateTimeInput from '../../components/transactions/utils/DateTimeInput.astro';
 import LogsTable from '../../components/transactions/LogsTable.jsx';
 
-// Get current page from URL parameters
 const currentPage = parseInt(Astro.url.searchParams.get('page') || '1');
+const searchTerm = Astro.url.searchParams.get('search') || '';
+
+console.log("Server-side searchTerm:", searchTerm);
 ---
 
 <Layout>
@@ -14,31 +16,15 @@ const currentPage = parseInt(Astro.url.searchParams.get('page') || '1');
 		<div class="w-full flex justify-between">
 			<h1 class="text-xl font-bold">Transaction Logs</h1>
 
-			<div class="flex gap-2 items-center">
-				<button class="p-2 text-textColor-primary hover:bg-btn-hover hover:text-white rounded">
-					<svg
-						id="filterIcon"
-						xmlns="http://www.w3.org/2000/svg"
-						fill="none"
-						stroke="currentColor"
-						stroke-width="2"
-						class="w-5 h-5"
-						viewBox="0 0 24 24">
-						<line x1="3" y1="6" x2="21" y2="6" />
-						<line x1="6" y1="12" x2="18" y2="12" />
-						<line x1="9" y1="18" x2="15" y2="18" />
-					</svg>
-				</button>
-				<a href="/stock-transaction/dashboard/" class="p-2 text-textColor-primary hover:bg-btn-hover hover:text-white rounded">
-					<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5">
-						<path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12" />
-					</svg>
-				</a>
-			</div>
+			<a href="/stock-transaction/dashboard/" class="p-2 text-textColor-primary hover:bg-btn-hover hover:text-white rounded">
+				<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5">
+					<path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12" />
+				</svg>
+			</a>
 		</div>
 
 		<div class="p-2 flex flex-col gap-4">
-			<LogsTable showPagination="true" currentPage="{currentPage}" client:load />
+			<LogsTable showPagination="true" currentPage={currentPage} searchTerm={searchTerm} client:load />
 		</div>
 	</div>
 </Layout>

@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from "react";
 
-const tdStyle = "bg-background px-4 py-2";
+const tdStyle = "bg-background px-4 py-2 max-h-[20px]";
 const thStyle = "px-3 py-1";
+const details = "py-0.5";
 
 export default function TransactionDetails({ transactionId, showSupplierDetails }) {
 	const [transaction, setTransaction] = useState(null);
@@ -33,7 +34,7 @@ export default function TransactionDetails({ transactionId, showSupplierDetails 
 					<h1 className="font-semibold text-2xl">Transaction Details</h1>
 					<p className="text-border_color">Detailed breakdown of the transaction.</p>
 				</div>
-				<a href="/stock-transaction/dashboard/" className="p-2 h-fit text-textColor-primary hover:bg-btn-hover hover:text-white rounded">
+				<button onClick={() => window.history.back()} className="p-2 h-fit text-textColor-primary hover:bg-btn-hover cursor-pointer rounded ">
 					<svg
 						xmlns="http://www.w3.org/2000/svg"
 						fill="none"
@@ -43,7 +44,7 @@ export default function TransactionDetails({ transactionId, showSupplierDetails 
 						className="w-5 h-5">
 						<path strokeLinecap="round" strokeLinejoin="round" d="M6 18 18 6M6 6l12 12" />
 					</svg>
-				</a>
+				</button>
 			</div>
 
 			{loading ? (
@@ -98,11 +99,13 @@ export default function TransactionDetails({ transactionId, showSupplierDetails 
 								<tbody>
 									{transaction.items.map((item, index) => (
 										<tr className="table-row" key={index}>
-											<td className={`${tdStyle}`}><a href="#" className="hover:underline">{item.name}</a></td>
-											<td className={`${tdStyle}`}>{item.quantity}</td>
 											<td className={`${tdStyle}`}>
-												{item.expiry_date ? new Date(expiry_date).toLocaleDateString() : "N/A"}
+												<a href="#" className="hover:underline text-textColor-primary">
+													{item.name}
+												</a>
 											</td>
+											<td className={`${tdStyle}`}>{item.quantity}</td>
+											<td className={`${tdStyle}`}>{item.expiry_date ? new Date(expiry_date).toLocaleDateString() : "N/A"}</td>
 											<td className={`${tdStyle}`}>₱ {item.unit_price}</td>
 											<td className={`${tdStyle}`}>₱ {(item.unit_price * item.quantity).toFixed(2)}</td>
 										</tr>
@@ -110,7 +113,7 @@ export default function TransactionDetails({ transactionId, showSupplierDetails 
 								</tbody>
 								<tfoot>
 									<tr className="border-t-[0.5px]">
-										<td className={`${tdStyle} font-semibold`}>Totals</td>
+										<td className={`${tdStyle} font-semibold `}>Totals</td>
 										<td className={`${tdStyle} font-semibold`}>{transaction.total_quantity}</td>
 										<td className={`${tdStyle}`}></td>
 										<td className={`${tdStyle}`}></td>
@@ -128,16 +131,16 @@ export default function TransactionDetails({ transactionId, showSupplierDetails 
 							<table className="w-full">
 								<tbody>
 									<tr className="">
-										<td className="font-semibold">Invoice Number</td>
-										<td className="">{transaction.invoice_no}</td>
+										<td className={`${details} font-semibold`}>Invoice Number</td>
+										<td className={details}>{transaction.invoice_no}</td>
 									</tr>
 									<tr className="">
-										<td className="font-semibold">Date</td>
-										<td className="">{new Date(transaction.transaction_datetime).toLocaleDateString()}</td>
+										<td className={`${details} font-semibold`}>Date</td>
+										<td className={details}>{new Date(transaction.transaction_datetime).toLocaleDateString()}</td>
 									</tr>
 									<tr className="">
-										<td className="font-semibold">Time</td>
-										<td className="">
+										<td className={`${details} font-semibold`}>Time</td>
+										<td className={details}>
 											{new Date(transaction.transaction_datetime).toLocaleTimeString([], {
 												hour: "2-digit",
 												minute: "2-digit",
@@ -146,17 +149,32 @@ export default function TransactionDetails({ transactionId, showSupplierDetails 
 										</td>
 									</tr>
 									<tr className="">
-										<td className="font-semibold">Status</td>
-										<td className="">{transaction.status}</td>
+										<td className={`${details} font-semibold`}>Status</td>
+										<td className={details}>
+											<span
+												className={`inline-block text-center w-[6rem] px-3 py-1 text-sm font-semibold rounded-full ${
+													{
+														Delivered: "bg-green/10 text-green",
+														Completed: "bg-green/10 text-green",
+														"In Transit": "bg-orange/10 text-orange",
+														Pending: "bg-yellow-500/20 text-yellow-400",
+														Canceled: "bg-red/10 text-red",
+													}[transaction.status] || "bg-textColor-tertiary/10 text-textColor-tertiary"
+												}`}>
+												{transaction.status}
+											</span>
+										</td>
 									</tr>
 									<tr className="">
-										<td className="font-semibold">Created By</td>
-										<td className="">{transaction.created_by}</td>
+										<td className={`${details} font-semibold`}>Created By</td>
+										<td className={details}>{transaction.created_by}</td>
 									</tr>
-                                    <tr className="">
-										<td className="font-semibold">From</td>
-										<td className="">{transaction.warehouse_name}</td>
-                                    </tr>
+									{transaction.warehouse_name && (
+										<tr className="">
+											<td className={`${details} font-semibold`}>From</td>
+											<td className={details}>{transaction.warehouse_name}</td>
+										</tr>
+									)}
 								</tbody>
 							</table>
 						</div>
@@ -168,16 +186,16 @@ export default function TransactionDetails({ transactionId, showSupplierDetails 
 								<table className="w-full">
 									<tbody>
 										<tr className="">
-											<td className="font-semibold">Supplier</td>
-											<td className="">{transaction.supplier_name}</td>
+											<td className={`${details} font-semibold`}>Supplier</td>
+											<td className={details}>{transaction.supplier_name}</td>
 										</tr>
 										<tr className="">
-											<td className="font-semibold">Contact No</td>
-											<td className="">{transaction.supplier_contact}</td>
+											<td className={`${details} font-semibold`}>Contact No</td>
+											<td className={details}>{transaction.supplier_contact}</td>
 										</tr>
 										<tr className="">
-											<td className="font-semibold">Location</td>
-											<td className="">{transaction.supplier_location}</td>
+											<td className={`${details} font-semibold`}>Location</td>
+											<td className={details}>{transaction.supplier_location}</td>
 										</tr>
 									</tbody>
 								</table>
