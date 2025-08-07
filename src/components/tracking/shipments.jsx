@@ -16,6 +16,8 @@ const Shipments = () => {
   const [isAssigning, setIsAssigning] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 10;
+  const [filterStatus, setFilterStatus] = useState('All');
+
 
 
   useEffect(() => {
@@ -176,12 +178,17 @@ const Shipments = () => {
     }
   };
 
-  const paginatedShipments = shipments.slice(
+  const filteredShipments = filterStatus === 'All'
+    ? shipments
+    : shipments.filter(shipment => shipment.status === filterStatus);
+
+  const paginatedShipments = filteredShipments.slice(
     (currentPage - 1) * itemsPerPage,
     currentPage * itemsPerPage
   );
 
   const emptyRows = itemsPerPage - paginatedShipments.length;
+
 
   return (
     <div className="w-full max-w-[100%] bg-primary rounded-md mx-auto p-6 text-textColor-primary font-poppins">
@@ -218,9 +225,42 @@ const Shipments = () => {
               {showDropdown && (
                 <div className="absolute left-1/2 -translate-x-1/2 mt-2 bg-primary border border-border_color rounded shadow-md z-10 w-[130px]">
                   <ul className="py-1 text-sm text-textColor-primary text-left">
-                    <li><a href="#" className="block px-4 py-2 hover:bg-btn-hover">Received</a></li>
-                    <li><a href="#" className="block px-4 py-2 hover:bg-btn-hover">Delivered</a></li>
-                    <li><a href="#" className="block px-4 py-2 hover:bg-btn-hover">Pending</a></li>
+                    <li>
+                      <button
+                        onClick={() => {
+                          setFilterStatus('Pending');
+                          setShowDropdown(false);
+                          setCurrentPage(1); // reset to first page
+                        }}
+                        className="block w-full text-left px-4 py-2 hover:bg-btn-hover"
+                      >
+                        Pending
+                      </button>
+                    </li>
+                    <li>
+                      <button
+                        onClick={() => {
+                          setFilterStatus('Delivered');
+                          setShowDropdown(false);
+                          setCurrentPage(1); // reset to first page
+                        }}
+                        className="block w-full text-left px-4 py-2 hover:bg-btn-hover"
+                      >
+                        Delivered
+                      </button>
+                    </li>
+                    <li>
+                      <button
+                        onClick={() => {
+                          setFilterStatus('All');
+                          setShowDropdown(false);
+                          setCurrentPage(1); // reset to first page
+                        }}
+                        className="block w-full text-left px-4 py-2 hover:bg-btn-hover"
+                      >
+                        All
+                      </button>
+                    </li>
                   </ul>
                 </div>
               )}
@@ -269,8 +309,8 @@ const Shipments = () => {
       <div className="flex justify-between items-center border-t border-border_color pt-4 mt-4 text-sm text-gray-700">
         <div>
           Showing <span className="font-medium">{(currentPage - 1) * itemsPerPage + 1}</span>–
-          <span className="font-medium">{Math.min(currentPage * itemsPerPage, shipments.length)}</span> of
-          <span className="font-medium"> {shipments.length} </span> shipments
+          <span className="font-medium">{Math.min(currentPage * itemsPerPage, filteredShipments.length)}</span> of
+          <span className="font-medium"> {filteredShipments.length} </span> shipments
         </div>
         <nav className="flex items-center gap-1">
           {currentPage > 1 && (
@@ -389,7 +429,7 @@ const Shipments = () => {
             </div>
             {/* Product Section */}
             <div className="absolute top-[223px] left-10 text-white text-xl">Product</div>
-            <div className="absolute top-[267px] left-[39px] w-[513px] h-[65px]">
+            <div className="absolute top-[267px] left-[39px] w-[565px] h-[65px]">
               <div className="relative w-full h-full">
                 <select
                   value={selectedProducts[0]}
@@ -429,8 +469,8 @@ const Shipments = () => {
                     ...prev,
                     {
                       name: productDetails.name,
-                      quantity: productDetails.quantity, // ✅ use the real quantity
-                      item_id: productDetails.item_id    // optional for DB logic later
+                      quantity: productDetails.quantity,
+                      item_id: productDetails.item_id
                     }
                   ]);
 
@@ -440,9 +480,11 @@ const Shipments = () => {
                 }
               }}
               disabled={isAssigning}
-              className="absolute top-[279px] right-[25px] w-[116px] h-[42px] bg-[#029F37] rounded-md text-white text-[17px] font-medium disabled:opacity-50"
+              className="absolute top-[267px] right-[25px] w-[65px] h-[65px] bg-[#029F37] rounded-md flex items-center justify-center disabled:opacity-50"
             >
-              Add
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-6 h-6">
+                <path fillRule="evenodd" d="M12 3.75a.75.75 0 0 1 .75.75v6.75h6.75a.75.75 0 0 1 0 1.5h-6.75v6.75a.75.75 0 0 1-1.5 0v-6.75H4.5a.75.75 0 0 1 0-1.5h6.75V4.5a.75.75 0 0 1 .75-.75Z" clipRule="evenodd" />
+              </svg>
             </button>
 
             {/* Products Table */}
