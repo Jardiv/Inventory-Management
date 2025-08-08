@@ -135,7 +135,8 @@ CREATE TABLE stock_in (
 -- Table: stock_out
 CREATE TABLE stock_out (
     id SERIAL PRIMARY KEY,
-    transaction_id INT NOT NULL REFERENCES transactions(id)
+    transaction_id INT NOT NULL REFERENCES transactions(id),
+    warehouse_id INT NOT NULL REFERENCES warehouse(id)
 );
 
 -- Table: transaction_items

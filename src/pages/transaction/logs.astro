@@ -1,0 +1,36 @@
+---
+import Layout from '../../layouts/Layout.astro';
+import DateTimeInput from '../../components/transactions/utils/DateTimeInput.astro';
+import LogsTable from '../../components/transactions/LogsTable.jsx';
+
+const currentPage = parseInt(Astro.url.searchParams.get('page') || '1');
+const searchTerm = Astro.url.searchParams.get('search') || '';
+
+const showSearchHeading = searchTerm !== '';
+---
+
+<Layout>
+	<DateTimeInput />
+
+	<div class="flex flex-col gap-1 w-full bg-primary p-4 mt-4 rounded-lg">
+		<div class="w-full flex justify-between">
+			<div>
+				<h1 class="text-xl font-bold">Transaction Logs</h1>
+				{showSearchHeading ? <h2 class="text-md mt-2">Search Results for: {searchTerm}</h2> : null}
+			</div>
+			<div class="flex gap-2 items-start">
+				{showSearchHeading ? <button class="px-4 py-1 text-textColor-secondary border-2 hover:border-btn-hover rounded-lg text-sm sm:text-base cursor-pointer"
+					onClick="window.location.href = '/transaction/logs/'">Clear Search</button> : null}
+				<a href="/transaction/dashboard/" class="p-2 h-fit text-textColor-primary hover:bg-btn-hover hover:text-white rounded">
+					<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5">
+						<path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12" />
+					</svg>
+				</a>
+			</div>
+		</div>
+
+		<div class="p-2 flex flex-col gap-4">
+			<LogsTable showPagination="true" currentPage={currentPage} searchTerm={searchTerm} client:load />
+		</div>
+	</div>
+</Layout>
