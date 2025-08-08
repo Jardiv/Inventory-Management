@@ -1,4 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
+import jsPDF from 'jspdf';
+import autoTable from 'jspdf-autotable';
 
 const PurchaseOrderLogs = () => {
   const [logs, setLogs] = useState([]);
@@ -410,13 +412,7 @@ const PurchaseOrderLogs = () => {
     }
   };
 
-  // Handle download PDF
-  const handleDownloadPDF = (log) => {
-    // This would generate and download a PDF for the purchase order
-    console.log('Downloading PDF for:', log.poNumber);
-    // Implementation would depend on your PDF generation service
-    alert(`Downloading PDF for ${log.poNumber}`);
-  };
+  // ...existing code...
 
   // Handle view details
   const handleViewDetails = (log) => {
@@ -594,6 +590,85 @@ const PurchaseOrderLogs = () => {
     );
   }
 
+  // PDF download for purchase order details modal
+  const handleDownloadPDF = (po) => {
+    if (!po) return;
+    try {
+      const doc = new jsPDF();
+      doc.setFontSize(22);
+      doc.text('Purchase Order Details', 14, 18);
+
+      // Primary Details
+      doc.setFontSize(14);
+      doc.text('Primary Details', 14, 30);
+      const primaryDetails = [
+        ['Invoice Number', po.poNumber],
+        ['Date Generated', po.dateCreated],
+        ['Transaction Type', 'Purchase Order'],
+        ['Status', po.status],
+      ];
+      autoTable(doc, {
+        head: [['Field', 'Value']],
+        body: primaryDetails,
+        startY: 34,
+        theme: 'grid',
+        styles: { fontSize: 12 },
+        margin: { left: 14 },
+      });
+
+      // Summary
+      let summaryY = doc.lastAutoTable.finalY + 8;
+      doc.setFontSize(14);
+      doc.text('Summary', 14, summaryY);
+      const summaryDetails = [
+        ['Total Quantity', po.totalQuantity + ' pcs'],
+        ['Total Amount', po.totalAmount],
+        ['Created By', po.createdBy],
+      ];
+      autoTable(doc, {
+        head: [['Field', 'Value']],
+        body: summaryDetails,
+        startY: summaryY + 4,
+        theme: 'grid',
+        styles: { fontSize: 12 },
+        margin: { left: 14 },
+      });
+
+      // Purchased Products Table
+      let productsY = doc.lastAutoTable.finalY + 8;
+      doc.setFontSize(14);
+      doc.text('Purchased Products', 14, productsY);
+      let products = [];
+      if (poDetails && Array.isArray(poDetails.items)) {
+        products = poDetails.items;
+      } else if (po.items) {
+        products = po.items;
+      } else if (po.products) {
+        products = po.products;
+      }
+      const productRows = products.map(item => [
+        item.name,
+        item.supplier,
+        (item.quantity !== undefined ? item.quantity : '') + ' pcs',
+        item.unitPrice,
+        item.totalPrice
+      ]);
+      autoTable(doc, {
+        head: [['Product Name', 'Supplier', 'Quantity', 'Unit Price', 'Total Price']],
+        body: productRows,
+        startY: productsY + 4,
+        theme: 'grid',
+        styles: { fontSize: 12 },
+        margin: { left: 14 },
+      });
+
+      doc.save(`purchase_order_${po.poNumber || 'details'}.pdf`);
+    } catch (err) {
+      alert('PDF generation failed. Please check your browser console for errors and ensure jsPDF and jspdf-autotable are installed. Error: ' + err.message);
+      console.error('PDF generation error:', err);
+    }
+  };
+  
   return (
     <div className="flex-1 overflow-hidden flex flex-col">
       {loading && (

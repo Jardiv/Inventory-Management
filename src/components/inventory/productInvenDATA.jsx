@@ -1,14 +1,33 @@
 import { useEffect, useState } from "react";
 import { supabase } from "../../utils/supabaseClient";
 
-export default function ProductInventoryPreview({ limit = 10 }) {
+export default function ProductInventoryPreview({ limit = 10, hidePageNumbers = false }) {
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [page, setPage] = useState(1);
+  const [total, setTotal] = useState(0);
+  const [paginated, setPaginated] = useState(true);
+
+  const totalPages = Math.ceil(total / limit);
 
   useEffect(() => {
     async function fetchProducts() {
+      setLoading(true);
+
+      // ✅ Count only Completed
+      const { count } = await supabase
+        .from("items")
+        .select("id, added_items!inner(status)", { count: "exact", head: true })
+        .eq("added_items.status", "Completed");
+
+      setTotal(count || 0);
+
+      const from = (page - 1) * limit;
+      const to = from + limit - 1;
+
+      // ✅ Fetch only Completed
       const { data, error } = await supabase
-        .from('items')
+        .from("items")
         .select(`
           id,
           sku,
@@ -16,65 +35,108 @@ export default function ProductInventoryPreview({ limit = 10 }) {
           unit_price,
           min_quantity,
           max_quantity,
-          category (
-            name
-          ),
-          added_items (
-            status,
-            created_at
-          )
+          category ( name ),
+          added_items!inner ( status, created_at )
         `)
-        .order('id', { ascending: true })
-        .limit(limit);
+        .eq("added_items.status", "Completed")
+        .order("id", { ascending: true })
+        .range(from, to);
 
       if (error) {
         console.error("Failed to fetch products:", error.message);
       } else {
         setProducts(data);
       }
+
       setLoading(false);
     }
 
     fetchProducts();
-  }, [limit]);
+  }, [limit, page]);
 
-  if (loading) return <p className="text-sm text-gray-500">Loading products...</p>;
+  const renderPageButtons = () => {
+    const buttons = [];
+    buttons.push(
+      <button
+        key={1}
+        onClick={() => setPage(1)}
+        className={`px-2 py-1 rounded hover:bg-primary ${page === 1 ? "bg-primary font-bold" : ""}`}
+      >
+        1
+      </button>
+    );
+    if (page > 3) buttons.push(<span key="start-ellipsis">...</span>);
+    if (page > 1 && page < totalPages) {
+      buttons.push(
+        <button
+          key={page}
+          onClick={() => setPage(page)}
+          className="px-2 py-1 rounded bg-gray-300 font-bold"
+        >
+          {page}
+        </button>
+      );
+    }
+    if (page < totalPages - 2) buttons.push(<span key="end-ellipsis">...</span>);
+    if (totalPages > 1) {
+      buttons.push(
+        <button
+          key={totalPages}
+          onClick={() => setPage(totalPages)}
+          className={`px-2 py-1 rounded hover:bg-gray-200 ${page === totalPages ? "bg-gray-300 font-bold" : ""}`}
+        >
+          {totalPages}
+        </button>
+      );
+    }
+    return buttons;
+  };
 
   return (
-    <div className="overflow-x-auto mt-4">
-      <table className="w-full text-sm text-left border border-gray-200 rounded">
-<thead className="bg-violet-100 border-b border-gray-300 text-sm text-gray-700">
-  <tr>
-    <th className="px-4 py-2 text-left font-semibold">SKU</th>
-    <th className="px-4 py-2 text-left font-semibold">Name</th>
-    <th className="px-4 py-2 text-left font-semibold">Category</th>
-    <th className="px-4 py-2 text-left font-semibold">Status</th>
-    <th className="px-4 py-2 text-left font-semibold">Min Qty</th>
-    <th className="px-4 py-2 text-left font-semibold">Max Qty</th>
-    <th className="px-4 py-2 text-left font-semibold">Unit Price</th>
-    <th className="px-4 py-2 text-left font-semibold">Created At</th>
-  </tr>
-</thead>
+    <div>
+      {/* Table Headers */}
+      <div className="grid grid-cols-8 items-center bg-primary text-sm font-semibold px-3 py-3 border-b border-border_color rounded-t text-texctColor-primary">
+        <span>SKU</span>
+        <span>Name</span>
+        <span>Category</span>
+        <span>Status</span>
+        <span>Min Qty</span>
+        <span>Max Qty</span>
+        <span>Unit Price</span>
+        <span>Created At</span>
+      </div>
 
-        <tbody>
-          {products.map(item => (
-            <tr key={item.id} className="border-t">
-              <td className="p-3">{item.sku}</td>
-              <td className="p-3">{item.name}</td>
-              <td className="p-3">{item.category?.name || '—'}</td>
-              <td className="p-3">{item.added_items?.status || '—'}</td>
-              <td className="p-3">{item.min_quantity}</td>
-              <td className="p-3">{item.max_quantity}</td>
-              <td className="p-3">₱{item.unit_price?.toFixed(2)}</td>
-              <td className="p-3">
-                {item.added_items?.created_at
-                  ? new Date(item.added_items.created_at).toLocaleDateString()
-                  : '—'}
-              </td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
+      {/* Table Rows */}
+      {loading ? (
+        <p className="px-3 py-4">Loading...</p>
+      ) : products.length === 0 ? (
+        <p className="px-3 py-4">No products found.</p>
+      ) : (
+        products.map((item) => (
+          <div key={item.id} className="grid grid-cols-8 items-center border-b px-3 py-3 text-sm hover:bg-btn-hover rounded transition">
+            <span>{item.sku}</span>
+            <span>{item.name}</span>
+            <span>{item.category?.name || "—"}</span>
+            <span>{item.added_items?.status || "—"}</span>
+            <span>{item.min_quantity}</span>
+            <span>{item.max_quantity}</span>
+            <span>₱{item.unit_price?.toFixed(2)}</span>
+            <span>{item.added_items?.created_at ? new Date(item.added_items.created_at).toLocaleDateString() : "—"}</span>
+          </div>
+        ))
+      )}
+
+      {/* Pagination Footer */}
+      {paginated && totalPages > 1 && (
+        <div className="flex items-center justify-between mt-4 text-sm">
+          <div>Showing {(page - 1) * limit + 1}-{Math.min(page * limit, total)} of {total} items</div>
+          <div className="flex items-center gap-1">
+            <button onClick={() => setPage((p) => Math.max(p - 1, 1))} disabled={page === 1}>&lt;</button>
+            {!hidePageNumbers && renderPageButtons()}
+            <button onClick={() => setPage((p) => Math.min(p + 1, totalPages))} disabled={page === totalPages}>&gt;</button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

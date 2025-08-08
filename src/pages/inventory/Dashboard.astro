@@ -4,39 +4,32 @@ import Addmodal from '../../components/inventory/Addmodal.astro';
 import Filter from '../../components/inventory/Filter.astro';
 import QuickSummary from '../../components/inventory/QuickSummary.jsx';
 import ProductInventoryPreview from '../../components/inventory/productInvenDATA.jsx';
-
 ---
 
 <Layout>
   <Addmodal />
 
-
-  <!-- INVENTORY OVERVIEW -->
   <section id="overviewSection">
-    <!-- Inventory Summary -->
     <div class="bg-primary p-6 rounded-lg mb-6">  
       <h2 class="text-xl font-semibold mb-4">Quick Summary</h2>
       <QuickSummary client:load />
     </div>
 
-    <!-- Product Table Preview --> 
-<div class="bg-primary p-6 rounded-lg">
-  <div class="flex items-center justify-between mb-6 relative z-10">
-    <div class="flex items-center gap-3">
-      <h2 class="text-xl font-semibold">Product Inventory</h2>
-    </div>
-    <div class="flex items-center gap-2">
-      <Filter />
-      <a href="/inventory/ProductInventoryTBL/">
-        <button class="text-btn-primary hover:text-purple-300 px-4 py-2 pr-0 text-sm sm:text-base">See All</button>
-      </a>
-    </div>
-  </div>
+    <div class="bg-primary p-6 rounded-lg">
+      <div class="flex items-center justify-between mb-6 relative z-10">
+        <div class="flex items-center gap-3">
+          <h2 class="text-xl font-semibold">Product Inventory</h2>
+        </div>
+        <div class="flex items-center gap-2">
+          <Filter />
+          <a href="/inventory/ProductInventoryTBL/">
+            <button class="text-btn-primary hover:text-purple-300 px-4 py-2 pr-0 text-sm sm:text-base">See All</button>
+          </a>
+        </div>
+      </div>
 
-  <!-- Dynamic Table via API -->
-<ProductInventoryPreview client:load limit={6} paginated={false} />
-
-</div>
+      <ProductInventoryPreview client:load limit={6} hidePageNumbers={true} />
+    </div>
   </section>
 
   <script src="/scripts/inventory/inventory.js" is:inline></script>
