@@ -281,26 +281,55 @@ const Shipments = () => {
       {/* Table */}
       <div className="overflow-x-auto">
         <div className="min-w-[700px]">
+          {/* Table Header */}
           <div className="grid grid-cols-4 text-center text-lg border-b border-border_color py-2 font-medium">
             <div className="min-w-[150px]">Shipment ID</div>
             <div className="min-w-[150px]">Item name</div>
             <div className="min-w-[200px]">Quantity</div>
             <div className="min-w-[150px]">Status</div>
           </div>
+
           <div className="divide-y divide-border_color">
-            {paginatedShipments.map((t, i) => (
-              <div key={i} className="grid grid-cols-4 text-center text-lg py-4 font-normal">
-                <div>{t.id}</div>
-                <div>{t.name}</div>
-                <div>{t.qty}</div>
-                <div>{t.status}</div>
-              </div>
-            ))}
-            {Array.from({ length: emptyRows > 0 ? emptyRows : 0 }).map((_, i) => (
-              <div key={i} className="grid grid-cols-4 text-center text-lg h-[56px] font-normal opacity-50">
-                <div>&nbsp;</div><div>&nbsp;</div><div>&nbsp;</div><div>&nbsp;</div>
-              </div>
-            ))}
+            {loading ? (
+              // Skeleton rows
+              Array.from({ length: itemsPerPage }).map((_, i) => (
+                <div
+                  key={i}
+                  className="grid grid-cols-4 text-center text-lg py-4 font-normal animate-pulse"
+                >
+                  <div className="mx-auto w-20 h-5 bg-gray-700 rounded"></div>
+                  <div className="mx-auto w-24 h-5 bg-gray-700 rounded"></div>
+                  <div className="mx-auto w-16 h-5 bg-gray-700 rounded"></div>
+                  <div className="mx-auto w-20 h-5 bg-gray-700 rounded"></div>
+                </div>
+              ))
+            ) : (
+              <>
+                {paginatedShipments.map((t, i) => (
+                  <div
+                    key={i}
+                    className="grid grid-cols-4 text-center text-lg py-4 font-normal"
+                  >
+                    <div>{t.id}</div>
+                    <div>{t.name}</div>
+                    <div>{t.qty}</div>
+                    <div>{t.status}</div>
+                  </div>
+                ))}
+                {/* Empty rows to maintain height */}
+                {Array.from({ length: emptyRows > 0 ? emptyRows : 0 }).map((_, i) => (
+                  <div
+                    key={i}
+                    className="grid grid-cols-4 text-center text-lg h-[56px] font-normal opacity-50"
+                  >
+                    <div>&nbsp;</div>
+                    <div>&nbsp;</div>
+                    <div>&nbsp;</div>
+                    <div>&nbsp;</div>
+                  </div>
+                ))}
+              </>
+            )}
           </div>
         </div>
       </div>
