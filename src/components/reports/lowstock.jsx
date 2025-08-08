@@ -37,6 +37,11 @@ const LowStockTable = ({ currentPage = 1 }) => {
         status: ''
     });
 
+    // New state for tracking filtered out items with pending orders
+    const [filteredOutInfo, setFilteredOutInfo] = useState(null);
+    const [showFilteredItemsDetails, setShowFilteredItemsDetails] = useState(false);
+    const [isNotificationDismissed, setIsNotificationDismissed] = useState(false);
+
     // Storage key for selected items
     const STORAGE_KEY = 'lowstock_selected_items';
     const ORDER_QUANTITY_STORAGE_KEY = 'lowstock_custom_order_quantities';
@@ -82,6 +87,50 @@ const LowStockTable = ({ currentPage = 1 }) => {
             console.error('Error resetting custom order quantities:', error);
         }
     }, []);
+
+    // Functions to handle notification dismissal/restoration
+    const dismissNotification = () => {
+        setIsNotificationDismissed(true);
+    };
+
+    const restoreNotification = () => {
+        setIsNotificationDismissed(false);
+    };
+
+    // Effect to render restore button in header placeholder
+    useEffect(() => {
+        const placeholder = document.getElementById('restore-notification-placeholder');
+        if (placeholder && filteredOutInfo && filteredOutInfo.itemsWithPendingOrders > 0 && isNotificationDismissed) {
+            placeholder.innerHTML = `
+                <button 
+                    id="restore-notification-btn"
+                    class="text-purple hover:text-purple-300 text-sm font-medium transition-colors flex items-center gap-2 ml-2"
+                    title="Show filtered items notification"
+                >
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-4 h-4">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M11.25 11.25l.041-.02a.75.75 0 011.063.852l-.708 2.836a.75.75 0 001.063.853l.041-.021M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-9-3.75h.008v.008H12V8.25z" />
+                    </svg>
+                    <span class="text-xs">Show filtered items info (${filteredOutInfo.itemsWithPendingOrders} hidden)</span>
+                </button>
+            `;
+            
+            // Add click event listener
+            const restoreBtn = document.getElementById('restore-notification-btn');
+            if (restoreBtn) {
+                restoreBtn.addEventListener('click', restoreNotification);
+            }
+        } else if (placeholder) {
+            placeholder.innerHTML = '';
+        }
+
+        // Cleanup function
+        return () => {
+            const restoreBtn = document.getElementById('restore-notification-btn');
+            if (restoreBtn) {
+                restoreBtn.removeEventListener('click', restoreNotification);
+            }
+        };
+    }, [filteredOutInfo, isNotificationDismissed]);
 
     // Function to toggle filter modal and dispatch events
     const toggleFilterModal = (isOpen) => {
@@ -649,6 +698,8 @@ const LowStockTable = ({ currentPage = 1 }) => {
             case 'Out of stock':
             case 'Out of Stock':
                 return 'text-red bg-red/10';
+            case 'Normal':
+                return 'text-green bg-green/10';
             default:
                 return 'text-textColor-tertiary bg-textColor-tertiary/10';
         }
@@ -669,6 +720,12 @@ const LowStockTable = ({ currentPage = 1 }) => {
             if (result.success) {
                 let fetchedData = result.data || [];
                 console.log(`Fetched ${fetchedData.length} low stock items`);
+                
+                // Capture debug info about filtered out items
+                if (result.debug) {
+                    setFilteredOutInfo(result.debug);
+                    console.log('Debug info:', result.debug);
+                }
                 
                 // Apply custom order quantities from localStorage
                 fetchedData = applyCustomOrderQuantities(fetchedData);
@@ -997,6 +1054,43 @@ const LowStockTable = ({ currentPage = 1 }) => {
     return (
         <>
             <div className="flex-1 overflow-hidden flex flex-col h-full">
+                {/* Notification about filtered out items with pending orders */}
+                {filteredOutInfo && filteredOutInfo.itemsWithPendingOrders > 0 && !isNotificationDismissed && (
+                    <div className=" mt-2 mb-4 bg-btn-primary/10 border border-btn-primary rounded-lg p-3">
+                        <div className="flex items-start justify-between">
+                            <div className="flex items-center">
+                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth="1.5" stroke="currentColor" className="w-5 h-5 text-purple mr-2 flex-shrink-0">
+                                    <path strokeLinecap="round" strokeLinejoin="round" d="M11.25 11.25l.041-.02a.75.75 0 011.063.852l-.708 2.836a.75.75 0 001.063.853l.041-.021M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-9-3.75h.008v.008H12V8.25z" />
+                                </svg>
+                                <div className="text-sm">
+                                    <span className="text-purple font-medium">
+                                        {filteredOutInfo.itemsWithPendingOrders} item{filteredOutInfo.itemsWithPendingOrders !== 1 ? 's' : ''} 
+                                    </span>
+                                    <span className="text-textColor-primary"> with low stock are hidden because they already have pending purchase orders. </span>
+                                    <span className="text-textColor-tertiary"><br></br>They will appear here again once the orders are delivered or cancelled.</span>
+                                </div>
+                            </div>
+                            <div className="flex items-center gap-2 ml-4 flex-shrink-0 p-2">
+                                <button 
+                                    onClick={() => window.location.href = '/reports/Logs'}
+                                    className="text-purple hover:text-purple-300 text-sm font-medium transition-colors"
+                                >
+                                    View Pending Orders
+                                </button>
+                                <button 
+                                    onClick={dismissNotification}
+                                    className="text-textColor-tertiary hover:text-textColor-primary transition-colors  rounded"
+                                    title="Dismiss notification"
+                                >
+                                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth="1.5" stroke="currentColor" className="w-4 h-4">
+                                        <path strokeLinecap="round" strokeLinejoin="round" d="M6 18 18 6M6 6l12 12" />
+                                    </svg>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                )}
+
                 {/* Low Stock Table */}
                 <div className="flex-1 overflow-auto">
                     <table className="w-full text-sm">
@@ -1246,7 +1340,7 @@ const LowStockTable = ({ currentPage = 1 }) => {
                         className="bg-primary rounded-lg p-6 w-[500px] max-h-[90vh] overflow-y-auto"
                         onClick={(e) => e.stopPropagation()}
                     >
-                        <div className="flex justify-between items-center mb-4">
+                        <div className="flex justify-between items-center       ">
                             <h3 className="text-textColor-primary text-lg font-semibold">Purchase Order Details</h3>
                             <button 
                                 onClick={closeDetailsModal}
@@ -1329,7 +1423,7 @@ const LowStockTable = ({ currentPage = 1 }) => {
                                     </button>
                                     <button 
                                         onClick={updateOrderQuantity}
-                                        className="flex-1 bg-green-700 hover:bg-green-900 text-textColor-primary px-4 py-2 rounded font-medium transition-colors"
+                                        className="flex-1 bg-green-700 hover:bg-green-900 text-textColor-secondary px-4 py-2 rounded font-medium transition-colors"
                                     >
                                         Update Order
                                     </button>
@@ -1380,15 +1474,19 @@ const LowStockTable = ({ currentPage = 1 }) => {
                                 </div>
                                 <div className="bg-background rounded-lg p-4">
                                     <h3 className="text-sm font-medium text-textColor-tertiary mb-1">Total Amount</h3>
-                                    <p className="text-lg font-semibold text-green-400">${purchaseOrderSummary.totalAmount.toFixed(2)}</p>
+                                    <p className="text-lg font-semibold text-green">${purchaseOrderSummary.totalAmount.toFixed(2)}</p>
                                 </div>
                             </div>
 
-                            {/* Fixed Table Title and Header */}
+                            {/* Table Title */}
                             <h3 className="text-lg font-semibold text-textColor-primary mb-2">Selected Products</h3>
+                        </div>
+
+                        {/* Scrollable Table with Header and Body */}
+                        <div className="flex-1 overflow-auto px-6">
                             <div className="overflow-x-auto">
                                 <table className="w-full text-sm">
-                                    <thead>
+                                    <thead className="sticky top-0 bg-primary z-10">
                                         <tr className="text-textColor-primary border-b border-gray-700">
                                             <th className="text-left py-3 px-4 font-medium bg-primary">SKU</th>
                                             <th className="text-left py-3 px-4 font-medium bg-primary">Name</th>
@@ -1397,17 +1495,9 @@ const LowStockTable = ({ currentPage = 1 }) => {
                                             <th className="text-right py-3 px-4 font-medium bg-primary">Total Price</th>
                                         </tr>
                                     </thead>
-                                </table>
-                            </div>
-                        </div>
-
-                        {/* Scrollable Table Body */}
-                        <div className="flex-1 overflow-auto px-6">
-                            <div className="overflow-x-auto">
-                                <table className="w-full text-sm">
                                     <tbody>
                                         {purchaseOrderSummary.items.map((item, index) => (
-                                            <tr key={item.id} className="border-b border-gray-700 text-textColor-secondary">
+                                            <tr key={item.id} className="border-b border-gray-700 text-textColor-primary">
                                                 <td className="py-3 px-4 font-mono">{item.sku}</td>
                                                 <td className="py-3 px-4">{item.name}</td>
                                                 <td className="py-3 px-4 text-center">{item.quantity}</td>

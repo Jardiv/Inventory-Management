@@ -72,7 +72,8 @@ export const GET: APIRoute = async ({ url }) => {
         invoice_no,
         items (
           name,
-          sku
+          sku,
+          unit_price
         ),
         suppliers (
           name
@@ -93,12 +94,9 @@ export const GET: APIRoute = async ({ url }) => {
 
     // Create product details from purchase order items
     const productDetails: ProductDetail[] = (purchaseOrderItems || []).map((item: any) => {
-      // Since individual item prices aren't stored, calculate from the total purchase order
-      // Distribute the total purchase order amount proportionally based on quantity
-      const totalQuantityInOrder = purchaseOrderData.total_quantity || 1;
-      const proportionalAmount = (purchaseOrderData.total_price / totalQuantityInOrder) * item.quantity;
-      const unitPrice = proportionalAmount / item.quantity;
-      const totalPrice = proportionalAmount;
+      // Get the actual unit price from the items table
+      const actualUnitPrice = item.items?.unit_price || 0;
+      const totalPrice = actualUnitPrice * item.quantity;
       
       // Get the actual product name from the joined items table
       const productName = item.items 
@@ -116,7 +114,7 @@ export const GET: APIRoute = async ({ url }) => {
         unitPrice: new Intl.NumberFormat('en-US', {
           style: 'currency',
           currency: 'USD'
-        }).format(unitPrice),
+        }).format(actualUnitPrice),
         totalPrice: new Intl.NumberFormat('en-US', {
           style: 'currency',
           currency: 'USD'
@@ -128,10 +126,14 @@ export const GET: APIRoute = async ({ url }) => {
     const responseData = {
       id: purchaseOrderData.id,
       poNumber: purchaseOrderData.invoice_no,
-      dateCreated: new Date(purchaseOrderData.date_created).toLocaleDateString('en-US', {
+      dateCreated: new Date(purchaseOrderData.date_created).toLocaleString('en-US', {
         year: 'numeric',
         month: 'short',
-        day: 'numeric'
+        day: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit',
+        second: '2-digit',
+        hour12: true
       }),
       totalQuantity: purchaseOrderData.total_quantity,
       totalAmount: new Intl.NumberFormat('en-US', {

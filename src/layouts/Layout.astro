@@ -63,6 +63,18 @@ import "/src/styles/global.css";
 				});
 				e.classList.add("active");
 			}
+
+			// Initialize sidebar when DOM is loaded
+			document.addEventListener('DOMContentLoaded', function() {
+				// Initialize theme
+				if (window.initializeTheme) {
+					window.initializeTheme();
+				}
+				// Initialize sidebar
+				if (window.initializeSidebar) {
+					window.initializeSidebar();
+				}
+			});
 		</script>
 	</body>
 </html>

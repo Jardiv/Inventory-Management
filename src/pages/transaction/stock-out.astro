@@ -1,6 +1,6 @@
 ---
 import Layout from '../../layouts/Layout.astro';
-import DateTimeInput from '../../components/transactions/DateTimeInput.astro';
+import DateTimeInput from '../../components/transactions/utils/DateTimeInput.astro';
 import StockOutTable from '../../components/transactions/StockOutTable.jsx';
 
 // Get current page from URL parameters
@@ -14,7 +14,7 @@ const itemsPerPage = 10;
 	<div class="flex flex-col gap-1 w-full bg-primary p-4 mt-4 rounded-lg">
 		<div class="w-full flex justify-between">
 			<h1 class="text-xl font-bold">Stock Out Transactions</h1>
-			<a href="/stock-transaction/dashboard/" class="p-2 text-textColor-primary hover:bg-btn-hover hover:text-white rounded">
+			<a href="/transaction/dashboard/" class="p-2 text-textColor-primary hover:bg-btn-hover hover:text-white rounded">
                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5">
                     <path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12" />
                 </svg>

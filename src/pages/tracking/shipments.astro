@@ -1,0 +1,10 @@
+---
+import Layout from '../../layouts/Layout.astro';
+import Shipments from '../../components/tracking/shipments.jsx';
+---
+
+<Layout> <!-- If you're using a layout -->
+  <main class="p-6">
+    <Shipments client:load />
+  </main>
+</Layout>

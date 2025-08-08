@@ -1,0 +1,14 @@
+---
+import Layout from '../../layouts/Layout.astro';
+import TransactionDetails from '../../components/transactions/TransactionDetails.jsx';
+import { URL } from 'node:url';
+
+const url = new URL(Astro.request.url);
+const transactionId = url.searchParams.get("id");
+const isShow = url.searchParams.get("showSupplier");
+const showSupplierDetails = isShow !== 'false';
+---
+
+<Layout>
+    <TransactionDetails client:load transactionId={transactionId} showSupplierDetails={showSupplierDetails} />
+</Layout>

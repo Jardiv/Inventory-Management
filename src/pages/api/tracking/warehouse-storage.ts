@@ -15,11 +15,13 @@ export const GET: APIRoute = async ({ request }) => {
     .from('warehouse_items')
     .select(` 
       id,
+      item_id,
       quantity,
       date_assigned,
       status,
       warehouse_id,
-      items (
+      items ( 
+        id,
         sku,
         name,
         category: category_id (
@@ -36,10 +38,13 @@ export const GET: APIRoute = async ({ request }) => {
   const { data, error, count } = await query;
 
   if (error) {
+    console.error("Database error in warehouse-storage:", error);
     return new Response(JSON.stringify({ error: error.message }), {
       status: 500,
     });
   }
+
+  console.log("Warehouse storage API response:", data);
 
   return new Response(JSON.stringify({ data: data || [], count: count || 0 }), {
     status: 200,

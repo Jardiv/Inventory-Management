@@ -1,0 +1,149 @@
+-- Table: added_items
+CREATE TABLE added_items (
+    id SERIAL PRIMARY KEY,
+    sku VARCHAR UNIQUE NOT NULL,
+    name VARCHAR NOT NULL,
+    description VARCHAR,
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    status VARCHAR NOT NULL CHECK (status IN ('Pending', 'Completed', 'To Review', 'Canceled'))
+);
+
+-- Table: added_suppliers
+CREATE TABLE added_suppliers (
+    id SERIAL PRIMARY KEY,
+    name VARCHAR NOT NULL,
+    phone_num BIGINT NOT NULL,
+    email VARCHAR NOT NULL,
+    location VARCHAR NOT NULL,
+    sku VARCHAR NOT NULL REFERENCES added_items(sku),
+    price_per_unit FLOAT NOT NULL
+);
+
+-- Table: category
+CREATE TABLE category (
+	id SERIAL PRIMARY KEY,
+	name VARCHAR NOT NULL
+);
+
+-- Table: items
+CREATE TABLE items (
+    id SERIAL PRIMARY KEY,
+    sku VARCHAR NOT NULL REFERENCES added_items(sku),
+    name VARCHAR NOT NULL,
+    category_id INT NOT NULL,
+    image VARCHAR,
+    min_quantity INT NOT NULL,
+    max_quantity INT NOT NULL,
+    unit_price FLOAT NOT NULL,
+    updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    accepted_at TIMESTAMP
+);
+
+-- Table: suppliers
+CREATE TABLE suppliers (
+    id SERIAL PRIMARY KEY,
+    name VARCHAR NOT NULL UNIQUE,
+    phone_num BIGINT NOT NULL,
+    email VARCHAR NOT NULL,
+    location VARCHAR NOT NULL
+);
+
+-- Table: warehouse
+CREATE TABLE warehouse (
+    id SERIAL PRIMARY KEY,
+    name VARCHAR NOT NULL,
+    location VARCHAR NOT NULL,
+    max_capacity INT NOT NULL
+);
+
+-- Table: warehouse_items
+CREATE TABLE warehouse_items (
+    id SERIAL PRIMARY KEY,
+    item_id INT NOT NULL REFERENCES items(id),
+    quantity INT NOT NULL,
+    date_assigned TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    status VARCHAR NOT NULL,
+    warehouse_id INT NOT NULL REFERENCES warehouse(id)
+);
+
+-- Table: shipments
+CREATE TABLE shipments (
+    id SERIAL PRIMARY KEY,
+    -- shipment_id INT UNIQUE NOT NULL,
+    item_id INT NOT NULL REFERENCES items(id),
+    quantity INT NOT NULL,
+    date TIMESTAMP,
+    status VARCHAR CHECK (status IN ('Pending', 'Delivered'))
+);
+
+-- Table: transfers
+CREATE TABLE transfers (
+    id SERIAL PRIMARY KEY,
+    item_id INT NOT NULL REFERENCES items(id),
+    from_warehouse INT NOT NULL REFERENCES warehouse(id),
+    to_warehouse INT NOT NULL REFERENCES warehouse(id),
+    quantity INT NOT NULL,
+    transfer_date TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    status VARCHAR NOT NULL 
+);
+
+-- Table: purchase_orders
+CREATE TABLE purchase_orders (
+    id SERIAL PRIMARY KEY,
+    invoice_no VARCHAR UNIQUE NOT NULL,
+    date_created TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    created_by VARCHAR NOT NULL,
+    total_quantity INT NOT NULL,
+    total_price FLOAT NOT NULL,
+    status VARCHAR NOT NULL
+);
+
+-- Table: purchase_orders_items
+CREATE TABLE purchase_orders_items (
+    id SERIAL PRIMARY KEY,
+    item_id INT NOT NULL REFERENCES items(id),
+    quantity INT NOT NULL,
+    supplier_id INT NOT NULL REFERENCES suppliers(id),
+    invoice_no VARCHAR NOT NULL REFERENCES purchase_orders(invoice_no)
+);
+
+-- Table: auto_order
+CREATE TABLE auto_order (
+    id SERIAL PRIMARY KEY,
+    item_id INT NOT NULL REFERENCES items(id),
+    order_quantity INT NOT NULL
+);
+
+-- Table: transactions
+CREATE TABLE transactions (
+    id SERIAL PRIMARY KEY,
+    invoice_no VARCHAR UNIQUE NOT NULL,
+    transaction_datetime TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    total_quantity INT NOT NULL,
+    total_price FLOAT NOT NULL,
+    status VARCHAR NOT NULL,
+    created_by VARCHAR NOT NULL
+);
+
+-- Table: stock_in
+CREATE TABLE stock_in (
+    id SERIAL PRIMARY KEY,
+    transaction_id INT NOT NULL REFERENCES transactions(id),
+    supplier_id INT NOT NULL REFERENCES suppliers(id)
+);
+
+-- Table: stock_out
+CREATE TABLE stock_out (
+    id SERIAL PRIMARY KEY,
+    transaction_id INT NOT NULL REFERENCES transactions(id),
+    warehouse_id INT NOT NULL REFERENCES warehouse(id)
+);
+
+-- Table: transaction_items
+CREATE TABLE transaction_items (
+    id SERIAL PRIMARY KEY,
+    invoice_no VARCHAR NOT NULL REFERENCES transactions(invoice_no),
+    item_id INT NOT NULL REFERENCES items(id),
+    quantity INT NOT NULL,
+    expiration_date DATE
+);

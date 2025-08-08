@@ -109,7 +109,16 @@ export default function WarehouseSummary() {
       {/* Table Rows */}
       <div className="divide-y divide-border_color">
         {loading ? (
-          <div className="py-4 text-center col-span-4">Loading...</div>
+          // Skeleton rows (fixed height so table doesn't resize)
+          Array.from({ length: 5 }).map((_, i) => (
+            <div key={`skeleton-${i}`} className="grid grid-cols-4 py-4 text-center text-lg">
+              {[...Array(4)].map((_, j) => (
+                <div key={j} className="flex justify-center">
+                  <div className="h-5 w-20 bg-gray-300 animate-pulse rounded"></div>
+                </div>
+              ))}
+            </div>
+          ))
         ) : (
           <>
             {warehouseItems.map((item, idx) => (
