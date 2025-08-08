@@ -1,67 +1,142 @@
-// src/components/inventory/InventoryPage.jsx
-import React, { useState } from 'react';
-import ProductInventoryPreview from './productInvenDATA.jsx';
-import ProductOverviewModal from './ProductOverviewModal.jsx';
-import Addmodal from './Addmodal.astro';
-import Filter from './Filter.astro';
+import { useEffect, useState } from "react";
+import { supabase } from "../../utils/supabaseClient";
 
-export default function InventoryPage() {
-  const [showModal, setShowModal] = useState(false);
-  const [selectedProduct, setSelectedProduct] = useState(null);
+export default function ProductInventoryPreview({ limit = 10, hidePageNumbers = false }) {
+  const [products, setProducts] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [page, setPage] = useState(1);
+  const [total, setTotal] = useState(0);
+  const [paginated, setPaginated] = useState(true);
 
-  const handleRowClick = (product) => {
-    setSelectedProduct(product);
-    setShowModal(true);
-  };
+  const totalPages = Math.ceil(total / limit);
 
-  const handleCloseModal = () => {
-    setShowModal(false);
-    setSelectedProduct(null);
+  useEffect(() => {
+    async function fetchProducts() {
+      setLoading(true);
+
+      // ✅ Count only Completed
+      const { count } = await supabase
+        .from("items")
+        .select("id, added_items!inner(status)", { count: "exact", head: true })
+        .eq("added_items.status", "Completed");
+
+      setTotal(count || 0);
+
+      const from = (page - 1) * limit;
+      const to = from + limit - 1;
+
+      // ✅ Fetch only Completed
+      const { data, error } = await supabase
+        .from("items")
+        .select(`
+          id,
+          sku,
+          name,
+          unit_price,
+          min_quantity,
+          max_quantity,
+          category ( name ),
+          added_items!inner ( status, created_at )
+        `)
+        .eq("added_items.status", "Completed")
+        .order("id", { ascending: true })
+        .range(from, to);
+
+      if (error) {
+        console.error("Failed to fetch products:", error.message);
+      } else {
+        setProducts(data);
+      }
+
+      setLoading(false);
+    }
+
+    fetchProducts();
+  }, [limit, page]);
+
+  const renderPageButtons = () => {
+    const buttons = [];
+    buttons.push(
+      <button
+        key={1}
+        onClick={() => setPage(1)}
+        className={`px-2 py-1 rounded hover:bg-primary ${page === 1 ? "bg-primary font-bold" : ""}`}
+      >
+        1
+      </button>
+    );
+    if (page > 3) buttons.push(<span key="start-ellipsis">...</span>);
+    if (page > 1 && page < totalPages) {
+      buttons.push(
+        <button
+          key={page}
+          onClick={() => setPage(page)}
+          className="px-2 py-1 rounded bg-gray-300 font-bold"
+        >
+          {page}
+        </button>
+      );
+    }
+    if (page < totalPages - 2) buttons.push(<span key="end-ellipsis">...</span>);
+    if (totalPages > 1) {
+      buttons.push(
+        <button
+          key={totalPages}
+          onClick={() => setPage(totalPages)}
+          className={`px-2 py-1 rounded hover:bg-gray-200 ${page === totalPages ? "bg-gray-300 font-bold" : ""}`}
+        >
+          {totalPages}
+        </button>
+      );
+    }
+    return buttons;
   };
 
   return (
-    <>
-      <Addmodal />
-      {showModal && <ProductOverviewModal product={selectedProduct} onClose={handleCloseModal} />}
-      
-      <section id="overviewSection">
-        <div className="bg-primary p-6 rounded-lg">
-          <div className="flex items-center justify-between mb-6 relative z-10">
-            <div className="flex items-center gap-3">
-              <h2 className="text-xl font-semibold">Product Inventory</h2>
-              <a href="/inventory/PendingItemsPreview" class="text-sm px-3 py-1 rounded bg-btn-hover text-white hover:bg-violet-600 transition">
-                Pending Products
-              </a>
-            </div>
+    <div>
+      {/* Table Headers */}
+      <div className="grid grid-cols-8 items-center bg-primary text-sm font-semibold px-3 py-3 border-b border-border_color rounded-t text-texctColor-primary">
+        <span>SKU</span>
+        <span>Name</span>
+        <span>Category</span>
+        <span>Status</span>
+        <span>Min Qty</span>
+        <span>Max Qty</span>
+        <span>Unit Price</span>
+        <span>Created At</span>
+      </div>
 
-            <div className="flex items-center gap-2">
-              <button id="open-add-modal" className="flex items-center gap-2 rounded px-4 py-2 bg-primary text-textColor-primary hover:bg-violet-600 transition">
-                <svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="currentColor">
-                  <path d="M440-440H200v-80h240v-240h80v240h240v80H520v240h-80v-240Z"/>
-                </svg>
-              </button>
-              <Filter />
-              <button className="p-2 text-textColor-primary hover:bg-btn-hover hover:text-white rounded">
-                <svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" className="w-5 h-5" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5M16.5 12 12 16.5m0 0L7.5 12m4.5 4.5V3" />
-                </svg>
-              </button>
-              <button onClick={() => window.history.back()} className="p-2 text-textColor-primary hover:bg-btn-hover hover:text-white rounded">
-                <svg xmlns="http://www.w3.org/2000/svg" stroke-width="1.5" stroke="currentColor" className="w-5 h-5">
-                  <path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12" />
-                </svg>
-              </button>
-            </div>
+      {/* Table Rows */}
+      {loading ? (
+        <p className="px-3 py-4">Loading...</p>
+      ) : products.length === 0 ? (
+        <p className="px-3 py-4">No products found.</p>
+      ) : (
+        products.map((item) => (
+          <div key={item.id} className="grid grid-cols-8 items-center border-b px-3 py-3 text-sm hover:bg-btn-hover rounded transition">
+            <span>{item.sku}</span>
+            <span>{item.name}</span>
+            <span>{item.category?.name || "—"}</span>
+            <span>{item.added_items?.status || "—"}</span>
+            <span>{item.min_quantity}</span>
+            <span>{item.max_quantity}</span>
+            <span>₱{item.unit_price?.toFixed(2)}</span>
+            <span>{item.added_items?.created_at ? new Date(item.added_items.created_at).toLocaleDateString() : "—"}</span>
           </div>
-          
-          <ProductInventoryPreview
-            client:load
-            onRowClick={handleRowClick}
-            limit={10}
-            paginated={true}
-          />
+        ))
+      )}
+
+      {/* Pagination Footer */}
+      {paginated && totalPages > 1 && (
+        <div className="flex items-center justify-between mt-4 text-sm">
+          <div>Showing {(page - 1) * limit + 1}-{Math.min(page * limit, total)} of {total} items</div>
+          <div className="flex items-center gap-1">
+            <button onClick={() => setPage((p) => Math.max(p - 1, 1))} disabled={page === 1}>&lt;</button>
+            {!hidePageNumbers && renderPageButtons()}
+            <button onClick={() => setPage((p) => Math.min(p + 1, totalPages))} disabled={page === totalPages}>&gt;</button>
+          </div>
         </div>
-      </section>
-    </>
+      )}
+    </div>
   );
 }

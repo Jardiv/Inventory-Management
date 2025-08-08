@@ -4,33 +4,23 @@ import Addmodal from '../../components/inventory/Addmodal.astro';
 import Filter from '../../components/inventory/Filter.astro';
 import QuickSummary from '../../components/inventory/QuickSummary.jsx';
 import ProductInventoryPreview from '../../components/inventory/productInvenDATA.jsx';
-import ProductOverviewModal from '../../components/inventory/ProductOverviewModal.jsx';
 ---
 
 <Layout>
-  <!-- 🛠 Add Product Modal Component -->
   <Addmodal />   
-  <ProductOverviewModal/>
-  <!-- 📦 INVENTORY OVERVIEW SECTION -->
+  
+  <!-- INVENTORY OVERVIEW -->  
   <section id="overviewSection">
-    
-    <!-- 📋 PRODUCT TABLE WRAPPER -->
+ 
+    <!-- Product Table Preview -->
     <div class="bg-primary p-6 rounded-lg">
-      
-      <!-- 🔹 HEADER: Title + Pending Products Link -->
       <div class="flex items-center justify-between mb-6 relative z-10">
         <div class="flex items-center gap-3">
           <h2 class="text-xl font-semibold">Product Inventory</h2>
-
-          <!-- 🕒 Pending Products Button -->
-          <a href="/inventory/PendingItemsPreview" class="text-sm px-3 py-1 rounded bg-btn-hover text-white hover:bg-violet-600 transition">
-            Pending Products
-          </a>
         </div>
 
-        <!-- 🔹 CONTROLS: Add, Filter, Download, Close -->
+        <!-- ✅ Controls: Add, Filter, Download, Close -->
         <div class="flex items-center gap-2">
-
           <!-- ➕ Add Button -->
           <button id="open-add-modal" class="flex items-center gap-2 rounded px-4 py-2 bg-primary text-textColor-primary hover:bg-violet-600 transition">
             <svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="currentColor">
@@ -38,7 +28,7 @@ import ProductOverviewModal from '../../components/inventory/ProductOverviewModa
             </svg>
           </button>
 
-          <!-- 🔍 Filter Component -->
+          <!-- 🔍 Filter -->
           <Filter />
 
           <!-- ⬇️ Download Button -->
@@ -50,22 +40,19 @@ import ProductOverviewModal from '../../components/inventory/ProductOverviewModa
           </button>
 
           <!-- ❌ Close / Back Button -->
-          <button
-            onclick="window.history.back()"
-            class="p-2 text-textColor-primary hover:bg-btn-hover hover:text-white rounded"
-          >
+          <a href="/inventory/Dashboard" class="p-2 text-textColor-primary hover:bg-btn-hover hover:text-white rounded">
             <svg xmlns="http://www.w3.org/2000/svg" stroke-width="1.5" stroke="currentColor" class="w-5 h-5">
               <path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12" />
             </svg>
-          </button>
+          </a>
         </div>
       </div>
-      
-      <!-- 📊 PRODUCT INVENTORY PREVIEW TABLE -->
+
+      <!-- React Component for product inventory preview -->
       <ProductInventoryPreview client:load limit={10} paginated={true} />
+
     </div>
   </section>
 
-  <!-- 📜 Inventory JS Script -->
   <script src="/scripts/inventory/inventory.js" is:inline></script>
 </Layout>
