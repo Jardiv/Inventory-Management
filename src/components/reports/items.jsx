@@ -1,4 +1,7 @@
 import { useState, useEffect } from 'react';
+import FileSaver from 'file-saver';
+import jsPDF from 'jspdf';
+import autoTable from 'jspdf-autotable';
 
 const InventoryTable = ({ itemsPerPage: initialItemsPerPage = 10 }) => {
     const [inventoryData, setInventoryData] = useState([]);
@@ -21,6 +24,25 @@ const InventoryTable = ({ itemsPerPage: initialItemsPerPage = 10 }) => {
         currentQuantityMax: '',
         status: ''
     });
+    const [showDownloadDropdown, setShowDownloadDropdown] = useState(false);
+
+    // Listen for downloadTable event to export current table view
+    useEffect(() => {
+        const handleDownloadTable = (e) => {
+            const type = e.detail?.type;
+            // Only export visible table data (filtered, sorted, paginated)
+            const exportData = getDisplayData().filter(row => row.isVisible !== false);
+            if (type === 'csv') {
+                downloadCSV(exportData);
+            } else if (type === 'pdf') {
+                downloadPDF(exportData);
+            }
+        };
+        window.addEventListener('downloadTable', handleDownloadTable);
+        return () => {
+            window.removeEventListener('downloadTable', handleDownloadTable);
+        };
+    }, [filteredData, currentPage, itemsPerPage, currentSort]);
 
     // Function to toggle filter modal and dispatch events
     const toggleFilterModal = (isOpen) => {
@@ -388,6 +410,32 @@ const InventoryTable = ({ itemsPerPage: initialItemsPerPage = 10 }) => {
     const calculatedTotalPages = Math.ceil(totalFilteredItems / itemsPerPage) || 1;
     
     const paginationPages = generatePaginationPages(currentPage, calculatedTotalPages);
+
+    const downloadCSV = (data) => {
+        const headers = ['Item Code', 'Item Name', 'Current', 'Min', 'Max', 'Status'];
+        const rows = data.map(item => [item.code, item.name, item.current, item.min, item.max, item.status]);
+        const csvContent = [headers, ...rows].map(e => e.join(",")).join("\n");
+        const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+        FileSaver.saveAs(blob, 'inventory.csv');
+    };
+
+    const downloadPDF = (data) => {
+        try {
+            const doc = new jsPDF();
+            doc.text('Inventory Report', 14, 10);
+            const headers = [['Item Code', 'Item Name', 'Current', 'Min', 'Max', 'Status']];
+            const rows = data.map(item => [item.code, item.name, item.current, item.min, item.max, item.status]);
+            autoTable(doc, {
+                head: headers,
+                body: rows,
+                startY: 20,
+            });
+            doc.save('inventory.pdf');
+        } catch (err) {
+            alert('PDF generation failed. Please check your browser console for errors and ensure jspdf and jspdf-autotable are installed. Error: ' + err.message);
+            console.error('PDF generation error:', err);
+        }
+    };
 
     if (loading) {
         return (
