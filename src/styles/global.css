@@ -133,6 +133,7 @@
 
 	.sidebar-container[data-state="expanded"] .sidebar-controls {
 		justify-content: space-between;
+		flex-direction: row-reverse;
 	}
 
 	/* Collapsed State */
@@ -620,4 +621,46 @@ main.overflow-auto::-webkit-scrollbar-thumb:hover {
 .hover-trigger:hover {
 	transform: translateX(0) scale(1.1);
 	box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+}
+
+/* Sidebar Dropdown Styles */
+.sidebar-dropdown .dropdown-menu {
+	transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.sidebar-dropdown .dropdown-menu.show {
+	opacity: 1 !important;
+	transform: scale(1) !important;
+	display: block !important;
+}
+
+.sidebar-dropdown input[type="radio"] {
+	background-color: transparent;
+	border-color: var(--color-border_color);
+}
+
+.sidebar-dropdown input[type="radio"]:checked {
+	background-color: var(--color-btn-primary);
+	border-color: var(--color-btn-primary);
+}
+
+.sidebar-dropdown input[type="radio"]:focus {
+	outline: none;
+	box-shadow: 0 0 0 2px var(--color-btn-primary);
+}
+
+/* Dropdown positioning for different sidebar states */
+[data-state="collapsed"] .sidebar-dropdown .dropdown-menu,
+[data-state="hover"] .sidebar-dropdown .dropdown-menu {
+	left: 100%;
+	bottom: 0;
+	margin-left: 8px;
+	margin-bottom: 0;
+}
+
+[data-state="expanded"] .sidebar-dropdown .dropdown-menu {
+	left: 0;
+	bottom: 100%;
+	margin-left: 0;
+	margin-bottom: 8px;
 }
