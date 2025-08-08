@@ -6,7 +6,7 @@ import QuickSummary from '../../components/inventory/QuickSummary.jsx';
 import ProductInventoryPreview from '../../components/inventory/productInvenDATA.jsx';
 
 ---
-
+ 
 <Layout>
   <Addmodal />
 
@@ -34,7 +34,7 @@ import ProductInventoryPreview from '../../components/inventory/productInvenDATA
   </div>
 
   <!-- Dynamic Table via API -->
-<ProductInventoryPreview client:load limit={6} paginated={false} />
+<ProductInventoryPreview client:load limit={6} hidePageNumbers={true} />
 
 </div>
   </section>

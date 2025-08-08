@@ -1,0 +1,14 @@
+---
+import Layout from '../../layouts/Layout.astro';
+import PendingItemsPreview from '../../components/inventory/PendingItemsPreview.jsx';
+---
+
+<Layout>
+  <!-- PENDING PRODUCTS SECTION -->
+  <section id="pendingSection">
+    <div class="bg-primary p-6 rounded-lg">
+      <!-- 📦 Pending Items Table -->
+      <PendingItemsPreview client:load limit={10} paginated={true} />
+    </div>
+  </section>
+</Layout>
