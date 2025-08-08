@@ -13,6 +13,10 @@ export default function WarehouseStorage({ initialItems, total, limit, page }) {
   const totalPages = Math.ceil(filteredTotal / limit);
   const [currentDate, setCurrentDate] = useState('');
   const [filterOpen, setFilterOpen] = useState(false);
+  const [sortColumn, setSortColumn] = useState(null); // "name" | "quantity" | null
+  const [sortOrder, setSortOrder] = useState(null);   // "asc" | "desc" | null
+
+
 
   useEffect(() => {
     if (typeof window !== 'undefined') {
@@ -154,8 +158,8 @@ export default function WarehouseStorage({ initialItems, total, limit, page }) {
               </svg>
             </button>
           </a>       
-          {/* ✅ Filter Button (Insert here) */}
-            <div className="relative">
+          {/* filter button
+          <div className="relative">
               <button onClick={() => setFilterOpen(!filterOpen)} className="bg-primary text-secondary rounded px-3 py-2 text-sm hover:text-textColor-secondary hover:bg-violet-600">
                 <svg width="24" height="24" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
                   <line x1="3" y1="6" x2="21" y2="6" />
@@ -173,7 +177,7 @@ export default function WarehouseStorage({ initialItems, total, limit, page }) {
                 </div>
               )}
             </div>
-
+          */}
           {/* ❌ Cancel Button with Link to Dashboard */}
           <a href="/tracking/Dashboard">
             <button className="bg-primary text-secondary rounded px-3 py-2 text-sm hover:text-textColor-secondary hover:bg-violet-600">
@@ -231,46 +235,195 @@ export default function WarehouseStorage({ initialItems, total, limit, page }) {
         </div>
       )}
       {/* Continue with Table & Pagination UI */}
-      {/* Warehouse Table */}
       <div className="overflow-x-auto">
         <table className="w-full table-fixed border-collapse">
-          <thead>
-            <tr className="text-left text-sm font-medium">
-              <th className="px-4 py-2 w-[120px]">SKU</th>
-              <th className="px-4 py-2 w-[160px]">Name</th>
-              <th className="px-4 py-2 w-[80px]">Qty</th>
-              <th className="px-4 py-2 w-[140px]">Category</th>
-              <th className="px-4 py-2 w-[160px]">Date Assigned</th>
-            </tr>
-          </thead>
-          <tbody>
-            {(items || []).slice(0, 10).map((item, index) => (
-              <tr
-                key={index}
-                className={`border-t border-border_color ${index === 9 ? 'border-b-0' : 'border-b border-border_color'}`}
-              >
-                <td className="py-3 px-4 w-[120px]">{item.items?.sku || ''}</td>
-                <td className="py-3 px-4 w-[160px]">{item.items?.name || ''}</td>
-                <td className="py-3 px-4 w-[80px]">{item.quantity ?? ''}</td>
-                <td className="py-3 px-4 w-[140px]">{item.items?.category?.name || ''}</td>
-                <td className="py-3 px-4 w-[160px]">{item.date_assigned || ''}</td>
-              </tr>
-            ))}
+        <thead>
+          <tr className="text-left text-sm font-medium">
+            <th className="px-4 py-2 w-[120px]">SKU</th>
+            <th className="px-4 py-2 w-[120px]">
+              <div className="flex items-center gap-1">
+                <span>Name</span>
+                <div className="flex flex-col leading-none">
+                  {/* Ascending */}
+                  <button
+                    onClick={() => {
+                      setSortColumn("name");
+                      setSortOrder(sortOrder === "asc" && sortColumn === "name" ? null : "asc");
+                    }}
+                    className={`${sortColumn === "name" && sortOrder === "asc" ? "text-violet-500" : "text-gray-400"} hover:text-violet-600`}
+                  >
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      strokeWidth="1.5"
+                      stroke="currentColor"
+                      className="w-3 h-3" // ⬅ Smaller size
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        d="m4.5 15.75 7.5-7.5 7.5 7.5"
+                      />
+                    </svg>
+                  </button>
 
-            {/* Fill in empty rows to always have 10 rows */}
-            {[...Array(Math.max(0, 10 - items.length))].map((_, i) => (
+                  {/* Descending */}
+                  <button
+                    onClick={() => {
+                      setSortColumn("name");
+                      setSortOrder(sortOrder === "desc" && sortColumn === "name" ? null : "desc");
+                    }}
+                    className={`${sortColumn === "name" && sortOrder === "desc" ? "text-violet-500" : "text-gray-400"} hover:text-violet-600`}
+                  >
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      strokeWidth="1.5"
+                      stroke="currentColor"
+                      className="w-3 h-3" // ⬅ Smaller size
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        d="m19.5 8.25-7.5 7.5-7.5-7.5"
+                      />
+                    </svg>
+                  </button>
+                </div>
+              </div>
+            </th>
+            <th className="px-4 py-2 w-[80px]">
+              <div className="flex items-center gap-1">
+                <span>Qty</span>
+                <div className="flex flex-col leading-none">
+                  {/* Ascending */}
+                  <button
+                    onClick={() => {
+                      setSortColumn("quantity");
+                      setSortOrder(sortOrder === "asc" && sortColumn === "quantity" ? null : "asc");
+                    }}
+                    className={`${sortColumn === "quantity" && sortOrder === "asc" ? "text-violet-500" : "text-gray-400"} hover:text-violet-600`}
+                  >
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      strokeWidth="1.5"
+                      stroke="currentColor"
+                      className="w-3 h-3" // ⬅ Smaller size
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        d="m4.5 15.75 7.5-7.5 7.5 7.5"
+                      />
+                    </svg>
+                  </button>
+
+                  {/* Descending */}
+                  <button
+                    onClick={() => {
+                      setSortColumn("quantity");
+                      setSortOrder(sortOrder === "desc" && sortColumn === "quantity" ? null : "desc");
+                    }}
+                    className={`${sortColumn === "quantity" && sortOrder === "desc" ? "text-violet-500" : "text-gray-400"} hover:text-violet-600`}
+                  >
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      strokeWidth="1.5"
+                      stroke="currentColor"
+                      className="w-3 h-3" // ⬅ Smaller size
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        d="m19.5 8.25-7.5 7.5-7.5-7.5"
+                      />
+                    </svg>
+                  </button>
+                </div>
+              </div>
+            </th>
+            <th className="px-4 py-2 w-[140px]">Category</th>
+            <th className="px-4 py-2 w-[100px]">Date Assigned</th>
+          </tr>
+        </thead>
+        <tbody>
+          {loading
+            ? // 🔹 Skeleton Rows (10 placeholders)
+              [...Array(10)].map((_, i) => (
+                <tr
+                  key={`skeleton-${i}`}
+                  className={`border-t border-border_color ${
+                    i === 9 ? "border-b-0" : "border-b border-border_color"
+                  }`}
+                >
+                  {["w-[120px]", "w-[120px]", "w-[80px]", "w-[140px]", "w-[160px]"].map(
+                    (width, idx) => (
+                      <td key={idx} className={`py-3 px-4 ${width}`}>
+                        <div className="h-4 bg-gray-300 rounded animate-pulse"></div>
+                      </td>
+                    )
+                  )}
+                </tr>
+              ))
+            : // 🔹 Actual Data Rows
+              (items || [])
+                .sort((a, b) => {
+                  if (!sortOrder || !sortColumn) return 0;
+                  let valA, valB;
+                  if (sortColumn === "name") {
+                    valA = a.items?.name?.toLowerCase() || "";
+                    valB = b.items?.name?.toLowerCase() || "";
+                  } else if (sortColumn === "quantity") {
+                    valA = a.quantity ?? 0;
+                    valB = b.quantity ?? 0;
+                  }
+                  if (sortOrder === "asc") return valA > valB ? 1 : valA < valB ? -1 : 0;
+                  if (sortOrder === "desc") return valA < valB ? 1 : valA > valB ? -1 : 0;
+                  return 0;
+                })
+                .slice(0, 10)
+                .map((item, index) => (
+                  <tr
+                    key={index}
+                    className={`border-t border-border_color ${
+                      index === 9 ? "border-b-0" : "border-b border-border_color"
+                    }`}
+                  >
+                    <td className="py-3 px-4 w-[120px]">{item.items?.sku || ""}</td>
+                    <td className="py-3 px-4 w-[120px]">{item.items?.name || ""}</td>
+                    <td className="py-3 px-4 w-[80px]">{item.quantity ?? ""}</td>
+                    <td className="py-3 px-4 w-[140px]">
+                      {item.items?.category?.name || ""}
+                    </td>
+                    <td className="py-3 px-4 w-[160px]">
+                      {item.date_assigned || ""}
+                    </td>
+                  </tr>
+                ))}
+
+          {/* Empty rows if less than 10 items */}
+          {!loading &&
+            [...Array(Math.max(0, 10 - items.length))].map((_, i) => (
               <tr
                 key={`empty-${i}`}
-                className={`border-t border-border_color ${items.length + i === 9 ? 'border-b-0' : 'border-b border-border_color'}`}
+                className={`border-t border-border_color ${
+                  items.length + i === 9 ? "border-b-0" : "border-b border-border_color"
+                }`}
               >
-                <td className="py-3 px-4">&nbsp;</td>
-                <td className="py-3 px-4">&nbsp;</td>
-                <td className="py-3 px-4">&nbsp;</td>
-                <td className="py-3 px-4">&nbsp;</td>
-                <td className="py-3 px-4">&nbsp;</td>
+                <td className="py-3 px-4 w-[120px]">&nbsp;</td>
+                <td className="py-3 px-4 w-[200px]">&nbsp;</td>
+                <td className="py-3 px-4 w-[80px]">&nbsp;</td>
+                <td className="py-3 px-4 w-[140px]">&nbsp;</td>
+                <td className="py-3 px-4 w-[160px]">&nbsp;</td>
               </tr>
             ))}
-          </tbody>
+        </tbody>
         </table>
       </div>
       {/* Pagination UI */}

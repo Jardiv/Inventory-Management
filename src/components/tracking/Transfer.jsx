@@ -406,7 +406,20 @@ const TransferList = () => {
         </div>
         <div className="divide-y divide-border_color">
           {loading ? (
-            <div className="text-center py-8 text-lg">Loading transfers...</div>
+            // Skeleton table rows
+            Array.from({ length: 10 }).map((_, idx) => (
+              <div
+                key={`skeleton-${idx}`}
+                className="grid grid-cols-6 text-center text-lg py-4 font-normal animate-pulse"
+              >
+                {Array.from({ length: 6 }).map((__, colIdx) => (
+                  <div
+                    key={`skeleton-cell-${idx}-${colIdx}`}
+                    className="mx-auto h-5 bg-gray-700/50 rounded w-[70%]"
+                  />
+                ))}
+              </div>
+            ))
           ) : (
             transfers.map(t => (
               <div key={t.id} className="grid grid-cols-6 text-center text-lg py-4 font-normal">

@@ -98,10 +98,36 @@ function initializeSidebar() {
     applySidebarModeInternal(savedMode);
 }
 
-// Open sidebar control modal
-function openSidebarModal() {
-    const modal = document.getElementById('sidebarModal');
-    const modalContent = modal.querySelector('.modal-content');
+// Initialize sidebar immediately and on DOM ready
+function earlyInitializeSidebar() {
+    const sidebar = document.getElementById('sidebar');
+    if (sidebar) {
+        const savedMode = localStorage.getItem('sidebarMode') || 'expanded';
+        applySidebarModeInternal(savedMode);
+    } else {
+        // If sidebar not found, try again after a brief delay
+        setTimeout(earlyInitializeSidebar, 10);
+    }
+}
+
+// Toggle sidebar control dropdown
+function toggleSidebarDropdown() {
+    const dropdown = document.getElementById('sidebarDropdown');
+    if (!dropdown) return;
+    
+    const isVisible = dropdown.classList.contains('show');
+    
+    if (isVisible) {
+        closeSidebarDropdown();
+    } else {
+        openSidebarDropdown();
+    }
+}
+
+// Open sidebar control dropdown
+function openSidebarDropdown() {
+    const dropdown = document.getElementById('sidebarDropdown');
+    if (!dropdown) return;
     
     // Set current mode in radio buttons
     const currentRadio = document.querySelector(`input[name="sidebarMode"][value="${currentSidebarMode}"]`);
@@ -109,39 +135,52 @@ function openSidebarModal() {
         currentRadio.checked = true;
     }
     
-    // Show modal with animation
-    modal.classList.remove('hidden');
-    modal.classList.add('flex');
+    // Show dropdown with animation
+    dropdown.classList.remove('hidden');
+    dropdown.classList.add('show');
     
-    // Trigger animation
+    // Add event listener for clicks outside
     setTimeout(() => {
-        modal.style.opacity = '1';
-        modalContent.style.transform = 'scale(1)';
+        document.addEventListener('click', handleDropdownOutsideClick);
     }, 10);
 }
 
-// Close sidebar control modal
-function closeSidebarModal() {
-    const modal = document.getElementById('sidebarModal');
-    const modalContent = modal.querySelector('.modal-content');
+// Close sidebar control dropdown
+function closeSidebarDropdown() {
+    const dropdown = document.getElementById('sidebarDropdown');
+    if (!dropdown) return;
     
-    // Hide modal with animation
-    modal.style.opacity = '0';
-    modalContent.style.transform = 'scale(0.95)';
+    // Hide dropdown with animation
+    dropdown.classList.remove('show');
     
     setTimeout(() => {
-        modal.classList.add('hidden');
-        modal.classList.remove('flex');
-    }, 300);
+        dropdown.classList.add('hidden');
+    }, 200);
+    
+    // Remove event listener
+    document.removeEventListener('click', handleDropdownOutsideClick);
 }
 
-// Apply selected sidebar mode
+// Handle clicks outside dropdown
+function handleDropdownOutsideClick(event) {
+    const dropdown = document.getElementById('sidebarDropdown');
+    const button = document.querySelector('.btn-sidebar-toggle');
+    
+    if (!dropdown || !button) return;
+    
+    // Check if click is outside both dropdown and button
+    if (!dropdown.contains(event.target) && !button.contains(event.target)) {
+        closeSidebarDropdown();
+    }
+}
+
+// Apply selected sidebar mode from dropdown
 function applySidebarMode() {
     const selectedMode = document.querySelector('input[name="sidebarMode"]:checked')?.value;
     if (selectedMode) {
         applySidebarModeInternal(selectedMode);
         localStorage.setItem('sidebarMode', selectedMode);
-        closeSidebarModal();
+        closeSidebarDropdown();
     }
 }
 
@@ -173,20 +212,23 @@ function applySidebarModeInternal(mode) {
     }
 }
 
-// Close modal when clicking outside
-document.addEventListener('click', function(event) {
-    const modal = document.getElementById('sidebarModal');
-    if (modal && event.target === modal) {
-        closeSidebarModal();
+// Add event listener for radio button changes to apply mode immediately
+document.addEventListener('change', function(event) {
+    if (event.target.name === 'sidebarMode') {
+        applySidebarMode();
     }
 });
 
 // Initialize sidebar when DOM is loaded
 document.addEventListener('DOMContentLoaded', initializeSidebar);
 
+// Also initialize immediately to prevent flashing
+earlyInitializeSidebar();
+
 // Expose sidebar functions globally
-window.openSidebarModal = openSidebarModal;
-window.closeSidebarModal = closeSidebarModal;
+window.toggleSidebarDropdown = toggleSidebarDropdown;
+window.openSidebarDropdown = openSidebarDropdown;
+window.closeSidebarDropdown = closeSidebarDropdown;
 window.applySidebarMode = applySidebarMode;
 window.initializeSidebar = initializeSidebar;
 
