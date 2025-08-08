@@ -85,42 +85,52 @@ export default function TransactionDetails({ transactionId, showSupplierDetails 
 				<div className="grid grid-cols-5 gap-4 h-[80%]">
 					<div className="col-span-3 py-4">
 						<h2 className="text-lg font-semibold mb-2">Item Details</h2>
-						<div className="bg-background border-[0.5px] border-border_color px-4 py-2 overflow-x-auto h-full flex flex-col justify-between">
-							<table className="w-full text-left table-fixed">
-								<thead>
-									<tr className="border-b-[0.5px]">
-										<th className={`${thStyle} w-[30%]`}>Item</th>
-										<th className={thStyle}>Quantity</th>
-										<th className={thStyle}>Expiry Date</th>
-										<th className={thStyle}>Unit Price</th>
-										<th className={thStyle}>Total</th>
-									</tr>
-								</thead>
-								<tbody>
-									{transaction.items.map((item, index) => (
-										<tr className="table-row" key={index}>
-											<td className={`${tdStyle}`}>
-												<a href="#" className="hover:underline text-textColor-primary">
-													{item.name}
-												</a>
-											</td>
-											<td className={`${tdStyle}`}>{item.quantity}</td>
-											<td className={`${tdStyle}`}>{item.expiry_date ? new Date(expiry_date).toLocaleDateString() : "N/A"}</td>
-											<td className={`${tdStyle}`}>₱ {item.unit_price}</td>
-											<td className={`${tdStyle}`}>₱ {(item.unit_price * item.quantity).toFixed(2)}</td>
+						<div className="bg-background border-[0.5px] border-border_color px-4 py-2 h-full flex flex-col">
+							<div className="overflow-y-auto flex-grow">
+								<table className="w-full text-left table-fixed">
+									<thead>
+										<tr className="border-b-[0.5px]">
+											<th className={`${thStyle} w-[30%]`}>Item</th>
+											<th className={thStyle}>Quantity</th>
+											<th className={thStyle}>Expiry Date</th>
+											<th className={thStyle}>Unit Price</th>
+											<th className={thStyle}>Total</th>
 										</tr>
-									))}
-								</tbody>
-								<tfoot>
-									<tr className="border-t-[0.5px]">
-										<td className={`${tdStyle} font-semibold `}>Totals</td>
-										<td className={`${tdStyle} font-semibold`}>{transaction.total_quantity}</td>
-										<td className={`${tdStyle}`}></td>
-										<td className={`${tdStyle}`}></td>
-										<td className={`${tdStyle} font-semibold`}>₱ {transaction.total_price}</td>
-									</tr>
-								</tfoot>
-							</table>
+									</thead>
+									<tbody>
+										{transaction.items.map((item, index) => (
+											<tr className="table-row" key={index}>
+												<td className={tdStyle}>
+													<a href="#" className="hover:underline text-textColor-primary">
+														{item.name}
+													</a>
+												</td>
+												<td className={tdStyle}>{item.quantity}</td>
+												<td className={tdStyle}>
+													{item.expiry_date ? new Date(item.expiry_date).toLocaleDateString() : "N/A"}
+												</td>
+												<td className={tdStyle}>₱ {item.unit_price}</td>
+												<td className={tdStyle}>₱ {(item.unit_price * item.quantity).toFixed(2)}</td>
+											</tr>
+										))}
+									</tbody>
+								</table>
+							</div>
+
+							{/* Totals pinned at bottom */}
+							<div className="border-t-[0.5px] mt-2 pt-2">
+								<table className="w-full text-left table-fixed">
+									<tfoot>
+										<tr>
+											<td className={`${tdStyle} font-semibold`}>Totals</td>
+											<td className={`${tdStyle} font-semibold`}>{transaction.total_quantity}</td>
+											<td className={tdStyle}></td>
+											<td className={tdStyle}></td>
+											<td className={`${tdStyle} font-semibold`}>₱ {transaction.total_price}</td>
+										</tr>
+									</tfoot>
+								</table>
+							</div>
 						</div>
 					</div>
 
