@@ -94,7 +94,8 @@ export default function TransactionsTable({
 
 				const res = await fetch(`${basePath}?${params.toString()}`, { signal });
 				const data = await res.json();
-
+				console.log("TransactionsTable:: Transactions data:", data);
+				
 				if (!signal.aborted) {
 					setTransactions(data.transactions || []);
 
@@ -157,8 +158,9 @@ export default function TransactionsTable({
 	const endItem = showPagination ? Math.min(paginationData.currentPage * itemsPerPage, paginationData.totalItems) : transactions.length;
 
 	const handleRowClick = (id) => {
-		window.location.href = `/stock-transaction/details?id=${id}`;
+		window.location.href = `/transaction/details?id=${id}`;
 	};
+	
 
 	// Determine if there are no transactions to display
 	const noTransactions = !loading && transactions.length === 0;

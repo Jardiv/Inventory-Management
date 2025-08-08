@@ -6,12 +6,12 @@ const availableStatuses = ["Delivered", "Completed", "In Transit", "Pending", "C
 
 export default function LogsTable(props) {
     const [statusFilters, setStatusFilters] = useState([]);
-	console.log("LogsTable props:", props.currentPage);
 	
     const columns = [
         { header: "Invoice no", accessor: "invoice_no", sortable: true },
         { header: "Date", accessor: "transaction_datetime", sortable: true },
         { header: "Supplier", accessor: "supplier_name", sortable: false, render: (log) => log.supplier_name || "- - -" },
+        { header: "Warehouse", accessor: "warehouse_name", sortable: false, render: (log) => log.warehouse_name || "- - -" },
         { header: "Total Items", accessor: "total_quantity", sortable: true },
         {
             header: "Total Price",
