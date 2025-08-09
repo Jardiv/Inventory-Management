@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import TransactionsTable from './TransactionsTable';
 import StatusFilter from './utils/StatusFilter';
 
-const availableStatuses = ["Delivered", "Completed", "In Transit", "Pending", "Canceled"];
+const availableStatuses = ["Delivered", "Completed", "Pending", "Canceled"];
 
 export default function LogsTable(props) {
     const [statusFilters, setStatusFilters] = useState([]);

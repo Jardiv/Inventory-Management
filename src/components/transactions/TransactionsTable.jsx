@@ -127,7 +127,7 @@ export default function TransactionsTable({
 		return () => {
 			controller.abort();
 		};
-	}, [limit, clientCurrentPage, itemsPerPage, showPagination, sortConfig, dateRange, direction, statusFilters?.length, searchTerm]);
+	}, [limit, clientCurrentPage, itemsPerPage, showPagination, sortConfig, dateRange, direction, statusFilters, searchTerm]);
 
 	const requestSort = (key) => {
 		if (!isAbleToSort) return;

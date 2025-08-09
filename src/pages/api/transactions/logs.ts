@@ -130,9 +130,9 @@ export async function GET({ request }: APIContext) {
 	// Get transaction IDs from related searches if search term is provided
 	let relatedTransactionIds: number[] = [];
 	if (search) {
-		console.log("Searching for:", search);
+		// console.log("Searching for:", search);
 		relatedTransactionIds = await getTransactionIdsByRelatedSearch(search);
-		console.log("Found transaction IDs from related search:", relatedTransactionIds);
+		// console.log("Found transaction IDs from related search:", relatedTransactionIds);
 	}
 
 	// COUNT QUERY - Count all transactions with search
@@ -140,6 +140,8 @@ export async function GET({ request }: APIContext) {
 
 	// Apply filters to count query
 	if (statuses && statuses.length > 0) {
+		console.log("logs:: Statuses:", statuses);
+		
 		countQuery = countQuery.in("status", statuses);
 	}
 	if (startDate) {
@@ -184,7 +186,7 @@ export async function GET({ request }: APIContext) {
 
 	// Apply search filter
 	if (search) {
-		console.log("Search term:", search);
+		// console.log("Search term:", search);
 		// Combine direct field search with related table searches
 		if (relatedTransactionIds.length > 0) {
 			query = query.or(`${buildSearchConditions(search)},id.in.(${relatedTransactionIds.join(',')})`);

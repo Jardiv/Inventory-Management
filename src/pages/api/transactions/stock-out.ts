@@ -2,38 +2,22 @@ import { supabase } from "../../../utils/supabaseClient.ts";
 import { jsonResponse, getUrlParams, formatDateTime } from "./utils.ts";
 import type { APIContext } from "astro";
 
-let counter = 0;
 export async function GET({ request }: APIContext) {
-	counter++;
-	const { limit, offset, status, sortBy, sortOrder, startDate, endDate, delivered, completed, received, pending } = getUrlParams(request);
-
-	// console.log(`
-    //     Counter: ${counter}
-    //     limit: ${limit}
-    //     offset: ${offset}
-    //     status: ${status}
-    //     sortBy: ${sortBy}
-    //     sortOrder: ${sortOrder}
-
-    //     filters:
-    //     startDate: ${startDate}
-    //     endDate: ${endDate}
-    //     delivered: ${delivered}
-    //     completed: ${completed}
-    //     received: ${received}
-    //     pending: ${pending}
-    // `);
+	const url = new URL(request.url);
+	const { limit, offset, sortBy, sortOrder, startDate, endDate } = getUrlParams(request);
+	const statuses = url.searchParams.getAll("status");
 
 	// COUNT QUERY
 	let countQuery = supabase.from("stock_out").select("transactions!inner(id)", { count: "exact", head: true });
 
+	if (statuses && statuses.length > 0) {
+		countQuery = countQuery.in("transactions.status", statuses);
+	}
 	if (startDate) {
 		countQuery = countQuery.gte("transactions.transaction_datetime", startDate);
-		console.log("startDate:", startDate);
 	}
 	if (endDate) {
 		countQuery = countQuery.lte("transactions.transaction_datetime", endDate);
-		console.log("endDate:", endDate);
 	}
 
 	let { count, error: countError } = await countQuery;
@@ -56,16 +40,15 @@ export async function GET({ request }: APIContext) {
       )
     )
   `);
-  
 
-	if (status) query = query.eq("status", status);
+	if (statuses && statuses.length > 0) {
+		query = query.in("status", statuses);
+	}
 	if (startDate) {
 		query = query.gte("transaction_datetime", startDate);
-		console.log("startDate:", startDate);
 	}
 	if (endDate) {
 		query = query.lte("transaction_datetime", endDate);
-		console.log("endDate:", endDate);
 	}
 	query = query.order(sortBy, { ascending: sortOrder === "asc" });
 	query = query.range(offset, offset + limit - 1);
