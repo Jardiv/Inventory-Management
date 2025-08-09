@@ -49,11 +49,11 @@ const Summary = () => {
         return (
             <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-4">
                 {[...Array(5)].map((_, i) => (
-                    <div key={i} className="bg-primary p-4 rounded-lg animate-pulse flex">
-                        <div className="h-8 w-8 bg-textColor-tertiary rounded-full mb-2"></div>
+                    <div key={i} className=" p-4 bg-primary rounded-lg flex">
+                        <div className="h-8 w-8 skeleton-loading rounded-full mb-2 animate-pulse"></div>
                         <div className="ml-4 w-full">
-                            <div className="h-4 w-3/4 bg-textColor-tertiary rounded"></div>
-                            <div className="h-6 w-1/2 bg-textColor-tertiary rounded mt-2"></div>
+                            <div className="h-4 w-3/4 skeleton-loading rounded animate-pulse"></div>
+                            <div className="h-6 w-1/2 skeleton-loading rounded mt-2 animate-pulse"></div>
                         </div>
                     </div>
                 ))}
