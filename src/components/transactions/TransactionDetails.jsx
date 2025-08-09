@@ -1,4 +1,6 @@
 import React, { useState, useEffect } from "react";
+import { jsPDF } from "jspdf";
+import autoTable from "jspdf-autotable"; // default import, not just "import 'jspdf-autotable'"
 
 const tdStyle = "bg-background px-4 py-2 max-h-[20px]";
 const thStyle = "px-3 py-1";
@@ -27,6 +29,90 @@ export default function TransactionDetails({ transactionId, showSupplierDetails 
 		}
 	}, [transactionId]);
 
+	const handleDownload = () => {
+		if (!transaction) return;
+
+		const doc = new jsPDF();
+		let finalY = 22; // Initial Y position
+
+		// Title
+		doc.setFontSize(20);
+		doc.text("Transaction Details", 14, finalY);
+		finalY += 10;
+
+		// Primary Details
+		doc.setFontSize(12);
+		doc.text("Primary Details", 14, finalY);
+		finalY += 4;
+		autoTable(doc, {
+			startY: finalY,
+			body: [
+				["Invoice Number", transaction.invoice_no],
+				["Date", new Date(transaction.transaction_datetime).toLocaleDateString()],
+				[
+					"Time",
+					new Date(transaction.transaction_datetime).toLocaleTimeString([], {
+						hour: "2-digit",
+						minute: "2-digit",
+						hour12: true,
+					}),
+				],
+				["Status", transaction.status],
+				["Created By", transaction.created_by],
+				["From", transaction.warehouse_name || "N/A"],
+			],
+			theme: "plain",
+			styles: { fontSize: 10 },
+		});
+		finalY = doc.lastAutoTable.finalY; // <-- updated property
+
+		// Supplier Details
+		if (transaction.supplier_name) {
+			finalY += 10;
+			doc.text("Supplier Details", 14, finalY);
+			finalY += 4;
+			autoTable(doc, {
+				startY: finalY,
+				body: [
+					["Supplier", transaction.supplier_name],
+					["Contact No", transaction.supplier_contact],
+					["Location", transaction.supplier_location],
+				],
+				theme: "plain",
+				styles: { fontSize: 10 },
+			});
+			finalY = doc.lastAutoTable.finalY;
+		}
+
+		// Item Details
+		finalY += 10;
+		doc.text("Item Details", 14, finalY);
+		finalY += 4;
+		autoTable(doc, {
+			startY: finalY,
+			head: [["Item", "Quantity", "Expiry Date", "Unit Price", "Total"]],
+			body: transaction.items.map((item) => [
+				item.name,
+				item.quantity,
+				item.expiry_date ? new Date(item.expiry_date).toLocaleDateString() : "N/A",
+				`${item.unit_price}`,
+				`${(item.unit_price * item.quantity).toFixed(2)}`,
+			]),
+			theme: "striped",
+			headStyles: { fillColor: [41, 128, 185] },
+		});
+		finalY = doc.lastAutoTable.finalY;
+
+		// Totals
+		finalY += 10;
+		doc.setFontSize(12);
+		doc.text(`Total Quantity: ${transaction.total_quantity} Items`, 14, finalY);
+		doc.text(`Total Price: ₱ ${transaction.total_price}`, 120, finalY);
+
+		// Save
+		doc.save(`transaction_${transaction.invoice_no}.pdf`);
+	};
+
 	return (
 		<div className="bg-primary px-6 py-4 rounded-lg h-full overflow-auto">
 			<div className="flex justify-between h-header">
@@ -34,17 +120,36 @@ export default function TransactionDetails({ transactionId, showSupplierDetails 
 					<h1 className="font-semibold text-2xl">Transaction Details</h1>
 					<p className="text-border_color">Detailed breakdown of the transaction.</p>
 				</div>
-				<button onClick={() => window.history.back()} className="p-2 h-fit text-textColor-primary hover:bg-btn-hover cursor-pointer rounded ">
-					<svg
-						xmlns="http://www.w3.org/2000/svg"
-						fill="none"
-						viewBox="0 0 24 24"
-						strokeWidth="1.5"
-						stroke="currentColor"
-						className="w-5 h-5">
-						<path strokeLinecap="round" strokeLinejoin="round" d="M6 18 18 6M6 6l12 12" />
-					</svg>
-				</button>
+				<div className="flex gap-2">
+					<button onClick={handleDownload} className="p-2 h-fit text-textColor-primary hover:bg-btn-hover cursor-pointer rounded ">
+						<svg
+							xmlns="http://www.w3.org/2000/svg"
+							fill="none"
+							viewBox="0 0 24 24"
+							strokeWidth={1.5}
+							stroke="currentColor"
+							className="w-6 h-6">
+							<path
+								strokeLinecap="round"
+								strokeLinejoin="round"
+								d="M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5M16.5 12 12 16.5m0 0L7.5 12m4.5 4.5V3"
+							/>
+						</svg>
+					</button>
+					<button
+						onClick={() => window.history.back()}
+						className="p-2 h-fit text-textColor-primary hover:bg-btn-hover cursor-pointer rounded ">
+						<svg
+							xmlns="http://www.w3.org/2000/svg"
+							fill="none"
+							viewBox="0 0 24 24"
+							strokeWidth="1.5"
+							stroke="currentColor"
+							className="w-6 h-6">
+							<path strokeLinecap="round" strokeLinejoin="round" d="M6 18 18 6M6 6l12 12" />
+						</svg>
+					</button>
+				</div>
 			</div>
 
 			{loading ? (
@@ -122,8 +227,8 @@ export default function TransactionDetails({ transactionId, showSupplierDetails 
 								<table className="w-full text-left table-fixed">
 									<tfoot>
 										<tr>
-											<td className={`${tdStyle} font-semibold`}>Totals</td>
-											<td className={`${tdStyle} font-semibold`}>{transaction.total_quantity}</td>
+											<td className={`${tdStyle} w-[30%] font-semibold`}>Totals</td>
+											<td className={`${tdStyle} font-semibold`}>{transaction.total_quantity} items</td>
 											<td className={tdStyle}></td>
 											<td className={tdStyle}></td>
 											<td className={`${tdStyle} font-semibold`}>₱ {transaction.total_price}</td>

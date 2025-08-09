@@ -37,7 +37,7 @@ export const GET: APIRoute = async ({ url }) => {
                 items ( sku, name, unit_price )
             `)
             .eq("invoice_no", invoice_no);
-        console.log("itemsData:", itemsData);
+        // console.log("itemsData:", itemsData);
         if (itemsError) {
             console.error("Error fetching transaction items:", itemsError.message);
             return new Response(JSON.stringify({ error: "Failed to fetch transaction items" }), { 
@@ -71,8 +71,8 @@ export const GET: APIRoute = async ({ url }) => {
             console.error("Error fetching stock in data:", stockOutError.message);
         }
 
-        console.log("stockInData:", stockInData);
-        console.log("stockOutData:", stockOutData);
+        // console.log("stockInData:", stockInData);
+        // console.log("stockOutData:", stockOutData);
         
 
         // 4. Assemble the response
@@ -90,7 +90,7 @@ export const GET: APIRoute = async ({ url }) => {
             supplier_location: stockInData?.suppliers?.location ?? null,
             warehouse_name: stockOutData?.warehouse?.name ?? null,
         };
-        console.log("responseData:", responseData);
+        // console.log("responseData:", responseData);
         
 
         return new Response(JSON.stringify(responseData), {

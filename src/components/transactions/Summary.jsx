@@ -51,7 +51,7 @@ const Summary = () => {
                 {[...Array(5)].map((_, i) => (
                     <div key={i} className="bg-primary p-4 rounded-lg animate-pulse flex">
                         <div className="h-8 w-8 bg-textColor-tertiary rounded-full mb-2"></div>
-                        <div className="ml-4 h-4 w-full">
+                        <div className="ml-4 w-full">
                             <div className="h-4 w-3/4 bg-textColor-tertiary rounded"></div>
                             <div className="h-6 w-1/2 bg-textColor-tertiary rounded mt-2"></div>
                         </div>
