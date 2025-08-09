@@ -150,10 +150,35 @@ export default function TransactionsTable({
     };
 
 	const getSortIndicator = (key) => {
-		if (!isAbleToSort || sortConfig.key !== key) return null;
-		return sortConfig.direction === "asc" ? " ↑" : " ↓";
+		const isSorted = isAbleToSort && sortConfig.key === key;
+		const isAsc = isSorted && sortConfig.direction === 'asc';
+		const isDesc = isSorted && sortConfig.direction === 'desc';
+
+		const upArrowClasses = ['w-3', 'h-3'];
+		const downArrowClasses = ['w-3', 'h-3'];
+
+		if (isAsc) {
+			downArrowClasses.push('invisible');
+		} else if (isDesc) {
+			upArrowClasses.push('invisible');
+		} else {
+			upArrowClasses.push('opacity-50');
+			downArrowClasses.push('opacity-50');
+		}
+
+		return (
+			<div className="flex flex-col">
+				<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth="1.5" stroke="currentColor" className={upArrowClasses.join(' ')}>
+					<path strokeLinecap="round" strokeLinejoin="round" d="M4.5 15.75l7.5-7.5 7.5 7.5" />
+				</svg>
+				<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth="1.5" stroke="currentColor" className={downArrowClasses.join(' ')}>
+					<path strokeLinecap="round" strokeLinejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5" />
+				</svg>
+			</div>
+		);
 	};
 
+	// Pagination logic
 	const startItem = showPagination ? (paginationData.currentPage - 1) * itemsPerPage + 1 : 1;
 	const endItem = showPagination ? Math.min(paginationData.currentPage * itemsPerPage, paginationData.totalItems) : transactions.length;
 
@@ -180,8 +205,10 @@ export default function TransactionsTable({
 									className={`table-header ${canSort ? "cursor-pointer" : ""} ${col.className || ""}`}
 									// Prevent onClick if sorting is disabled
 									onClick={() => canSort && requestSort(col.sortKey || col.accessor)}>
-									{typeof col.header === 'function' ? col.header() : col.header}
-									{col.sortable && getSortIndicator(col.sortKey || col.accessor)}
+									<div className="inline-flex items-center gap-2">
+										{typeof col.header === 'function' ? col.header() : col.header}
+										{col.sortable && isAbleToSort && getSortIndicator(col.sortKey || col.accessor)}
+									</div>
 								</th>
 							);
 						})}
