@@ -17,16 +17,12 @@ export default function PendingItemsPreview({ limit = 10, paginated = true }) {
       let query = supabase
         .from("added_items")
         .select("*", { count: "exact" })
-        .order("status", { ascending: true })
-        .order("id", { ascending: true });
+        .order("id", { ascending: true });  // Order by id ascending only
 
-      if (statusFilter === "All") {
-        query = query.in("status", ["Pending", "Cancelled"]);
-      } else {
+      if (statusFilter !== "All") {
         query = query.eq("status", statusFilter);
       }
-
-      if (paginated) query.range(from, to);
+      if (paginated) query = query.range(from, to);
 
       const { data, error, count } = await query;
       if (error) {
@@ -38,11 +34,9 @@ export default function PendingItemsPreview({ limit = 10, paginated = true }) {
       setLoading(false);
     }
     fetchItems();
-  }, [page, statusFilter]);
+  }, [page, statusFilter, limit, paginated]);
 
-  function totalPages() {
-    return Math.ceil(total / limit);
-  }
+  const totalPages = Math.ceil(total / limit);
 
   return (
     <div>
@@ -60,7 +54,7 @@ export default function PendingItemsPreview({ limit = 10, paginated = true }) {
           >
             <option value="All">All</option>
             <option value="Pending">Pending</option>
-            <option value="Cancelled">Cancelled</option>
+            <option value="Canceled">Canceled</option> {/* Fixed spelling */}
           </select>
         </div>
 
@@ -113,17 +107,17 @@ export default function PendingItemsPreview({ limit = 10, paginated = true }) {
       </div>
 
       {/* Pagination */}
-      {paginated && totalPages() > 1 && (
+      {paginated && totalPages > 1 && (
         <div className="flex justify-center mt-4 space-x-2">
           <button onClick={() => setPage((prev) => Math.max(prev - 1, 1))} disabled={page === 1}>
             Prev
           </button>
           <span>
-            Page {page} of {totalPages()}
+            Page {page} of {totalPages}
           </span>
           <button
-            onClick={() => setPage((prev) => Math.min(prev + 1, totalPages()))}
-            disabled={page === totalPages()}
+            onClick={() => setPage((prev) => Math.min(prev + 1, totalPages))}
+            disabled={page === totalPages}
           >
             Next
           </button>

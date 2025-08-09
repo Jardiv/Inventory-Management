@@ -9,12 +9,10 @@
       <button id="close-add-modal" class="text-textColor-primary text-2xl font-bold">&times;</button>
     </div>
 
-    <p class="text-sm text-textColor-primary">Add new product.</p>
-
     <!-- Item Name -->
     <div class="flex items-center space-x-3">
       <label for="itemName" class="w-40 text-base font-semibold">Item Name:</label>
-      <input type="text" id="itemName" placeholder="ABC"
+      <input type="text" id="itemName" placeholder="e.g., Steel Bolt"
         class="flex-1 bg-primary text-textColor-primary text-sm border border-neutral-700 rounded px-3 py-2" />
     </div>
 
@@ -23,46 +21,36 @@
       <label for="category" class="w-40 text-base font-semibold">Category:</label>
       <select id="category"
         class="flex-1 bg-primary text-textColor-primary text-sm border border-neutral-700 rounded px-3 py-2">
-        <option value="">Loading categories...</option>
+        <option value="">Loading...</option>
       </select>
     </div>
 
     <!-- Description -->
     <div class="flex items-start space-x-3">
       <label for="description" class="w-40 text-base font-semibold pt-2">Description:</label>
-      <textarea id="description" rows="2" placeholder="Optional"
+      <textarea id="description" rows="2" placeholder="e.g., High-quality corrosion-resistant bolt"
         class="flex-1 bg-primary text-textColor-primary text-sm border border-neutral-700 rounded px-3 py-2 resize-none"></textarea>
     </div>
 
     <!-- Min Quantity -->
     <div class="flex items-center space-x-3">
-      <label for="minQty" class="w-40 text-base font-semibold">Minimum Quantity:</label>
-      <input type="number" id="minQty" placeholder="10" min="0"
+      <label for="minQty" class="w-40 text-base font-semibold">Min Qty:</label>
+      <input type="number" id="minQty" min="0" placeholder="e.g., 10"
         class="flex-1 bg-primary text-textColor-primary text-sm border border-neutral-700 rounded px-3 py-2" />
     </div>
 
     <!-- Max Quantity -->
     <div class="flex items-center space-x-3">
-      <label for="maxQty" class="w-40 text-base font-semibold">Maximum Quantity:</label>
-      <input type="number" id="maxQty" placeholder="100" min="0"
+      <label for="maxQty" class="w-40 text-base font-semibold">Max Qty:</label>
+      <input type="number" id="maxQty" min="0" placeholder="e.g., 200"
         class="flex-1 bg-primary text-textColor-primary text-sm border border-neutral-700 rounded px-3 py-2" />
     </div>
 
     <!-- Unit Price -->
     <div class="flex items-center space-x-3">
       <label for="unitPrice" class="w-40 text-base font-semibold">Unit Price:</label>
-      <input type="number" id="unitPrice" placeholder="0.00" step="0.01" min="0.01"
+      <input type="number" id="unitPrice" step="0.01" min="0.01" placeholder="e.g., 15.99"
         class="flex-1 bg-primary text-textColor-primary text-sm border border-neutral-700 rounded px-3 py-2" />
-    </div>
-
-    <!-- Auto Re-order -->
-    <div class="flex items-center space-x-3">
-      <label for="autoReorder" class="w-40 text-base font-semibold">Auto Re-order:</label>
-      <label class="relative inline-flex items-center cursor-pointer">
-        <input type="checkbox" id="autoReorder" class="sr-only peer" checked>
-        <div class="w-11 h-6 bg-gray-700 rounded-full peer peer-checked:bg-green-500 transition-all"></div>
-        <div class="absolute left-0.5 top-0.5 w-5 h-5 bg-white rounded-full transition-all peer-checked:translate-x-full"></div>
-      </label>
     </div>
 
     <!-- Buttons -->
@@ -73,102 +61,85 @@
   </div>
 </div>
 
-<!-- ✅ Add Script -->
 <script type="module">
-  import { supabase } from "/src/utils/supabaseClient";
+import { supabase } from "/src/utils/supabaseClient";
 
-  document.addEventListener("DOMContentLoaded", () => {
-    const modal = document.getElementById("addModal");
-    const openBtn = document.getElementById("open-add-modal");
-    const closeBtn = document.getElementById("close-add-modal");
-    const cancelBtn = document.getElementById("cancelAddBtn");
-    const confirmBtn = document.getElementById("confirmAddBtn");
-    const categorySelect = document.getElementById("category");
+document.addEventListener("DOMContentLoaded", () => {
+  const modal = document.getElementById("addModal");
+  const openBtn = document.getElementById("open-add-modal");
+  const closeBtn = document.getElementById("close-add-modal");
+  const cancelBtn = document.getElementById("cancelAddBtn");
+  const confirmBtn = document.getElementById("confirmAddBtn");
+  const categorySelect = document.getElementById("category");
 
-    if (!modal || !openBtn || !closeBtn || !cancelBtn || !confirmBtn || !categorySelect) return;
+  const closeModal = () => { modal.classList.add("hidden"); clearInputs(); };
+  const clearInputs = () => document.querySelectorAll("#addModal input, #addModal textarea, #addModal select")
+                               .forEach(el => el.value = "");
 
-    openBtn.addEventListener("click", () => modal.classList.remove("hidden"));
-    const closeModal = () => { modal.classList.add("hidden"); clearInputs(); };
-    closeBtn.addEventListener("click", closeModal);
-    cancelBtn.addEventListener("click", closeModal);
+  openBtn?.addEventListener("click", () => modal.classList.remove("hidden"));
+  closeBtn?.addEventListener("click", closeModal);
+  cancelBtn?.addEventListener("click", closeModal);
 
-    const clearInputs = () => {
-      document.getElementById("itemName").value = "";
-      categorySelect.selectedIndex = 0;
-      document.getElementById("description").value = "";
-      document.getElementById("minQty").value = "";
-      document.getElementById("maxQty").value = "";
-      document.getElementById("unitPrice").value = "";
-      document.getElementById("autoReorder").checked = true;
-    };
-
-    // Load categories
-    async function loadCategories() {
-      const { data, error } = await supabase.from("category").select("*");
-      categorySelect.innerHTML = "";
-
-      if (error || !data?.length) {
-        categorySelect.innerHTML = `<option value="">Failed to load categories</option>`;
-        return;
-      }
-
-      categorySelect.innerHTML = `<option value="">Select Category</option>`;
-      data.forEach((cat) => {
-        const opt = document.createElement("option");
-        opt.value = cat.id;
-        opt.textContent = cat.name;
-        categorySelect.appendChild(opt);
-      });
+  // Load categories
+  async function loadCategories() {
+    const { data, error } = await supabase.from("category").select("*");
+    categorySelect.innerHTML = "";
+    if (error) {
+      categorySelect.innerHTML = `<option value="">Failed to load</option>`;
+      return;
     }
-    loadCategories();
-
-    // Confirm add
-    confirmBtn.addEventListener("click", async () => {
-      const name = document.getElementById("itemName").value.trim();
-      const category = categorySelect.value;
-      const description = document.getElementById("description").value.trim();
-      const minQty = parseInt(document.getElementById("minQty").value);
-      const maxQty = parseInt(document.getElementById("maxQty").value);
-      const unitPrice = parseFloat(document.getElementById("unitPrice").value);
-      const autoReorder = document.getElementById("autoReorder").checked;
-      const sku = `SKU-${Date.now()}`;
-
-      if (!name || !category || isNaN(minQty) || isNaN(maxQty) || isNaN(unitPrice)) {
-        alert("Please fill out all required fields.");
-        return;
-      }
-
-      const { data: itemData, error: itemError } = await supabase
-        .from("items")
-        .insert([{
-          sku,
-          name,
-          description,
-          category_id: parseInt(category),
-          min_quantity: minQty,
-          max_quantity: maxQty,
-          unit_price: unitPrice,
-          status: "normal", // ✅ valid status
-        }])
-        .select();
-
-      if (itemError) {
-        alert("Failed to add product:\n" + itemError.message);
-        return;
-      }
-
-      const insertedItem = itemData?.[0];
-      if (autoReorder && insertedItem?.id) {
-        await supabase.from("auto_reorder").insert([{
-          item_id: insertedItem.id,
-          auto_reorder: true,
-          supplier_id: null
-        }]);
-      }
-
-      alert("Product added successfully!");
-      closeModal();
-      location.reload();
+    categorySelect.innerHTML = `<option value="">Select</option>`;
+    data.forEach(cat => {
+      const opt = document.createElement("option");
+      opt.value = cat.id;
+      opt.textContent = cat.name;
+      categorySelect.appendChild(opt);
     });
+  }
+  loadCategories();
+
+  confirmBtn?.addEventListener("click", async () => {
+    const name = document.getElementById("itemName").value.trim();
+    const category = categorySelect.value;
+    const description = document.getElementById("description").value.trim();
+    const minQty = parseInt(document.getElementById("minQty").value);
+    const maxQty = parseInt(document.getElementById("maxQty").value);
+    const unitPrice = parseFloat(document.getElementById("unitPrice").value);
+    const sku = `SKU-${Date.now()}`;
+
+    if (!name || !category || isNaN(minQty) || isNaN(maxQty) || isNaN(unitPrice)) {
+      alert("Fill all fields.");
+      return;
+    }
+
+    // Step 1: Insert into added_items
+    const { error: addErr } = await supabase.from("added_items").insert([{
+      sku,
+      name,
+      description,
+      status: "Pending"
+    }]);
+    if (addErr) {
+      alert("Error adding product: " + addErr.message);
+      return;
+    }
+
+    // Step 2: Insert into items
+    const { error: itemErr } = await supabase.from("items").insert([{
+      sku,
+      name,
+      category_id: parseInt(category),
+      min_quantity: minQty,
+      max_quantity: maxQty,
+      unit_price: unitPrice
+    }]);
+    if (itemErr) {
+      alert("Error adding item details: " + itemErr.message);
+      return;
+    }
+
+    alert("Product added successfully!");
+    closeModal();
   });
+});
 </script>
