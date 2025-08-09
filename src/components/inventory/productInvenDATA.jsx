@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { supabase } from "../../utils/supabaseClient";
+import ProductOverviewModal from "./ProductOverviewModal.jsx"; // 👈 Updated import
 
 export default function ProductInventoryPreview({ limit = 10, hidePageNumbers = false }) {
   const [products, setProducts] = useState([]);
@@ -8,13 +9,15 @@ export default function ProductInventoryPreview({ limit = 10, hidePageNumbers = 
   const [total, setTotal] = useState(0);
   const [paginated, setPaginated] = useState(true);
 
+  const [selectedProduct, setSelectedProduct] = useState(null);
+  const [showModal, setShowModal] = useState(false);
+
   const totalPages = Math.ceil(total / limit);
 
   useEffect(() => {
     async function fetchProducts() {
       setLoading(true);
 
-      // ✅ Count only Completed
       const { count } = await supabase
         .from("items")
         .select("id, added_items!inner(status)", { count: "exact", head: true })
@@ -25,7 +28,6 @@ export default function ProductInventoryPreview({ limit = 10, hidePageNumbers = 
       const from = (page - 1) * limit;
       const to = from + limit - 1;
 
-      // ✅ Fetch only Completed
       const { data, error } = await supabase
         .from("items")
         .select(`
@@ -42,10 +44,10 @@ export default function ProductInventoryPreview({ limit = 10, hidePageNumbers = 
         .order("id", { ascending: true })
         .range(from, to);
 
-      if (error) {
-        console.error("Failed to fetch products:", error.message);
-      } else {
+      if (!error) {
         setProducts(data);
+      } else {
+        console.error(error);
       }
 
       setLoading(false);
@@ -53,6 +55,11 @@ export default function ProductInventoryPreview({ limit = 10, hidePageNumbers = 
 
     fetchProducts();
   }, [limit, page]);
+
+  const handleRowClick = (item) => {
+    setSelectedProduct(item);
+    setShowModal(true);
+  };
 
   const renderPageButtons = () => {
     const buttons = [];
@@ -113,7 +120,11 @@ export default function ProductInventoryPreview({ limit = 10, hidePageNumbers = 
         <p className="px-3 py-4">No products found.</p>
       ) : (
         products.map((item) => (
-          <div key={item.id} className="grid grid-cols-8 items-center border-b px-3 py-3 text-sm hover:bg-btn-hover rounded transition">
+          <div
+            key={item.id}
+            className="grid grid-cols-8 items-center border-b px-3 py-3 text-sm hover:bg-btn-hover rounded transition cursor-pointer"
+            onClick={() => handleRowClick(item)}
+          >
             <span>{item.sku}</span>
             <span>{item.name}</span>
             <span>{item.category?.name || "—"}</span>
@@ -129,13 +140,23 @@ export default function ProductInventoryPreview({ limit = 10, hidePageNumbers = 
       {/* Pagination Footer */}
       {paginated && totalPages > 1 && (
         <div className="flex items-center justify-between mt-4 text-sm">
-          <div>Showing {(page - 1) * limit + 1}-{Math.min(page * limit, total)} of {total} items</div>
+          <div>
+            Showing {(page - 1) * limit + 1}-{Math.min(page * limit, total)} of {total} items
+          </div>
           <div className="flex items-center gap-1">
             <button onClick={() => setPage((p) => Math.max(p - 1, 1))} disabled={page === 1}>&lt;</button>
             {!hidePageNumbers && renderPageButtons()}
             <button onClick={() => setPage((p) => Math.min(p + 1, totalPages))} disabled={page === totalPages}>&gt;</button>
           </div>
         </div>
+      )}
+
+      {/* Product Overview Modal */}
+      {showModal && (
+        <ProductOverviewModal
+          product={selectedProduct}
+          onClose={() => setShowModal(false)}
+        />
       )}
     </div>
   );

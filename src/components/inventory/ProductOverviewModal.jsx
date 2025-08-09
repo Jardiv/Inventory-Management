@@ -1,161 +1,135 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 
-export default function ProductDetailModal({ product, onClose }) {
-  const [activeTab, setActiveTab] = useState("stock"); // "stock" or "purchase"
+export default function ProductModal({ product, onClose }) {
+  const [activeTab, setActiveTab] = useState("stock");
+  const [stockData, setStockData] = useState([]);
+  const [loadingStock, setLoadingStock] = useState(true);
+
+  useEffect(() => {
+    if (product?.id && activeTab === "stock") {
+      setLoadingStock(true);
+      fetch(`/api/products/${product.id}/stock`) // Adjust API route to match your backend
+        .then((res) => res.json())
+        .then((data) => {
+          setStockData(data);
+          setLoadingStock(false);
+        })
+        .catch(() => {
+          setStockData([]);
+          setLoadingStock(false);
+        });
+    }
+  }, [product?.id, activeTab]);
 
   if (!product) return null;
 
   return (
-    <div
-      className="fixed inset-0 bg-black bg-opacity-75 flex justify-center items-center z-50"
-      onClick={onClose}
-    >
-      <div
-        className="bg-gray-900 text-white p-6 rounded-md w-[700px] max-w-full"
-        onClick={(e) => e.stopPropagation()}
-      >
-        {/* Header with title and back link */}
-        <div className="flex justify-between items-center mb-4">
-          <h2 className="text-lg font-bold">Product Overview</h2>
-          <button
-            className="text-purple-500 hover:underline"
-            onClick={onClose}
-          >
-            Back
-          </button>
-        </div>
+    <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-50">
+      <div className="bg-primary backdrop-blur-lg p-6 rounded-2xl shadow-lg max-w-3xl w-full relative animate-fadeIn">
+        
+        {/* Close Button */}
+        <button
+          onClick={onClose}
+          className="absolute top-3 right-3 text-primary hover:text-red-400 text-xl"
+        >
+          ✖
+        </button>
 
-        <div className="grid grid-cols-2 gap-6 mb-6">
-          {/* Primary Details */}
-          <div>
-            <h3 className="font-semibold border-b border-gray-600 pb-1 mb-2">
-              Primary Details
-            </h3>
-            <p><strong>Item Name:</strong> {product.name}</p>
-            <p><strong>Item Code:</strong> {product.code}</p>
+        {/* Title */}
+        <h2 className="text-2xl font-semibold mb-4 border-b border-gray-500 pb-2 text-textColor-primary">
+          Product Overview
+        </h2>
 
-            <h3 className="font-semibold border-b border-gray-600 mt-4 pb-1 mb-2">
-              Auto Re-order Status
-            </h3>
-            <p><strong>Status:</strong> {product.autoReorder ? "Yes" : "No"}</p>
-
-            <h3 className="font-semibold border-b border-gray-600 mt-4 pb-1 mb-2">
-              Description
-            </h3>
-            <p>{product.description}</p>
-          </div>
-
-          {/* Category & Quantity Details */}
-          <div>
-            <h3 className="font-semibold border-b border-gray-600 pb-1 mb-2">
-              Category Details
-            </h3>
-            <p><strong>Category:</strong> {product.category}</p>
-
-            <h3 className="font-semibold border-b border-gray-600 mt-4 pb-1 mb-2">
-              Quantity Details
-            </h3>
-            <p><strong>Minimum Quantity:</strong> {product.minQuantity}</p>
-            <p><strong>Maximum Quantity:</strong> {product.maxQuantity}</p>
-
-            {/* Edit and Delete Buttons */}
-            <div className="flex gap-2 mt-6">
-              <button className="bg-gray-700 px-4 py-1 rounded hover:bg-gray-600">Edit</button>
-              <button className="bg-gray-700 px-4 py-1 rounded hover:bg-gray-600">Delete</button>
-            </div>
-          </div>
+        {/* Product Details */}
+        <div className="space-y-2">
+          <p className="text-textColor-primary"><strong>Item Name:</strong> {product.name}</p>
+          <p className="text-textColor-primary"><strong>Item Code:</strong> {product.sku}</p>
+          <p className="text-textColor-primary"><strong>Category:</strong> {product.category?.name || "—"}</p>
+          <p className="text-textColor-primary"><strong>Min Quantity:</strong> {product.min_quantity}</p>
+          <p className="text-textColor-primary"><strong>Max Quantity:</strong> {product.max_quantity}</p>
+          <p className="text-textColor-primary"><strong>Unit Price:</strong> ₱{product.unit_price?.toFixed(2)}</p>
         </div>
 
         {/* Tabs */}
-        <div className="border-t border-gray-600 pt-4">
-          <nav className="flex space-x-4 text-sm font-medium text-gray-400">
-            <button
-              onClick={() => setActiveTab("stock")}
-              className={`pb-2 border-b-2 ${
-                activeTab === "stock"
-                  ? "border-purple-500 text-white"
-                  : "border-transparent"
-              }`}
-            >
-              Stock Information
-            </button>
-            <button
-              onClick={() => setActiveTab("purchase")}
-              className={`pb-2 border-b-2 ${
-                activeTab === "purchase"
-                  ? "border-purple-500 text-white"
-                  : "border-transparent"
-              }`}
-            >
-              Purchase History
-            </button>
-          </nav>
+        <div className="mt-6 flex gap-4 border-b border-gray-500 pb-2">
+          <button
+            onClick={() => setActiveTab("stock")}
+            className={`px-4 py-2 rounded-lg transition ${
+              activeTab === "stock"
+                ? "bg-violet-500/40 text-primary"
+                : "bg-violet-500/20 hover:bg-violet-500/40 text-textColor-primary"
+            }`}
+          >
+            Stock Information
+          </button>
+          <button
+            onClick={() => setActiveTab("history")}
+            className={`px-4 py-2 rounded-lg transition ${
+              activeTab === "history"
+                ? "bg-violet-500/40 text-primary"
+                : "bg-violet-500/20 hover:bg-violet-500/40 text-textColor-primary"
+            }`}
+          >
+            Purchase History
+          </button>
+        </div>
 
-          {/* Tab Content */}
-          <div className="mt-4 max-h-64 overflow-auto text-sm bg-gray-800 p-4 rounded">
-            {activeTab === "stock" && (
-              <StockInfoTable stockData={product.stockInfo} />
-            )}
-            {activeTab === "purchase" && (
-              <PurchaseHistoryTable purchaseData={product.purchaseHistory} />
-            )}
-          </div>
+        {/* Table Placeholder */}
+        <div className="mt-4 border border-gray-500 p-4 rounded-lg bg-primary text-textColor-primary space-y-2">
+          {activeTab === "stock" && (
+            <>
+              <div className="grid grid-cols-3 font-semibold border-b border-gray-500 pb-2">
+                <span>Warehouse</span>
+                <span>Quantity</span>
+                <span>Status</span>
+              </div>
+
+              {loadingStock ? (
+                <p>Loading stock data...</p>
+              ) : stockData.length > 0 ? (
+                stockData.map((item, idx) => (
+                  <div key={idx} className="grid grid-cols-3">
+                    <span>{item.warehouse_name}</span>
+                    <span>{item.quantity}</span>
+                    <span>
+                      {item.quantity > product.min_quantity
+                        ? "In Stock"
+                        : item.quantity > 0
+                        ? "Low Stock"
+                        : "Out of Stock"}
+                    </span>
+                  </div>
+                ))
+              ) : (
+                <p>No stock data available</p>
+              )}
+            </>
+          )}
+
+          {activeTab === "history" && (
+            <>
+              <div className="grid grid-cols-4 font-semibold border-b border-gray-500 pb-2">
+                <span>Date</span>
+                <span>Supplier</span>
+                <span>Quantity</span>
+                <span>Total Cost</span>
+              </div>
+              <div className="grid grid-cols-4">
+                <span>2025-08-01</span>
+                <span>ABC Supplies</span>
+                <span>100</span>
+                <span>₱5,000</span>
+              </div>
+              <div className="grid grid-cols-4">
+                <span>2025-07-20</span>
+                <span>XYZ Trading</span>
+                <span>50</span>
+                <span>₱2,500</span>
+              </div>
+            </>
+          )}
         </div>
       </div>
     </div>
-  );
-}
-
-function StockInfoTable({ stockData }) {
-  if (!stockData || stockData.length === 0)
-    return <p>No stock information available.</p>;
-
-  return (
-    <table className="w-full text-left border-collapse">
-      <thead>
-        <tr>
-          <th className="border-b border-gray-600 px-2 py-1">Date</th>
-          <th className="border-b border-gray-600 px-2 py-1">Quantity</th>
-          <th className="border-b border-gray-600 px-2 py-1">Location</th>
-        </tr>
-      </thead>
-      <tbody>
-        {stockData.map((row, i) => (
-          <tr key={i} className="odd:bg-gray-700 even:bg-gray-600">
-            <td className="px-2 py-1">{new Date(row.date).toLocaleDateString()}</td>
-            <td className="px-2 py-1">{row.quantity}</td>
-            <td className="px-2 py-1">{row.location}</td>
-          </tr>
-        ))}
-      </tbody>
-    </table>
-  );
-}
-
-function PurchaseHistoryTable({ purchaseData }) {
-  if (!purchaseData || purchaseData.length === 0)
-    return <p>No purchase history available.</p>;
-
-  return (
-    <table className="w-full text-left border-collapse">
-      <thead>
-        <tr>
-          <th className="border-b border-gray-600 px-2 py-1">Date</th>
-          <th className="border-b border-gray-600 px-2 py-1">Supplier</th>
-          <th className="border-b border-gray-600 px-2 py-1">Quantity</th>
-          <th className="border-b border-gray-600 px-2 py-1">Price</th>
-        </tr>
-      </thead>
-      <tbody>
-        {purchaseData.map((row, i) => (
-          <tr key={i} className="odd:bg-gray-700 even:bg-gray-600">
-            <td className="px-2 py-1">{new Date(row.date).toLocaleDateString()}</td>
-            <td className="px-2 py-1">{row.supplier}</td>
-            <td className="px-2 py-1">{row.quantity}</td>
-            <td className="px-2 py-1">₱{row.price.toFixed(2)}</td>
-          </tr>
-        ))}
-      </tbody>
-    </table>
   );
 }
