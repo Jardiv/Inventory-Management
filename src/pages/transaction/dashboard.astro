@@ -2,14 +2,19 @@
 import Layout from '../../layouts/Layout.astro';
 import StockInTable from '../../components/transactions/StockInTable.jsx';
 import StockOutTable from '../../components/transactions/StockOutTable.jsx';
-
-const limit = 4;
+import Summary from '../../components/transactions/Summary.jsx';
+const limit = 5;
 ---
 
 <!-- STOCK TRANSACTION DASHBOARD -->
 <Layout title="Stock Transaction Dashboard">
-	<div class="flex flex-col gap-4">
 
+	<div class="flex flex-col gap-4 mb-4">
+		<Summary client:load/>
+	</div>
+
+	<div class="flex flex-col gap-4">
+	
 		<!-- STOCK IN TRANSACTION TABLE -->
 		<div class="flex flex-col gap-1 w-full bg-primary p-4 rounded-lg">
 			<div class="w-full flex justify-between">
