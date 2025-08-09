@@ -89,7 +89,27 @@
 			window.location.search = params.toString();
 		};
 
-		fromDateInput.addEventListener('change', handleDateChange);
-		toDateInput.addEventListener('change', handleDateChange);
+		const handleFromDateChange = () => {
+			if (fromDateInput.value) {
+				toDateInput.min = fromDateInput.value;
+				if (toDateInput.value && toDateInput.value < fromDateInput.value) {
+					toDateInput.value = '';
+				}
+			}
+			handleDateChange();
+		};
+
+		const handleToDateChange = () => {
+			if (toDateInput.value) {
+				fromDateInput.max = toDateInput.value;
+				if (fromDateInput.value && fromDateInput.value > toDateInput.value) {
+					fromDateInput.value = '';
+				}
+			}
+			handleDateChange();
+		};
+
+		fromDateInput.addEventListener('change', handleFromDateChange);
+		toDateInput.addEventListener('change', handleToDateChange);
 	});
 </script>

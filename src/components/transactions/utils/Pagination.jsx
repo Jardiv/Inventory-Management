@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import PaginationSkeleton from './PaginationSkeleton';
 
 // Function to generate an array of page numbers for pagination display
@@ -39,9 +39,21 @@ const generatePaginationPages = (currentPage, totalPages) => {
 
 
 export default function Pagination({ paginationData, handlePageChange, startItem, endItem, loading }) {
+    const [jumpToPage, setJumpToPage] = useState("");
+
     if (loading) {
         return <PaginationSkeleton />;
     }
+
+    const handleJumpToPage = (e) => {
+        if (e.key === 'Enter') {
+            const page = parseInt(jumpToPage, 10);
+            if (page > 0 && page <= paginationData.totalPages) {
+                handlePageChange(e, page);
+            }
+            setJumpToPage("");
+        }
+    };
     
     const paginationPages = generatePaginationPages(paginationData.currentPage, paginationData.totalPages);
 
@@ -56,6 +68,20 @@ export default function Pagination({ paginationData, handlePageChange, startItem
             {/* Pagination buttons */}
             {paginationData.totalItems > 0 && paginationData.totalPages > 1 && (
                 <div className="flex items-center gap-1">
+                    {paginationData.totalPages > 5 && (
+                        <div className="flex items-center gap-2 mr-2">
+                            <input
+                                type="number"
+                                value={jumpToPage}
+                                onChange={(e) => setJumpToPage(e.target.value)}
+                                onKeyDown={handleJumpToPage}
+                                className="w-18 py-2 px-1 text-center bg-primary rounded-lg text-textColor-primary"
+                                placeholder={`Page...`}
+                                min="1"
+                                max={paginationData.totalPages}
+                            />
+                        </div>
+                    )}
                     {/* Previous page button */}
                     <a
                         href="#"

@@ -39,9 +39,6 @@
 	--color-blue: #4166F5;
 	--color-purple: #8A00C4;
 
-	--color-check: red; 
-	/* hsl(from var(--color-primary) h calc(s + 200) calc(l + 40)); */
-
 	--filter-logo: invert(100%);
 }
 
@@ -60,8 +57,6 @@
 	--color-green: #00e34c;
 	--color-blue: #82C8E5;
 	--color-purple: #d34dff;
-
-	--color-check: hsl(from var(--color-primary) h calc(s + 20) calc(l + 40));
 
 	--filter-logo: invert(0%)
 }
@@ -83,7 +78,6 @@
 	--color-purple: var(--color-purple);
 	--color-tbl-row: var(--color-tbl-hover);
 
-	--color-check: hsl(from var(--color-primary) h calc(s + 20) calc(l + 40));
 	--font-family-sans: "Poppins", sans-serif;
 
 	--filter-logo: var(--filter-logo);
@@ -299,7 +293,6 @@
 	.btn-theme .icon.active {
 		opacity: 1;
 	}
-
 
 	.stock-table {
 		@apply w-full text-left table-fixed;
