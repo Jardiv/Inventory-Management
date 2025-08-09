@@ -7,22 +7,22 @@ export async function GET({ request }: APIContext) {
     counter++;
     const { limit, offset, status, sortBy, sortOrder, startDate, endDate, delivered, completed, received, pending } = getUrlParams(request);
 
-    console.log(`
-        Counter: ${counter}
-        limit: ${limit}
-        offset: ${offset}
-        status: ${status}
-        sortBy: ${sortBy}
-        sortOrder: ${sortOrder}
+    // console.log(`
+    //     Counter: ${counter}
+    //     limit: ${limit}
+    //     offset: ${offset}
+    //     status: ${status}
+    //     sortBy: ${sortBy}
+    //     sortOrder: ${sortOrder}
 
-        filters:
-        startDate: ${startDate}
-        endDate: ${endDate}
-        delivered: ${delivered}
-        completed: ${completed}
-        received: ${received}
-        pending: ${pending}
-    `);
+    //     filters:
+    //     startDate: ${startDate}
+    //     endDate: ${endDate}
+    //     delivered: ${delivered}
+    //     completed: ${completed}
+    //     received: ${received}
+    //     pending: ${pending}
+    // `);
 
     // COUNT QUERY
 	let countQuery = supabase.from("stock_in").select("transactions!inner(id)", { count: "exact", head: true });
