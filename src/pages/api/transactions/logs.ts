@@ -140,6 +140,8 @@ export async function GET({ request }: APIContext) {
 
 	// Apply filters to count query
 	if (statuses && statuses.length > 0) {
+		console.log("logs:: Statuses:", statuses);
+		
 		countQuery = countQuery.in("status", statuses);
 	}
 	if (startDate) {

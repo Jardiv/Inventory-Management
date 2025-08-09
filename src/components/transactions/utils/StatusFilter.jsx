@@ -15,6 +15,8 @@ export default function StatusFilter({ availableStatuses, onFilterChange, isAble
 
 	const applyFilters = useCallback(() => {
 		onFilterChange(selectedStatuses);
+		console.log("StatusFilter:: Selected statuses:", selectedStatuses);
+		
 		setPopupOpen(false);
 	}, [selectedStatuses, onFilterChange]);
 
@@ -28,7 +30,6 @@ export default function StatusFilter({ availableStatuses, onFilterChange, isAble
 		return () => {
 			document.removeEventListener("mousedown", handleClickOutside);
 		};
-		console.log("StatusFilter:: Applied filters...");
 		
 	}, [popupRef, applyFilters]);
 
