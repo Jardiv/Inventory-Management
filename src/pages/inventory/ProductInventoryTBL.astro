@@ -7,7 +7,7 @@ import ProductInventoryPreview from '../../components/inventory/productInvenDATA
 ---
 
 <Layout>
-  <Addmodal />   
+  <Addmodal client:load />  
   
   <!-- INVENTORY OVERVIEW -->  
   <section id="overviewSection">
@@ -15,8 +15,17 @@ import ProductInventoryPreview from '../../components/inventory/productInvenDATA
     <!-- Product Table Preview -->
     <div class="bg-primary p-6 rounded-lg">
       <div class="flex items-center justify-between mb-6 relative z-10">
+        
+        <!-- Left side: Title + Pending Items Button -->
         <div class="flex items-center gap-3">
           <h2 class="text-xl font-semibold">Product Inventory</h2>
+          
+          <!-- 🟡 Pending Items Button -->
+          <a href="/inventory/PendingItemsPreview/">
+            <button class="bg-violet-500 hover:bg-violet-600 text-primary px-4 py-1.5 rounded text-sm transition">
+              Pending Items
+            </button>
+          </a>
         </div>
 
         <!-- ✅ Controls: Add, Filter, Download, Close -->
@@ -50,7 +59,6 @@ import ProductInventoryPreview from '../../components/inventory/productInvenDATA
 
       <!-- React Component for product inventory preview -->
       <ProductInventoryPreview client:load limit={10} paginated={true} />
-
     </div>
   </section>
 
