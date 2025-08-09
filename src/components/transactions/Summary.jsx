@@ -39,8 +39,8 @@ const Summary = () => {
                 {icon}
             </div>
             <div>
-                <h3 className="text-gray-400 text-sm font-semibold">{title}</h3>
-                <p className="text-2xl text-white font-bold">{value}</p>
+                <h3 className="text-textColor-tertiary text-sm font-semibold">{title}</h3>
+                <p className="text-2xl text-textColor-primary font-bold">{value}</p>
             </div>
         </div>
     );
