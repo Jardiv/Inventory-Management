@@ -1,4 +1,7 @@
 import { useState, useEffect } from 'react';
+import FileSaver from 'file-saver';
+import jsPDF from 'jspdf';
+import autoTable from 'jspdf-autotable';
 
 const WarehouseTable = ({ itemsPerPage: initialItemsPerPage = 10 }) => {
     const [warehouseData, setWarehouseData] = useState([]);
@@ -22,6 +25,201 @@ const WarehouseTable = ({ itemsPerPage: initialItemsPerPage = 10 }) => {
         utilizationMax: '',
         status: ''
     });
+
+  // Listen for download event (CSV/PDF) and export current table view
+  useEffect(() => {
+    const handleDownloadTable = async (e) => {
+      const type = e.detail?.type;
+      const exportData = getDisplayData().filter(row => row.isVisible !== false);
+      if (type === 'csv') {
+        downloadCSV(exportData);
+      } else if (type === 'pdf') {
+        await downloadPDF(exportData);
+      }
+    };
+    window.addEventListener('downloadTable', handleDownloadTable);
+    return () => window.removeEventListener('downloadTable', handleDownloadTable);
+  }, [filteredData, currentPage, itemsPerPage, currentSort]);
+
+  // CSV download of current view
+  const downloadCSV = (data) => {
+    const headers = ['Warehouse', 'Used', 'Max', 'Available', 'Utilization (%)', 'Status'];
+    const rows = data.map(w => [
+      w.name,
+      w.used,
+      w.max,
+      w.available,
+      w.utilization,
+      w.status
+    ]);
+    const csvContent = [headers, ...rows].map(r => r.join(',')).join('\n');
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    FileSaver.saveAs(blob, 'warehouses.csv');
+  };
+
+  // PDF download of current view with branded header
+  const downloadPDF = async (data) => {
+    try {
+      const doc = new jsPDF();
+      const pageWidth = doc.internal.pageSize.getWidth();
+      const margin = 14;
+
+      // Helpers
+      const loadImageAsDataURL = async (paths) => {
+        const tryLoad = (src) => new Promise((resolve, reject) => {
+          const img = new Image();
+          img.crossOrigin = 'anonymous';
+          img.onload = () => {
+            const canvas = document.createElement('canvas');
+            canvas.width = img.width; canvas.height = img.height;
+            const ctx = canvas.getContext('2d');
+            ctx.drawImage(img, 0, 0);
+            resolve(canvas.toDataURL('image/png'));
+          };
+          img.onerror = reject;
+          img.src = src;
+        });
+        for (const p of paths) { try { return await tryLoad(p); } catch (_) {} }
+        throw new Error('Logo not found');
+      };
+
+      const arrayBufferToBase64 = (buffer) => {
+        const bytes = new Uint8Array(buffer);
+        let binary = '';
+        const chunk = 0x8000;
+        for (let i = 0; i < bytes.length; i += chunk) {
+          binary += String.fromCharCode.apply(null, bytes.subarray(i, i + chunk));
+        }
+        return btoa(binary);
+      };
+
+      const tryEmbedFont = async (path, vfsName, family, style) => {
+        const res = await fetch(path);
+        if (!res.ok) throw new Error('font fetch failed');
+        const buf = await res.arrayBuffer();
+        doc.addFileToVFS(vfsName, arrayBufferToBase64(buf));
+        doc.addFont(vfsName, family, style);
+      };
+
+      let hasPoppins = false;
+      try {
+        await Promise.all([
+          tryEmbedFont('/fonts/Poppins-Regular.ttf', 'Poppins-Regular.ttf', 'Poppins', 'normal'),
+          tryEmbedFont('/fonts/Poppins-Bold.ttf', 'Poppins-Bold.ttf', 'Poppins', 'bold')
+        ]);
+        hasPoppins = true;
+      } catch (_) { /* fallback */ }
+
+      // Header
+      let headerBottomY = 56;
+      try {
+        const logoDataUrl = await loadImageAsDataURL([
+          '/ims_logo.png', '/ims%20logo.png', '/ims logo.png', '/logo.png'
+        ]);
+        const logoX = margin, logoY = 12, logoW = 30, logoH = 30;
+        doc.addImage(logoDataUrl, 'PNG', logoX, logoY, logoW, logoH);
+
+        const textX = logoX + logoW + 6;
+        let lineY = logoY + Math.round(logoH / 2);
+        if (hasPoppins) { doc.setFont('Poppins', 'bold'); } else { doc.setFont('helvetica', 'bold'); }
+        doc.setFontSize(26);
+        doc.text('IMS', textX, lineY);
+        const imsBaselineY = lineY;
+
+        lineY += 6;
+        if (hasPoppins) { doc.setFont('Poppins', 'normal'); } else { doc.setFont('helvetica', 'normal'); }
+        doc.setFontSize(12);
+        doc.text('Inventory Management System', textX, lineY);
+
+        lineY += 6;
+        doc.setFontSize(9);
+        doc.text('Address • Phone • Email • Website', textX, lineY);
+
+        // Right header text
+        const rightX = pageWidth - margin;
+        if (hasPoppins) { doc.setFont('Poppins', 'normal'); } else { doc.setFont('helvetica', 'normal'); }
+        doc.setFontSize(28);
+        const titleTop = imsBaselineY;
+        doc.text('WAREHOUSE', rightX, titleTop, { align: 'right' });
+        doc.text('REPORT', rightX, titleTop + 14, { align: 'right' });
+
+        headerBottomY = Math.max(logoY + logoH, lineY, titleTop + 14) + 4;
+      } catch (_) {
+        if (hasPoppins) { doc.setFont('Poppins', 'bold'); } else { doc.setFont('helvetica', 'bold'); }
+        doc.setFontSize(26);
+        doc.text('IMS', margin, 24);
+        if (hasPoppins) { doc.setFont('Poppins', 'normal'); } else { doc.setFont('helvetica', 'normal'); }
+        doc.setFontSize(12);
+        doc.text('Inventory Management System', margin, 30);
+        if (hasPoppins) { doc.setFont('Poppins', 'normal'); } else { doc.setFont('helvetica', 'normal'); }
+        doc.setFontSize(28);
+        doc.text('WAREHOUSE', pageWidth - margin, 24, { align: 'right' });
+        doc.text('REPORT', pageWidth - margin, 38, { align: 'right' });
+        headerBottomY = 46;
+      }
+
+      // Spacing below header
+      let cursorY = headerBottomY + 10;
+
+      // Table
+      const headers = [['Warehouse', 'Used', 'Max', 'Available', 'Utilization (%)', 'Status']];
+      const rows = data.map(w => [
+        w.name,
+        w.used,
+        w.max,
+        w.available,
+        `${w.utilization}%`,
+        w.status
+      ]);
+      const HEADER_PURPLE = [143, 0, 179];
+
+      const totalPagesExp = '{total_pages_count_string}';
+      autoTable(doc, {
+        head: headers,
+        body: rows,
+        startY: cursorY,
+        theme: 'grid',
+        styles: { fontSize: 12 },
+        headStyles: { fillColor: HEADER_PURPLE, textColor: 255 },
+        margin: { left: margin },
+        didDrawPage: () => {
+          const size = doc.internal.pageSize;
+          const thisPageWidth = (typeof size.getWidth === 'function') ? size.getWidth() : size.width;
+          const thisPageHeight = (typeof size.getHeight === 'function') ? size.getHeight() : size.height;
+          const centerX = margin + (thisPageWidth - margin * 2) / 2;
+          const pageInfo = doc.internal.getCurrentPageInfo ? doc.internal.getCurrentPageInfo() : null;
+          const currentPage = pageInfo ? pageInfo.pageNumber : doc.internal.getNumberOfPages();
+          const pageStr = typeof doc.putTotalPages === 'function' ? `Page ${currentPage} of ${totalPagesExp}` : `Page ${currentPage}`;
+          doc.setFontSize(9);
+          if (hasPoppins) { doc.setFont('Poppins', 'normal'); } else { doc.setFont('helvetica', 'normal'); }
+          doc.text(pageStr, centerX, thisPageHeight - 8, { align: 'center' });
+        }
+      });
+
+      if (typeof doc.putTotalPages === 'function') {
+        doc.putTotalPages(totalPagesExp);
+      }
+
+      // Add trailing marker on last page, right aligned and italic
+      const endPage = doc.getNumberOfPages();
+      doc.setPage(endPage);
+      let finalY = doc.lastAutoTable.finalY || cursorY;
+      const pageHeight = doc.internal.pageSize.getHeight();
+      let markerY = finalY + 8;
+      if (markerY > pageHeight - 14) {
+        doc.addPage();
+        markerY = margin + 6;
+      }
+      doc.setFontSize(10);
+      try { if (hasPoppins) { doc.setFont('Poppins', 'italic'); } else { doc.setFont('helvetica', 'italic'); } } catch (_) { doc.setFont('helvetica', 'italic'); }
+      doc.text('...Nothing Follows', pageWidth - margin, markerY, { align: 'right' });
+
+      doc.save('warehouses.pdf');
+    } catch (err) {
+      alert('PDF generation failed. Please check your browser console for errors and ensure jspdf and jspdf-autotable are installed. Error: ' + err.message);
+      console.error('PDF generation error:', err);
+    }
+  };
 
     // Function to toggle filter modal and dispatch events
     const toggleFilterModal = (isOpen) => {

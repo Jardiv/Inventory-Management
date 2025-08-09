@@ -121,7 +121,7 @@ export default function TransactionDetails({ transactionId, showSupplierDetails 
 					<p className="text-border_color">Detailed breakdown of the transaction.</p>
 				</div>
 				<div className="flex gap-2">
-					<button onClick={handleDownload} className="p-2 h-fit text-textColor-primary hover:bg-btn-hover cursor-pointer rounded ">
+		<button onClick={handleDownload} className="p-2 h-fit text-textColor-primary hover:bg-btn-hover cursor-pointer rounded ">
 						<svg
 							xmlns="http://www.w3.org/2000/svg"
 							fill="none"
