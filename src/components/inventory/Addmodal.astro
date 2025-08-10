@@ -1,8 +1,5 @@
----
----
-<!-- ✅ Add Modal -->
-<div id="addModal" class="hidden fixed inset-0 bg-black/60 flex items-center justify-center z-50">
-  <div class="bg-primary text-textColor-primary rounded-lg w-[460px] p-6 space-y-5 relative">
+<div id="addModal" class="hidden fixed inset-0 rounded-lg bg-black/60 flex items-center justify-center z-50">
+  <div class="bg-primary text-textColor-primary  w-[460px] p-6 space-y-5 relative rounded-lg">
     <!-- Header -->
     <div class="flex justify-between items-center mb-1">
       <h2 class="text-xl font-bold">Add Product</h2>
@@ -12,7 +9,7 @@
     <!-- Item Name -->
     <div class="flex items-center space-x-3">
       <label for="itemName" class="w-40 text-base font-semibold">Item Name:</label>
-      <input type="text" id="itemName" placeholder="e.g., Steel Bolt"
+      <input type="text" id="itemName" placeholder="e.g., ABC"
         class="flex-1 bg-primary text-textColor-primary text-sm border border-neutral-700 rounded px-3 py-2" />
     </div>
 
@@ -28,29 +25,8 @@
     <!-- Description -->
     <div class="flex items-start space-x-3">
       <label for="description" class="w-40 text-base font-semibold pt-2">Description:</label>
-      <textarea id="description" rows="2" placeholder="e.g., High-quality corrosion-resistant bolt"
+      <textarea id="description" rows="2" placeholder="e.g., Lorem ipsum bratata"
         class="flex-1 bg-primary text-textColor-primary text-sm border border-neutral-700 rounded px-3 py-2 resize-none"></textarea>
-    </div>
-
-    <!-- Min Quantity -->
-    <div class="flex items-center space-x-3">
-      <label for="minQty" class="w-40 text-base font-semibold">Min Qty:</label>
-      <input type="number" id="minQty" min="0" placeholder="e.g., 10"
-        class="flex-1 bg-primary text-textColor-primary text-sm border border-neutral-700 rounded px-3 py-2" />
-    </div>
-
-    <!-- Max Quantity -->
-    <div class="flex items-center space-x-3">
-      <label for="maxQty" class="w-40 text-base font-semibold">Max Qty:</label>
-      <input type="number" id="maxQty" min="0" placeholder="e.g., 200"
-        class="flex-1 bg-primary text-textColor-primary text-sm border border-neutral-700 rounded px-3 py-2" />
-    </div>
-
-    <!-- Unit Price -->
-    <div class="flex items-center space-x-3">
-      <label for="unitPrice" class="w-40 text-base font-semibold">Unit Price:</label>
-      <input type="number" id="unitPrice" step="0.01" min="0.01" placeholder="e.g., 15.99"
-        class="flex-1 bg-primary text-textColor-primary text-sm border border-neutral-700 rounded px-3 py-2" />
     </div>
 
     <!-- Buttons -->
@@ -62,84 +38,81 @@
 </div>
 
 <script type="module">
-import { supabase } from "/src/utils/supabaseClient";
+  import { supabase } from "/src/utils/supabaseClient";
 
-document.addEventListener("DOMContentLoaded", () => {
-  const modal = document.getElementById("addModal");
-  const openBtn = document.getElementById("open-add-modal");
-  const closeBtn = document.getElementById("close-add-modal");
-  const cancelBtn = document.getElementById("cancelAddBtn");
-  const confirmBtn = document.getElementById("confirmAddBtn");
-  const categorySelect = document.getElementById("category");
+  document.addEventListener("DOMContentLoaded", () => {
+    const modal = document.getElementById("addModal");
+    const openBtn = document.getElementById("open-add-modal");
+    const closeBtn = document.getElementById("close-add-modal");
+    const cancelBtn = document.getElementById("cancelAddBtn");
+    const confirmBtn = document.getElementById("confirmAddBtn");
+    const categorySelect = document.getElementById("category");
 
-  const closeModal = () => { modal.classList.add("hidden"); clearInputs(); };
-  const clearInputs = () => document.querySelectorAll("#addModal input, #addModal textarea, #addModal select")
-                               .forEach(el => el.value = "");
+    const closeModal = () => { modal.classList.add("hidden"); clearInputs(); };
+    const clearInputs = () => document.querySelectorAll("#addModal input, #addModal textarea, #addModal select")
+      .forEach(el => el.value = "");
 
-  openBtn?.addEventListener("click", () => modal.classList.remove("hidden"));
-  closeBtn?.addEventListener("click", closeModal);
-  cancelBtn?.addEventListener("click", closeModal);
+    openBtn?.addEventListener("click", () => modal.classList.remove("hidden"));
+    closeBtn?.addEventListener("click", closeModal);
+    cancelBtn?.addEventListener("click", closeModal);
 
-  // Load categories
-  async function loadCategories() {
-    const { data, error } = await supabase.from("category").select("*");
-    categorySelect.innerHTML = "";
-    if (error) {
-      categorySelect.innerHTML = `<option value="">Failed to load</option>`;
-      return;
+    // Load categories
+    async function loadCategories() {
+      const { data, error } = await supabase.from("category").select("*");
+      categorySelect.innerHTML = "";
+      if (error) {
+        categorySelect.innerHTML = `<option value="">Failed to load</option>`;
+        return;
+      }
+      categorySelect.innerHTML = `<option value="">Select</option>`;
+      data.forEach(cat => {
+        const opt = document.createElement("option");
+        opt.value = cat.id;
+        opt.textContent = cat.name;
+        categorySelect.appendChild(opt);
+      });
     }
-    categorySelect.innerHTML = `<option value="">Select</option>`;
-    data.forEach(cat => {
-      const opt = document.createElement("option");
-      opt.value = cat.id;
-      opt.textContent = cat.name;
-      categorySelect.appendChild(opt);
+    loadCategories();
+
+    confirmBtn?.addEventListener("click", async () => {
+      const name = document.getElementById("itemName").value.trim();
+      const category = categorySelect.value;
+      const description = document.getElementById("description").value.trim();
+      const sku = `SKU-${Date.now()}`;
+
+      if (!name || !category) {
+        alert("Please fill in the item name and select a category.");
+        return;
+      }
+
+      // Step 1: Insert into added_items
+      const { error: addErr } = await supabase.from("added_items").insert([{
+        sku,
+        name,
+        description,
+        status: "Pending"
+      }]);
+      if (addErr) {
+        alert("Error adding product: " + addErr.message);
+        return;
+      }
+
+      // Step 2: Insert into items
+      const { error: itemErr } = await supabase.from("items").insert([{
+        sku,
+        name,
+        category_id: parseInt(category),
+        min_quantity: 0, // Defaulting to 0 since the field was removed
+        max_quantity: 0, // Defaulting to 0 since the field was removed
+        unit_price: 0 // Defaulting to 0 since the field was removed
+      }]);
+      if (itemErr) {
+        alert("Error adding item details: " + itemErr.message);
+        return;
+      }
+
+      alert("Product added successfully!");
+      closeModal();
     });
-  }
-  loadCategories();
-
-  confirmBtn?.addEventListener("click", async () => {
-    const name = document.getElementById("itemName").value.trim();
-    const category = categorySelect.value;
-    const description = document.getElementById("description").value.trim();
-    const minQty = parseInt(document.getElementById("minQty").value);
-    const maxQty = parseInt(document.getElementById("maxQty").value);
-    const unitPrice = parseFloat(document.getElementById("unitPrice").value);
-    const sku = `SKU-${Date.now()}`;
-
-    if (!name || !category || isNaN(minQty) || isNaN(maxQty) || isNaN(unitPrice)) {
-      alert("Fill all fields.");
-      return;
-    }
-
-    // Step 1: Insert into added_items
-    const { error: addErr } = await supabase.from("added_items").insert([{
-      sku,
-      name,
-      description,
-      status: "Pending"
-    }]);
-    if (addErr) {
-      alert("Error adding product: " + addErr.message);
-      return;
-    }
-
-    // Step 2: Insert into items
-    const { error: itemErr } = await supabase.from("items").insert([{
-      sku,
-      name,
-      category_id: parseInt(category),
-      min_quantity: minQty,
-      max_quantity: maxQty,
-      unit_price: unitPrice
-    }]);
-    if (itemErr) {
-      alert("Error adding item details: " + itemErr.message);
-      return;
-    }
-
-    alert("Product added successfully!");
-    closeModal();
   });
-});
 </script>

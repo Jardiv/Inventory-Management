@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { jsPDF } from "jspdf";
-import autoTable from "jspdf-autotable"; // default import, not just "import 'jspdf-autotable'"
+import autoTable from "jspdf-autotable";
 
 const tdStyle = "bg-background px-4 py-2 max-h-[20px]";
 const thStyle = "px-3 py-1";
@@ -29,65 +29,58 @@ export default function TransactionDetails({ transactionId, showSupplierDetails 
 		}
 	}, [transactionId]);
 
-	const handleDownload = () => {
+	const handlePDF = (isView) => {
 		if (!transaction) return;
 
 		const doc = new jsPDF();
-		let finalY = 22; // Initial Y position
+		const pageHeight = doc.internal.pageSize.height || doc.internal.pageSize.getHeight();
+		const pageWidth = doc.internal.pageSize.width || doc.internal.pageSize.getWidth();
 
-		// Title
-		doc.setFontSize(20);
-		doc.text("Transaction Details", 14, finalY);
+		// Header
+		doc.setFont("helvetica", "bold");
+		doc.setFontSize(24);
+		doc.setTextColor(40);
+		doc.text("InventoryMS", 14, 22);
+
+		doc.setFont("helvetica", "normal");
+		doc.setFontSize(10);
+		doc.text("Indang, Cavite", 14, 30);
+		doc.text("inventoryms@gmail.com", 14, 35);
+		doc.text("123-456-7890", 14, 40);
+
+		doc.setFont("helvetica", "bold");
+		doc.setFontSize(28);
+		doc.text("TRANSACTION", pageWidth - 14, 22, { align: "right" });
+		doc.setFont("helvetica", "normal");
+		doc.setFontSize(10);
+		doc.text(`Invoice #: ${transaction.invoice_no}`, pageWidth - 14, 30, { align: "right" });
+		doc.text(`Date: ${new Date(transaction.transaction_datetime).toLocaleDateString()}`, pageWidth - 14, 35, { align: "right" });
+
+		let finalY = 50;
+
+		// Separator line
+		doc.setDrawColor(200);
+		doc.line(14, finalY, pageWidth - 14, finalY);
 		finalY += 10;
 
-		// Primary Details
+		// Details section
 		doc.setFontSize(12);
-		doc.text("Primary Details", 14, finalY);
-		finalY += 4;
-		autoTable(doc, {
-			startY: finalY,
-			body: [
-				["Invoice Number", transaction.invoice_no],
-				["Date", new Date(transaction.transaction_datetime).toLocaleDateString()],
-				[
-					"Time",
-					new Date(transaction.transaction_datetime).toLocaleTimeString([], {
-						hour: "2-digit",
-						minute: "2-digit",
-						hour12: true,
-					}),
-				],
-				["Status", transaction.status],
-				["Created By", transaction.created_by],
-				["From", transaction.warehouse_name || "N/A"],
-			],
-			theme: "plain",
-			styles: { fontSize: 10 },
-		});
-		finalY = doc.lastAutoTable.finalY; // <-- updated property
+		doc.setFont("helvetica", "bold");
+		doc.text("From:", 14, finalY);
+		doc.setFont("helvetica", "normal");
+		doc.text(transaction.warehouse_name || "N/A", 30, finalY);
 
-		// Supplier Details
 		if (transaction.supplier_name) {
-			finalY += 10;
-			doc.text("Supplier Details", 14, finalY);
-			finalY += 4;
-			autoTable(doc, {
-				startY: finalY,
-				body: [
-					["Supplier", transaction.supplier_name],
-					["Contact No", transaction.supplier_contact],
-					["Location", transaction.supplier_location],
-				],
-				theme: "plain",
-				styles: { fontSize: 10 },
-			});
-			finalY = doc.lastAutoTable.finalY;
+			doc.setFont("helvetica", "bold");
+			doc.text("Supplier:", pageWidth / 2, finalY);
+			doc.setFont("helvetica", "normal");
+			doc.text(transaction.supplier_name, pageWidth / 2 + 30, finalY);
+			doc.text(transaction.supplier_contact.toString(), pageWidth / 2 + 30, finalY + 5);
+			doc.text(transaction.supplier_location, pageWidth / 2 + 30, finalY + 10);
 		}
+		finalY += 20;
 
-		// Item Details
-		finalY += 10;
-		doc.text("Item Details", 14, finalY);
-		finalY += 4;
+		// Items table
 		autoTable(doc, {
 			startY: finalY,
 			head: [["Item", "Quantity", "Expiry Date", "Unit Price", "Total"]],
@@ -95,22 +88,63 @@ export default function TransactionDetails({ transactionId, showSupplierDetails 
 				item.name,
 				item.quantity,
 				item.expiry_date ? new Date(item.expiry_date).toLocaleDateString() : "N/A",
-				`${item.unit_price}`,
-				`${(item.unit_price * item.quantity).toFixed(2)}`,
+				`₱ ${item.unit_price.toFixed(2)}`,
+				`₱ ${(item.unit_price * item.quantity).toFixed(2)}`,
 			]),
-			theme: "striped",
-			headStyles: { fillColor: [41, 128, 185] },
+			theme: "grid",
+			headStyles: {
+				fillColor: [22, 160, 133],
+				textColor: 255,
+				fontStyle: "bold",
+			},
+			alternateRowStyles: { fillColor: [245, 245, 245] },
+			didDrawPage: function (data) {
+				// Page number
+				doc.setFontSize(10);
+				doc.text("Page " + doc.internal.getNumberOfPages(), data.settings.margin.left, pageHeight - 10);
+			},
 		});
 		finalY = doc.lastAutoTable.finalY;
 
 		// Totals
+		const neededSpace = 40;
+		if (finalY > pageHeight - neededSpace) {
+			doc.addPage();
+			finalY = 20;
+		}
 		finalY += 10;
 		doc.setFontSize(12);
-		doc.text(`Total Quantity: ${transaction.total_quantity} Items`, 14, finalY);
-		doc.text(`Total Price: ₱ ${transaction.total_price}`, 120, finalY);
+		doc.setFont("helvetica", "bold");
+		doc.text(`Total Quantity:`, pageWidth / 2 + 23, finalY, { align: "left" });
+		doc.text(`${transaction.total_quantity} Items`, pageWidth - 14, finalY, { align: "right" });
+		finalY += 7;
+		doc.text(`Total Price:`, pageWidth / 2 + 30, finalY, { align: "left" });
+		doc.text(`₱ ${transaction.total_price}`, pageWidth - 25, finalY, { align: "right" });
+		finalY += 7;
+		doc.setFontSize(10);
+		doc.setFont("helvetica", "bold");
+		doc.text(`Status:`, pageWidth / 2 + 41, finalY, { align: "left" });
+		doc.setFont("helvetica", "normal");
+		doc.text(transaction.status, pageWidth - 14, finalY, { align: "right" });
+
+		// Footer note on last page
+		const pageCount = doc.internal.getNumberOfPages();
+		doc.setPage(pageCount);
+		const finalPageHeight = doc.internal.pageSize.height || doc.internal.pageSize.getHeight();
+		doc.setDrawColor(200);
+		doc.line(14, finalPageHeight - 35, pageWidth - 14, finalPageHeight - 35);
+		doc.setFontSize(10);
+		doc.text("Thank you for your business!", pageWidth / 2, finalPageHeight - 25, { align: "center" });
 
 		// Save
-		doc.save(`transaction_${transaction.invoice_no}.pdf`);
+
+		if (isView) {
+			const pdfBlob = doc.output("blob");
+			const pdfUrl = URL.createObjectURL(pdfBlob);
+			window.open(pdfUrl);
+		} else {
+			doc.save(`transaction_${transaction.invoice_no}.pdf`);
+		}
 	};
 
 	return (
@@ -121,7 +155,22 @@ export default function TransactionDetails({ transactionId, showSupplierDetails 
 					<p className="text-border_color">Detailed breakdown of the transaction.</p>
 				</div>
 				<div className="flex gap-2">
-		<button onClick={handleDownload} className="p-2 h-fit text-textColor-primary hover:bg-btn-hover cursor-pointer rounded ">
+					<button onClick={() => handlePDF(true)} className="p-2 h-fit text-textColor-primary hover:bg-btn-hover cursor-pointer rounded " title="View PDF">
+						<svg
+							xmlns="http://www.w3.org/2000/svg"
+							fill="none"
+							viewBox="0 0 24 24"
+							strokeWidth={1.5}
+							stroke="currentColor"
+							className="ww-6 h-6">
+							<path
+								strokeLinecap="round"
+								strokeLinejoin="round"
+								d="M19.5 14.25v-2.625a3.375 3.375 0 0 0-3.375-3.375h-1.5A1.125 1.125 0 0 1 13.5 7.125v-1.5a3.375 3.375 0 0 0-3.375-3.375H8.25m5.231 13.481L15 17.25m-4.5-15H5.625c-.621 0-1.125.504-1.125 1.125v16.5c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 0 0-9-9Zm3.75 11.625a2.625 2.625 0 1 1-5.25 0 2.625 2.625 0 0 1 5.25 0Z"
+							/>
+						</svg>
+					</button>
+					<button onClick={() => handlePDF(false)} className="p-2 h-fit text-textColor-primary hover:bg-btn-hover cursor-pointer rounded " title="Download PDF">
 						<svg
 							xmlns="http://www.w3.org/2000/svg"
 							fill="none"
@@ -138,7 +187,7 @@ export default function TransactionDetails({ transactionId, showSupplierDetails 
 					</button>
 					<button
 						onClick={() => window.history.back()}
-						className="p-2 h-fit text-textColor-primary hover:bg-btn-hover cursor-pointer rounded ">
+						className="p-2 h-fit text-textColor-primary hover:bg-btn-hover cursor-pointer rounded " title="Close">
 						<svg
 							xmlns="http://www.w3.org/2000/svg"
 							fill="none"
@@ -187,7 +236,7 @@ export default function TransactionDetails({ transactionId, showSupplierDetails 
 					</div>
 				</div>
 			) : transaction ? (
-				<div className="grid grid-cols-5 gap-4 h-[80%]">
+				<div className="grid grid-cols-5 gap-4 min-h-[80%] pb-6">
 					<div className="col-span-3 py-4">
 						<h2 className="text-lg font-semibold mb-2">Item Details</h2>
 						<div className="bg-background border-[0.5px] border-border_color px-4 py-2 h-full flex flex-col">

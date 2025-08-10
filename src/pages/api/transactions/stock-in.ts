@@ -4,8 +4,8 @@ import type { APIContext } from "astro";
 
 export async function GET({ request }: APIContext) {
 	const url = new URL(request.url);
-	const { limit, offset, sortBy, sortOrder, startDate, endDate } = getUrlParams(request);
-	const statuses = url.searchParams.getAll("status");
+	const { limit, offset, sortBy, sortOrder, startDate, endDate, maxPrice, minPrice, supplierId , statuses } = getUrlParams(request);
+	// const statuses = url.searchParams.getAll("status");
 
 	// COUNT QUERY
 	let countQuery = supabase.from("stock_in").select("transactions!inner(id)", { count: "exact", head: true });
@@ -18,6 +18,15 @@ export async function GET({ request }: APIContext) {
 	}
 	if (endDate) {
 		countQuery = countQuery.lte("transactions.transaction_datetime", endDate);
+	}
+	if (minPrice && !isNaN(parseFloat(minPrice))) {
+		countQuery = countQuery.gte("transactions.total_price", parseFloat(minPrice));
+	}
+	if (maxPrice && !isNaN(parseFloat(maxPrice))) {
+		countQuery = countQuery.lte("transactions.total_price", parseFloat(maxPrice));
+	}
+	if (supplierId && !isNaN(parseInt(supplierId))) {
+		countQuery = countQuery.eq("supplier_id", parseInt(supplierId));
 	}
 
 	let { count, error: countError } = await countQuery;
@@ -49,7 +58,19 @@ export async function GET({ request }: APIContext) {
 	if (endDate) {
 		query = query.lte("transaction_datetime", endDate);
 	}
-	query = query.order(sortBy, { ascending: sortOrder === "asc" });
+	if (minPrice && !isNaN(parseFloat(minPrice))) {
+		query = query.gte("total_price", parseFloat(minPrice));
+	}
+	if (maxPrice && !isNaN(parseFloat(maxPrice))) {
+		query = query.lte("total_price", parseFloat(maxPrice));
+	}
+	if (supplierId && !isNaN(parseInt(supplierId))) {
+		query = query.eq("stock_in.supplier_id", parseInt(supplierId));
+	}
+	
+	const validSortBy = ["invoice_no", "transaction_datetime", "total_price", "total_quantity", "status"];
+	const sortColumn = validSortBy.includes(sortBy) ? sortBy : "transaction_datetime";
+	query = query.order(sortColumn, { ascending: sortOrder === "asc" });
 	query = query.range(offset, offset + limit - 1);
 	let { data, error: queryError } = await query;
 

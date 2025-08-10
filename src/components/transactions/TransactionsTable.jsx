@@ -13,7 +13,8 @@ export default function TransactionsTable({
 	currentPage = 1,
 	itemsPerPage = 10,
 	statusFilters = [],
-	searchTerm = ''
+	searchTerm = '',
+    priceRange: initialPriceRange = { minPrice: "", maxPrice: "" }
 }) {
 	const [transactions, setTransactions] = useState([]);
 	const [loading, setLoading] = useState(true);
@@ -26,6 +27,7 @@ export default function TransactionsTable({
 	});
 	const [sortConfig, setSortConfig] = useState({ key: "transaction_datetime", direction: "desc" });
 	const [dateRange, setDateRange] = useState({ startDate: "", endDate: "" });
+	const [priceRange, setPriceRange] = useState(initialPriceRange);
 	const [clientCurrentPage, setClientCurrentPage] = useState(parseInt(currentPage, 10) || 1);
 
 	const tableLimit = showPagination ? itemsPerPage : parseInt(limit) || 10;
@@ -38,6 +40,8 @@ export default function TransactionsTable({
 		return () => document.removeEventListener("dateRangeChanged", handleDateChange);
 	}, []);
 
+	
+
 	useEffect(() => {
 		const params = new URLSearchParams(window.location.search);
 		const pageFromUrl = parseInt(params.get("page"), 10);
@@ -49,6 +53,14 @@ export default function TransactionsTable({
 		const startDate = params.get("startDate");
 		const endDate = params.get("endDate");
 
+		console.log("TransactionsTable:: useEffect called");
+		console.log("TransactionsTable:: params:", params);
+		console.log("TransactionsTable:: sortBy:", sortBy);
+		console.log("TransactionsTable:: sortOrder:", sortOrder);
+		console.log("TransactionsTable:: startDate:", startDate);
+		console.log("TransactionsTable:: endDate:", endDate);
+		
+
 		if (sortBy && sortOrder) {
 			setSortConfig({ key: sortBy, direction: sortOrder });
 		}
@@ -56,7 +68,13 @@ export default function TransactionsTable({
 		if (startDate || endDate) {
 			setDateRange({ startDate: startDate || "", endDate: endDate || "" });
 		}
+
+		
 	}, []);
+
+	useEffect(() => {
+		setPriceRange(initialPriceRange);
+	}, [initialPriceRange]);
 
 	useEffect(() => {
 		const controller = new AbortController();
@@ -83,6 +101,8 @@ export default function TransactionsTable({
 
                 if (dateRange.startDate) params.append('startDate', dateRange.startDate);
                 if (dateRange.endDate) params.append('endDate', dateRange.endDate);
+				if (priceRange.minPrice) params.append('minPrice', priceRange.minPrice);
+                if (priceRange.maxPrice) params.append('maxPrice', priceRange.maxPrice);
                 if (searchTerm) params.append('search', searchTerm);
 				
                 // Add status filters if they exist
@@ -90,7 +110,16 @@ export default function TransactionsTable({
                     statusFilters.forEach(status => {
                         params.append('status', status);
                     });
+					console.log("TransactionsTable:: statusFilters:", statusFilters);
                 }
+
+                // Add warehouseId/supplierId from URL
+                const urlParams = new URLSearchParams(window.location.search);
+                const warehouseId = urlParams.get("warehouseId");
+                const supplierId = urlParams.get("supplierId");
+
+                if (warehouseId) params.append('warehouseId', warehouseId);
+                if (supplierId) params.append('supplierId', supplierId);
 
 				const res = await fetch(`${basePath}?${params.toString()}`, { signal });
 				const data = await res.json();
@@ -127,7 +156,7 @@ export default function TransactionsTable({
 		return () => {
 			controller.abort();
 		};
-	}, [limit, clientCurrentPage, itemsPerPage, showPagination, sortConfig, dateRange, direction, statusFilters, searchTerm]);
+	}, [limit, clientCurrentPage, itemsPerPage, showPagination, sortConfig, dateRange, priceRange, direction, statusFilters, searchTerm]);
 
 	const requestSort = (key) => {
 		if (!isAbleToSort) return;
