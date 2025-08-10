@@ -7,16 +7,19 @@ export default function WarehouseStorage({ initialItems, total, limit, page }) {
   const [showModal, setShowModal] = useState(false);
   const [warehouseList, setWarehouseList] = useState([]);
 
+  // Form states for the modal
+  const [warehouseName, setWarehouseName] = useState('');
+  const [description, setDescription] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [submitMessage, setSubmitMessage] = useState('');
 
   const [currentPage, setCurrentPage] = useState(page);
   const [filteredTotal, setFilteredTotal] = useState(total || 0);
   const totalPages = Math.ceil(filteredTotal / limit);
   const [currentDate, setCurrentDate] = useState('');
   const [filterOpen, setFilterOpen] = useState(false);
-  const [sortColumn, setSortColumn] = useState(null); // "name" | "quantity" | null
-  const [sortOrder, setSortOrder] = useState(null);   // "asc" | "desc" | null
-
-
+  const [sortColumn, setSortColumn] = useState(null);
+  const [sortOrder, setSortOrder] = useState(null);
 
   useEffect(() => {
     if (typeof window !== 'undefined') {
@@ -64,7 +67,7 @@ export default function WarehouseStorage({ initialItems, total, limit, page }) {
         const res = await fetch(`/api/tracking/warehouse-storage?page=${page}&limit=${limit}&warehouse_id=${selectedWarehouse}`);
         const result = await res.json();
         setItems(result.data || []);
-        setFilteredTotal(result.count || 0); // 👈 this now uses count from your API
+        setFilteredTotal(result.count || 0);
       } catch (err) {
         console.error("Error fetching items", err);
       } finally {
@@ -84,6 +87,67 @@ export default function WarehouseStorage({ initialItems, total, limit, page }) {
     });
     setCurrentDate(formatted);
   }, []);
+
+  // Function to handle warehouse request submission
+  const handleWarehouseSubmit = async (e) => {
+    e.preventDefault();
+    
+    // Basic validation
+    if (!warehouseName.trim()) {
+      setSubmitMessage('Warehouse name is required');
+      return;
+    }
+
+    setIsSubmitting(true);
+    setSubmitMessage('');
+
+    try {
+      const response = await fetch('/api/tracking/warehouse-requests', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          warehouse_name: warehouseName,
+          description: description
+        }),
+      });
+
+      const result = await response.json();
+
+      if (response.ok) {
+        // Success
+        setSubmitMessage('Warehouse request submitted successfully!');
+        
+        // Clear form
+        setWarehouseName('');
+        setDescription('');
+        
+        // Close modal after 2 seconds
+        setTimeout(() => {
+          setShowModal(false);
+          setSubmitMessage('');
+        }, 2000);
+      } else {
+        // Error from API
+        setSubmitMessage(result.error || 'Failed to submit warehouse request');
+      }
+    } catch (error) {
+      console.error('Error submitting warehouse request:', error);
+      setSubmitMessage('Network error. Please try again.');
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  // Function to reset modal state when closing
+  const handleCloseModal = () => {
+    setShowModal(false);
+    setWarehouseName('');
+    setDescription('');
+    setSubmitMessage('');
+    setIsSubmitting(false);
+  };
 
   return (
     <div>
@@ -134,7 +198,7 @@ export default function WarehouseStorage({ initialItems, total, limit, page }) {
 
         {/* Action Buttons */}
         <div className="flex gap-3 items-center">
-          {/* ✅ Add Warehouse Button */}
+          {/* Add Warehouse Button */}
           <button
             onClick={() => setShowModal(true)}
             className="flex items-center gap-2 px-4 py-2 border border-transparent rounded hover:border-btn-hover transition"
@@ -156,28 +220,9 @@ export default function WarehouseStorage({ initialItems, total, limit, page }) {
                   d="M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5M16.5 12 12 16.5m0 0L7.5 12m4.5 4.5V3" />
               </svg>
             </button>
-          </a>       
-          {/* filter button
-          <div className="relative">
-              <button onClick={() => setFilterOpen(!filterOpen)} className="bg-primary text-secondary rounded px-3 py-2 text-sm hover:text-textColor-secondary hover:bg-violet-600">
-                <svg width="24" height="24" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-                  <line x1="3" y1="6" x2="21" y2="6" />
-                  <line x1="6" y1="12" x2="18" y2="12" />
-                  <line x1="9" y1="18" x2="15" y2="18" />
-                </svg>
-              </button>
-              {filterOpen && (
-                <div className="absolute left-1/2 -translate-x-1/2 mt-2 bg-primary border border-border_color rounded shadow-md z-10 w-[130px]">
-                  <ul className="py-1 text-sm text-textColor-primary text-left">
-                    <li><a href="#" className="block px-4 py-2 hover:bg-btn-hover">Date</a></li>
-                    <li><a href="#" className="block px-4 py-2 hover:bg-btn-hover">Warehouse</a></li>
-                    <li><a href="#" className="block px-4 py-2 hover:bg-btn-hover">Transfer ID</a></li>
-                  </ul>
-                </div>
-              )}
-            </div>
-          */}
-          {/* ❌ Cancel Button with Link to Dashboard */}
+          </a>
+
+          {/* Cancel Button with Link to Dashboard */}
           <a href="/tracking/Dashboard">
             <button className="bg-primary text-secondary rounded px-3 py-2 text-sm hover:text-textColor-secondary hover:bg-violet-600">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="w-5 h-5">
@@ -188,27 +233,34 @@ export default function WarehouseStorage({ initialItems, total, limit, page }) {
         </div>
       </div>
 
-      {/* ✅ Modal for Add Warehouse */}
+      {/* Modal for Add Warehouse */}
       {showModal && (
         <div className="fixed inset-0 bg-black/60 flex justify-center items-center z-50">
           <div className="bg-primary text-textColor-primary rounded-md w-[400px] p-6 shadow-lg border border-border_color relative">
             <h2 className="text-xl font-semibold mb-4">Add New Warehouse</h2>
 
-            <form onSubmit={(e) => e.preventDefault()}>
+            <form onSubmit={handleWarehouseSubmit}>
               {/* Warehouse Name Input */}
               <label className="block mb-1">Warehouse Name</label>
               <input
                 type="text"
+                value={warehouseName}
+                onChange={(e) => setWarehouseName(e.target.value)}
                 placeholder="Enter warehouse name"
                 className="w-full border border-border_color rounded px-3 py-2 mb-4 bg-primary text-textColor-primary"
+                required
+                disabled={isSubmitting}
               />
 
               {/* Description Input */}
               <label className="block mb-1">Description</label>
               <textarea
+                value={description}
+                onChange={(e) => setDescription(e.target.value)}
                 placeholder="Enter warehouse description"
                 className="w-full border border-border_color rounded px-3 py-2 mb-4 bg-primary text-textColor-primary"
                 rows={3}
+                disabled={isSubmitting}
               />
 
               {/* Other Form Fields */}
@@ -217,22 +269,39 @@ export default function WarehouseStorage({ initialItems, total, limit, page }) {
                 Requested Date: <span className="font-medium text-textColor-primary">{currentDate}</span>
               </div>
 
+              {/* Submit Message */}
+              {submitMessage && (
+                <div className={`text-sm mb-4 p-2 rounded ${
+                  submitMessage.includes('successfully') 
+                    ? 'bg-green-100 text-green-800 border border-green-200' 
+                    : 'bg-red-100 text-red-800 border border-red-200'
+                }`}>
+                  {submitMessage}
+                </div>
+              )}
+
               <div className="flex justify-end gap-2">
                 <button
                   type="button"
-                  onClick={() => setShowModal(false)}
+                  onClick={handleCloseModal}
                   className="px-4 py-2 bg-red text-white rounded hover:bg-red/80"
+                  disabled={isSubmitting}
                 >
                   Cancel
                 </button>
-                <button type="submit" className="px-4 py-2 bg-green text-white rounded hover:bg-green/80">
-                  Submit
+                <button 
+                  type="submit" 
+                  className="px-4 py-2 bg-green text-white rounded hover:bg-green/80 disabled:opacity-50"
+                  disabled={isSubmitting}
+                >
+                  {isSubmitting ? 'Submitting...' : 'Submit'}
                 </button>
               </div>
             </form>
           </div>
         </div>
       )}
+
       {/* Continue with Table & Pagination UI */}
       <div className="overflow-x-auto">
         <table className="w-full table-fixed border-collapse">
@@ -257,7 +326,7 @@ export default function WarehouseStorage({ initialItems, total, limit, page }) {
                       viewBox="0 0 24 24"
                       strokeWidth="1.5"
                       stroke="currentColor"
-                      className="w-3 h-3" // ⬅ Smaller size
+                      className="w-3 h-3"
                     >
                       <path
                         strokeLinecap="round"
@@ -281,7 +350,7 @@ export default function WarehouseStorage({ initialItems, total, limit, page }) {
                       viewBox="0 0 24 24"
                       strokeWidth="1.5"
                       stroke="currentColor"
-                      className="w-3 h-3" // ⬅ Smaller size
+                      className="w-3 h-3"
                     >
                       <path
                         strokeLinecap="round"
@@ -311,7 +380,7 @@ export default function WarehouseStorage({ initialItems, total, limit, page }) {
                       viewBox="0 0 24 24"
                       strokeWidth="1.5"
                       stroke="currentColor"
-                      className="w-3 h-3" // ⬅ Smaller size
+                      className="w-3 h-3"
                     >
                       <path
                         strokeLinecap="round"
@@ -335,7 +404,7 @@ export default function WarehouseStorage({ initialItems, total, limit, page }) {
                       viewBox="0 0 24 24"
                       strokeWidth="1.5"
                       stroke="currentColor"
-                      className="w-3 h-3" // ⬅ Smaller size
+                      className="w-3 h-3"
                     >
                       <path
                         strokeLinecap="round"
@@ -353,7 +422,7 @@ export default function WarehouseStorage({ initialItems, total, limit, page }) {
         </thead>
         <tbody>
           {loading
-            ? // 🔹 Skeleton Rows (10 placeholders)
+            ? // Skeleton Rows (10 placeholders)
               [...Array(10)].map((_, i) => (
                 <tr
                   key={`skeleton-${i}`}
@@ -370,7 +439,7 @@ export default function WarehouseStorage({ initialItems, total, limit, page }) {
                   )}
                 </tr>
               ))
-            : // 🔹 Actual Data Rows
+            : // Actual Data Rows
               (items || [])
                 .sort((a, b) => {
                   if (!sortOrder || !sortColumn) return 0;
@@ -425,6 +494,7 @@ export default function WarehouseStorage({ initialItems, total, limit, page }) {
         </tbody>
         </table>
       </div>
+
       {/* Pagination UI */}
       <div className="flex justify-between items-center border-t border-border_color pt-4 mt-4">
         <div>
@@ -459,4 +529,3 @@ export default function WarehouseStorage({ initialItems, total, limit, page }) {
     </div>
   );
 }
-
