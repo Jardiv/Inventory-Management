@@ -168,7 +168,7 @@ const TransferList = () => {
           console.log("Found actualItemId:", actualItemId);
         }
         
-        if (!actualItemId) {
+        if (!actualItemId) { 
           console.error("❌ No item_id found for warehouse item:", item);
           console.error("Available fields:", item ? Object.keys(item) : 'none');
         } else {
