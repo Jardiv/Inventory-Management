@@ -2,7 +2,7 @@ import React, { useState, useEffect, useCallback } from "react";
 
 export default function FilterModal({ tableType }) {
 	const [isOpen, setIsOpen] = useState(false);
-	const [type, setType] = useState(tableType); // 'stock-out' or 'stock-in'
+	const [type, setType] = useState(tableType);
 
 	// Filter states
 	const [fromDate, setFromDate] = useState("");
@@ -10,20 +10,20 @@ export default function FilterModal({ tableType }) {
 	const [minPrice, setMinPrice] = useState("");
 	const [maxPrice, setMaxPrice] = useState("");
 	const [selectedStatuses, setSelectedStatuses] = useState([]);
-	const [sourceId, setSourceId] = useState("");
+	const [warehouseId, setWarehouseId] = useState("");
+	const [supplierId, setSupplierId] = useState("");
 
 	// Data for dropdowns
-	const [sources, setSources] = useState([]);
+	const [warehouses, setWarehouses] = useState([]);
+	const [suppliers, setSuppliers] = useState([]);
 	const availableStatuses = ["Delivered", "Completed", "Pending", "Canceled"];
 
 	const toURLFormat = (dateString) => {
 		if (!dateString) return "";
 		try {
 			const d = new Date(dateString);
-			if (isNaN(d.getTime())) {
-				return "";
-			}
-			return d.toISOString().slice(0, 16); // "YYYY-MM-DDTHH:MM"
+			if (isNaN(d.getTime())) return "";
+			return d.toISOString().slice(0, 16);
 		} catch (e) {
 			console.error("Error formatting date for URL:", e);
 			return "";
@@ -32,23 +32,18 @@ export default function FilterModal({ tableType }) {
 
 	const setFiltersFromURL = useCallback(() => {
 		const params = new URLSearchParams(window.location.search);
-		console.log("-----------------------------------------------------");
-		console.log("FilterModal:: setFiltersFromURL called");
-		console.log("FilterModal:: params:", params);
-		console.log("-----------------------------------------------------");
-
 		setFromDate(params.get("startDate") || "");
 		setToDate(params.get("endDate") || "");
 		setMinPrice(params.get("minPrice") || "");
 		setMaxPrice(params.get("maxPrice") || "");
 		setSelectedStatuses(params.getAll("status"));
-		setSourceId(params.get(type === "stock-out" ? "warehouseId" : "supplierId") || "");
-	}, [type]);
+		setWarehouseId(params.get("warehouseId") || "");
+		setSupplierId(params.get("supplierId") || "");
+	}, []);
 
 	useEffect(() => {
 		const openModal = (e) => {
-			const filterType = e.detail?.type || "stock-out";
-			setType(filterType);
+			setType(e.detail?.type || "stock-out");
 			setIsOpen(true);
 		};
 		document.addEventListener("open-filter-modal", openModal);
@@ -57,17 +52,15 @@ export default function FilterModal({ tableType }) {
 
 	useEffect(() => {
 		if (isOpen) {
-			console.log("FilterModal:: useEffect called with isOpen:", isOpen);
-			
 			document.body.style.overflow = "hidden";
 			setFiltersFromURL();
 
-			// Fix the endpoint URLs and fetch the correct data
-			const endpoint = type === "stock-out" ? "/api/transactions/filter-warehouse" : "/api/transactions/filter-suppliers";
-			fetch(endpoint)
-				.then((res) => res.json())
-				.then((data) => setSources(data.data || []))
-				.catch((err) => console.error(`Failed to fetch ${type === "stock-out" ? "warehouses" : "suppliers"}`, err));
+			if (type === "stock-out" || type === "logs") {
+				fetch("/api/transactions/filter-warehouse").then(res => res.json()).then(data => setWarehouses(data.data || [])).catch(err => console.error("Failed to fetch warehouses", err));
+			}
+			if (type === "stock-in" || type === "logs") {
+				fetch("/api/transactions/filter-suppliers").then(res => res.json()).then(data => setSuppliers(data.data || [])).catch(err => console.error("Failed to fetch suppliers", err));
+			}
 		} else {
 			document.body.style.overflow = "auto";
 		}
@@ -76,180 +69,118 @@ export default function FilterModal({ tableType }) {
 	const closeModal = () => setIsOpen(false);
 
 	const handleApplyFilters = () => {
-		console.log("FilterModal:: handleApplyFilters called");
-		console.log("FilterModal:: selectedStatuses at apply:", selectedStatuses);
-
 		const params = new URLSearchParams(window.location.search);
-		const setParam = (key, value) => {
-			if (value) params.set(key, value);
-			else params.delete(key);
-		};
+		const setParam = (key, value) => value ? params.set(key, value) : params.delete(key);
 
-		// Set date range filters
 		setParam("startDate", toURLFormat(fromDate));
 		setParam("endDate", toURLFormat(toDate));
-
-		// Set price range filters
 		setParam("minPrice", minPrice);
 		setParam("maxPrice", maxPrice);
 
 		params.delete("status");
-		selectedStatuses.forEach((status) => params.append("status", status));
+		selectedStatuses.forEach(status => params.append("status", status));
 
-		// Set warehouse/supplier filter
-		const sourceParam = type === "stock-out" ? "warehouseId" : "supplierId" ;
-		
-		params.delete(sourceParam);
-		if (sourceId) params.set(sourceParam, sourceId);
+		setParam("warehouseId", warehouseId);
+		setParam("supplierId", supplierId);
 
-		// Reset to first page when applying filters
 		params.set("page", "1");
-
-		console.log("FilterModal::handleApplyFiltersL:: params:", params.toString());
-
-		// Apply the new URL
-		console.log("FilterModal::handleApplyFiltersL:: window.location.search:", window.location.search);
-		// debugger;
 		window.location.search = params.toString();
 		closeModal();
 	};
 
 	const handleClearFilters = () => {
-		// Clear all filters by removing search params
 		window.location.search = "";
 		closeModal();
 	};
 
 	if (!isOpen) return null;
 
+	const renderWarehouseFilter = () => (
+		<div className="flex flex-col gap-2">
+			<label className="text-textColor-secondary">Warehouse</label>
+			<select value={warehouseId} onChange={(e) => { setWarehouseId(e.target.value); if (e.target.value) setSupplierId(""); }} disabled={!!supplierId} className="w-full bg-background border border-border_color rounded-md p-2 text-textColor-primary focus:outline-none focus:ring-2 focus:ring-btn-primary disabled:opacity-50">
+				<option value="">All Warehouses</option>
+				{warehouses.map(source => <option key={source.id} value={source.id}>{source.name}</option>)}
+			</select>
+		</div>
+	);
+
+	const renderSupplierFilter = () => (
+		<div className="flex flex-col gap-2">
+			<label className="text-textColor-secondary">Supplier</label>
+			<select value={supplierId} onChange={(e) => { setSupplierId(e.target.value); if (e.target.value) setWarehouseId(""); }} disabled={!!warehouseId} className="w-full bg-background border border-border_color rounded-md p-2 text-textColor-primary focus:outline-none focus:ring-2 focus:ring-btn-primary disabled:opacity-50">
+				<option value="">All Suppliers</option>
+				{suppliers.map(source => <option key={source.id} value={source.id}>{source.name}</option>)}
+			</select>
+		</div>
+	);
+
 	return (
-		<div
-			className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 transition-opacity duration-300 ease-in-out"
-			onClick={closeModal}>
-			<div
-				className="bg-primary p-6 rounded-lg shadow-lg w-full max-w-xl transform transition-all duration-300 ease-in-out"
-				onClick={(e) => e.stopPropagation()}>
-				<div className="flex justify-between items-center mb-4">
-					<h2 className="text-xl font-bold text-textColor-primary">Filter Options</h2>
-					<button onClick={closeModal} className="p-2 rounded-full hover:bg-tbl-hover">
-						<svg
-							xmlns="http://www.w3.org/2000/svg"
-							fill="none"
-							viewBox="0 0 24 24"
-							strokeWidth="1.5"
-							stroke="currentColor"
-							className="w-6 h-6 text-textColor-primary">
-							<path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
-						</svg>
+		<div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60" onClick={closeModal}>
+			<div className="bg-primary p-8 rounded-xl shadow-2xl w-full max-w-2xl transform transition-all duration-300 ease-in-out" onClick={(e) => e.stopPropagation()}>
+				<div className="flex justify-between items-center mb-6">
+					<h2 className="text-2xl font-bold text-textColor-primary">Filter Options</h2>
+					<button onClick={closeModal} className="p-2 rounded-full hover:bg-tbl-hover text-textColor-secondary hover:text-textColor-primary">
+						<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth="2" stroke="currentColor" className="w-6 h-6"><path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
 					</button>
 				</div>
-				<div className="flex flex-col gap-4">
-					{/* Date Range Filter */}
-					<fieldset className="p-4 rounded-md">
-						<legend className="text-lg font-semibold text-textColor-primary px-2">Date Range</legend>
-						<div className="flex justify-center items-center gap-4 text-center ">
-							<label className="flex flex-col gap-2 text-textColor-tertiary">
-								<input
-									type="datetime-local"
-									value={fromDate}
-									onChange={(e) => setFromDate(e.target.value)}
-									className="w-full bg-background border border-border_color rounded-md p-2 text-textColor-primary focus:outline-none focus:ring-2 focus:ring-btn-primary"
-								/>
-							</label>
-							<span className="text-textColor-tertiary">To</span>
-							<label className="flex flex-col gap-2 text-textColor-tertiary">
-								<input
-									type="datetime-local"
-									value={toDate}
-									onChange={(e) => setToDate(e.target.value)}
-									className="w-full bg-background border border-border_color rounded-md p-2 text-textColor-primary focus:outline-none focus:ring-2 focus:ring-btn-primary"
-								/>
-							</label>
+				<div className="space-y-6">
+					<div className="grid grid-cols-1 gap-6">
+						<div className="flex flex-col gap-2">
+							<label className="text-textColor-secondary">Date Range</label>
+							<div className="flex items-center gap-2">
+								<input type="datetime-local" value={fromDate} onChange={(e) => setFromDate(e.target.value)} className="w-full bg-background border border-border_color rounded-md p-2 text-textColor-primary focus:outline-none focus:ring-2 focus:ring-btn-primary" />
+								<span className="text-textColor-tertiary">to</span>
+								<input type="datetime-local" value={toDate} onChange={(e) => setToDate(e.target.value)} className="w-full bg-background border border-border_color rounded-md p-2 text-textColor-primary focus:outline-none focus:ring-2 focus:ring-btn-primary" />
+							</div>
 						</div>
-					</fieldset>
-
-					{/* Price Range Filter */}
-					<fieldset className="p-4 rounded-md">
-						<legend className="text-lg font-semibold text-textColor-primary px-2">Total Price Range</legend>
-						<div className="flex items-center gap-4">
-							<input
-								type="number"
-								placeholder="Min Price"
-								value={minPrice}
-								onChange={(e) => setMinPrice(e.target.value)}
-								min="0"
-								step="0.01"
-								className="w-full bg-background border border-border_color rounded-md p-2 text-textColor-primary focus:outline-none focus:ring-2 focus:ring-btn-primary"
-							/>
-							<span className="text-textColor-tertiary">-</span>
-							<input
-								type="number"
-								placeholder="Max Price"
-								value={maxPrice}
-								onChange={(e) => setMaxPrice(e.target.value)}
-								min="0"
-								step="0.01"
-								className="w-full bg-background border border-border_color rounded-md p-2 text-textColor-primary focus:outline-none focus:ring-2 focus:ring-btn-primary"
-							/>
+						<div className="flex flex-col gap-2">
+							<label className="text-textColor-secondary">Total Price Range</label>
+							<div className="flex items-center gap-2">
+								<input type="number" placeholder="Min" value={minPrice} onChange={(e) => setMinPrice(e.target.value)} min="0" step="0.01" className="w-full bg-background border border-border_color rounded-md p-2 text-textColor-primary focus:outline-none focus:ring-2 focus:ring-btn-primary" />
+								<span className="text-textColor-tertiary">-</span>
+								<input type="number" placeholder="Max" value={maxPrice} onChange={(e) => setMaxPrice(e.target.value)} min="0" step="0.01" className="w-full bg-background border border-border_color rounded-md p-2 text-textColor-primary focus:outline-none focus:ring-2 focus:ring-btn-primary" />
+							</div>
 						</div>
-					</fieldset>
+					</div>
 
-					{/* Status Filter */}
-					<fieldset className="p-4 rounded-md">
-						<legend className="text-lg font-semibold text-textColor-primary px-2">Status</legend>
-						<div className="grid grid-cols-2 gap-2">
-							{availableStatuses.map((s) => (
-								<label key={s} className="flex items-center gap-2 cursor-pointer">
-									<input
-										type="checkbox"
-										value={s}
-										checked={selectedStatuses.includes(s)}
-										onChange={(e) => {
-											if (e.target.checked) {
-												setSelectedStatuses([...selectedStatuses, s]);
-											} else {
-												setSelectedStatuses(selectedStatuses.filter((status) => status !== s));
-											}
-										}}
-										className="accent-btn-primary"
-									/>
+					<div>
+						<label className="text-textColor-secondary">Status</label>
+						<div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-2">
+							{availableStatuses.map(s => (
+								<label key={s} className="flex items-center gap-2 cursor-pointer p-2 rounded-md hover:bg-tbl-hover">
+									<input type="checkbox" value={s} checked={selectedStatuses.includes(s)} onChange={(e) => setSelectedStatuses(e.target.checked ? [...selectedStatuses, s] : selectedStatuses.filter(status => status !== s))} className="h-4 w-4 accent-btn-primary" />
 									<span className="text-textColor-primary">{s}</span>
 								</label>
 							))}
 						</div>
-					</fieldset>
+					</div>
 
-					{/* Warehouse/Supplier Filter */}
-					<fieldset className="p-4 rounded-md">
-						<legend className="text-lg font-semibold text-textColor-primary px-2">
-							{type === "stock-out" ? "Warehouse" : "Supplier"}
-						</legend>
-						<select
-							value={sourceId}
-							onChange={(e) => setSourceId(e.target.value)}
-							className="w-full bg-background border border-border_color rounded-md p-2 text-textColor-primary focus:outline-none focus:ring-2 focus:ring-btn-primary">
-							<option value="">All {type === "stock-out" ? "Warehouses" : "Suppliers"}</option>
-							{sources.map((source) => (
-								<option key={source.id} value={source.id}>
-									{source.name}
-								</option>
-							))}
-						</select>
-					</fieldset>
+					{type === "logs" && (
+						<div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-4 border-t border-border_color">
+							{renderWarehouseFilter()}
+							{renderSupplierFilter()}
+						</div>
+					)}
+					{type === "stock-out" && renderWarehouseFilter()}
+					{type === "stock-in" && renderSupplierFilter()}
 				</div>
 
-				{/* Action Buttons */}
-				<div className="flex justify-end gap-4 mt-6">
-					<button onClick={handleClearFilters} className="px-4 py-2 rounded-md text-textColor-primary hover:bg-tbl-hover transition-colors">
+				<div className="flex justify-end gap-4 mt-8">
+					<button onClick={handleClearFilters} className="px-6 py-2 rounded-lg text-textColor-primary bg-tbl-hover hover:bg-border_color transition-colors font-semibold">
 						Clear Filters
 					</button>
-					<button
-						onClick={handleApplyFilters}
-						className="px-4 py-2 rounded-md bg-btn-primary text-white hover:bg-btn-hover transition-colors">
+					<button onClick={handleApplyFilters} className="px-6 py-2 rounded-lg bg-btn-primary text-white hover:bg-btn-hover transition-colors font-semibold">
 						Apply Filters
 					</button>
 				</div>
 			</div>
+			
 		</div>
+
+		
 	);
 }
+
+
+

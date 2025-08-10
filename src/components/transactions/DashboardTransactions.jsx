@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from "react";
-import Warehouse from "../../pages/reports/Warehouse.astro";
 
 export default function DashboardTransactions() {
 	const [transactions, setTransactions] = useState([]);

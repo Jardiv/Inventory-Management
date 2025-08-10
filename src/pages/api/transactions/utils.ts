@@ -68,22 +68,22 @@ export function getUrlParams(request: Request) {
         supplierId: url.searchParams.get("supplierId"),
 		statuses: url.searchParams.getAll("status")
     };
-	console.log("=====================================================");
-	console.log("getUrlParams:: called", request.url);
-	console.log("getUrlParams:: data:", data);
-	console.log("getUrlParams:: limit:", data.limit);
-	console.log("getUrlParams:: offset:", data.offset);
-	console.log("getUrlParams:: sortBy:", data.sortBy);
-	console.log("getUrlParams:: sortOrder:", data.sortOrder);
-	console.log("getUrlParams:: startDate:", data.startDate);
-	console.log("getUrlParams:: endDate:", data.endDate);
-	console.log("getUrlParams:: search:", data.search);
-	console.log("getUrlParams:: minPrice:", data.minPrice);
-	console.log("getUrlParams:: maxPrice:", data.maxPrice);
-	console.log("getUrlParams:: warehouseId:", data.warehouseId);
-	console.log("getUrlParams:: supplierId:", data.supplierId);
-	console.log("getUrlParams:: statuses:", data.statuses);
-	console.log("=====================================================");
+	// console.log("=====================================================");
+	// console.log("getUrlParams:: called", request.url);
+	// console.log("getUrlParams:: data:", data);
+	// console.log("getUrlParams:: limit:", data.limit);
+	// console.log("getUrlParams:: offset:", data.offset);
+	// console.log("getUrlParams:: sortBy:", data.sortBy);
+	// console.log("getUrlParams:: sortOrder:", data.sortOrder);
+	// console.log("getUrlParams:: startDate:", data.startDate);
+	// console.log("getUrlParams:: endDate:", data.endDate);
+	// console.log("getUrlParams:: search:", data.search);
+	// console.log("getUrlParams:: minPrice:", data.minPrice);
+	// console.log("getUrlParams:: maxPrice:", data.maxPrice);
+	// console.log("getUrlParams:: warehouseId:", data.warehouseId);
+	// console.log("getUrlParams:: supplierId:", data.supplierId);
+	// console.log("getUrlParams:: statuses:", data.statuses);
+	// console.log("=====================================================");
 	
 	return data;
 }

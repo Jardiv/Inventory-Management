@@ -1,10 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import TransactionsTable from './TransactionsTable';
 
-const availableStatuses = ["Received", "Pending", "Canceled"];
-
 export default function StockInTable(props) {
     const [statusFilters, setStatusFilters] = useState([]);
+    const [priceRange, setPriceRange] = useState({ minPrice: "", maxPrice: "" });
 
     useEffect(() => {
         if (typeof window !== 'undefined') {
@@ -15,6 +14,10 @@ export default function StockInTable(props) {
             } else {
                 setStatusFilters([]); // Clear if no statuses in URL
             }
+            setPriceRange({
+                minPrice: params.get("minPrice") || "",
+                maxPrice: params.get("maxPrice") || ""
+            });
         }
     }, [typeof window !== 'undefined' ? window.location.search : null]); // Conditional dependency
 
@@ -49,5 +52,5 @@ export default function StockInTable(props) {
         }
     ];
 
-    return <TransactionsTable {...props} columns={columns} direction="in" statusFilters={statusFilters} />;
+    return <TransactionsTable {...props} columns={columns} direction="in" statusFilters={statusFilters} priceRange={priceRange} />;
 }

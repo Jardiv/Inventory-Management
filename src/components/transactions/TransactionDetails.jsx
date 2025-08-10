@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { jsPDF } from "jspdf";
-import autoTable from "jspdf-autotable"; // default import, not just "import 'jspdf-autotable'"
+import autoTable from "jspdf-autotable"; 
 
 const tdStyle = "bg-background px-4 py-2 max-h-[20px]";
 const thStyle = "px-3 py-1";

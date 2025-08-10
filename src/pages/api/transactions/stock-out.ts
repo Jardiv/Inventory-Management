@@ -7,20 +7,20 @@ export async function GET({ request }: APIContext) {
 	const { limit, offset, sortBy, sortOrder, startDate, endDate, maxPrice, minPrice, warehouseId , statuses } = getUrlParams(request);
 	// Get filter parameters
 	// const statuses = url.searchParams.getAll("status");
-	console.log("=====================================================");
-	console.log("stock-out:: GET called");
-	console.log("stock-out:: url:", url.searchParams.toString());
-	console.log("stock-out:: limit:", limit);
-	console.log("stock-out:: offset:", offset);
-	console.log("stock-out:: sortBy:", sortBy);
-	console.log("stock-out:: sortOrder:", sortOrder);
-	console.log("stock-out:: startDate:", startDate);
-	console.log("stock-out:: endDate:", endDate);
-	console.log("stock-out:: statuses:", statuses);
-	console.log("stock-out:: warehouseId:", warehouseId);
-	console.log("stock-out:: minPrice:", minPrice);
-	console.log("stock-out:: maxPrice:", maxPrice);
-	console.log("=====================================================");
+	// console.log("=====================================================");
+	// console.log("stock-out:: GET called");
+	// console.log("stock-out:: url:", url.searchParams.toString());
+	// console.log("stock-out:: limit:", limit);
+	// console.log("stock-out:: offset:", offset);
+	// console.log("stock-out:: sortBy:", sortBy);
+	// console.log("stock-out:: sortOrder:", sortOrder);
+	// console.log("stock-out:: startDate:", startDate);
+	// console.log("stock-out:: endDate:", endDate);
+	// console.log("stock-out:: statuses:", statuses);
+	// console.log("stock-out:: warehouseId:", warehouseId);
+	// console.log("stock-out:: minPrice:", minPrice);
+	// console.log("stock-out:: maxPrice:", maxPrice);
+	// console.log("=====================================================");
 	
 	
 	// COUNT QUERY
@@ -96,7 +96,9 @@ export async function GET({ request }: APIContext) {
 		query = query.eq("stock_out.warehouse_id", parseInt(warehouseId));
 	}
 
-	query = query.order(sortBy, { ascending: sortOrder === "asc" });
+	const validSortBy = ["invoice_no", "transaction_datetime", "total_price", "total_quantity", "status"];
+	const sortColumn = validSortBy.includes(sortBy) ? sortBy : "transaction_datetime";
+	query = query.order(sortColumn, { ascending: sortOrder === "asc" });
 	query = query.range(offset, offset + limit - 1);
 	
 	let { data, error: queryError } = await query;

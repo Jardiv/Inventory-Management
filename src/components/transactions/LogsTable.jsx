@@ -7,6 +7,7 @@ export default function LogsTable(props) {
     const [statusFilters, setStatusFilters] = useState([]);
     const [warehouseId, setWarehouseId] = useState("");
     const [supplierId, setSupplierId] = useState("");
+    const [priceRange, setPriceRange] = useState({ minPrice: "", maxPrice: "" });
 
     useEffect(() => {
         if (typeof window !== 'undefined') {
@@ -19,6 +20,10 @@ export default function LogsTable(props) {
             }
             setWarehouseId(params.get("warehouseId") || "");
             setSupplierId(params.get("supplierId") || "");
+            setPriceRange({
+                minPrice: params.get("minPrice") || "",
+                maxPrice: params.get("maxPrice") || ""
+            });
         }
     }, [typeof window !== 'undefined' ? window.location.search : null]);
 
@@ -54,5 +59,5 @@ export default function LogsTable(props) {
         },
     ];
 
-    return <TransactionsTable {...props} columns={columns} statusFilters={statusFilters} searchTerm={props.searchTerm} warehouseId={warehouseId} supplierId={supplierId} />;
+    return <TransactionsTable {...props} columns={columns} statusFilters={statusFilters} searchTerm={props.searchTerm} warehouseId={warehouseId} supplierId={supplierId} priceRange={priceRange} />;
 }

@@ -13,7 +13,8 @@ export default function TransactionsTable({
 	currentPage = 1,
 	itemsPerPage = 10,
 	statusFilters = [],
-	searchTerm = ''
+	searchTerm = '',
+    priceRange: initialPriceRange = { minPrice: "", maxPrice: "" }
 }) {
 	const [transactions, setTransactions] = useState([]);
 	const [loading, setLoading] = useState(true);
@@ -26,7 +27,7 @@ export default function TransactionsTable({
 	});
 	const [sortConfig, setSortConfig] = useState({ key: "transaction_datetime", direction: "desc" });
 	const [dateRange, setDateRange] = useState({ startDate: "", endDate: "" });
-	const [priceRange, setPriceRange] = useState({ minPrice: "", maxPrice: "" });
+	const [priceRange, setPriceRange] = useState(initialPriceRange);
 	const [clientCurrentPage, setClientCurrentPage] = useState(parseInt(currentPage, 10) || 1);
 
 	const tableLimit = showPagination ? itemsPerPage : parseInt(limit) || 10;
@@ -39,13 +40,7 @@ export default function TransactionsTable({
 		return () => document.removeEventListener("dateRangeChanged", handleDateChange);
 	}, []);
 
-	useEffect(() => {
-		const hadnlePriceChange = (event) => {
-			setPriceRange(event.detail);
-		};
-		document.addEventListener("priceRangeChanged", hadnlePriceChange);
-		return () => document.removeEventListener("priceRangeChanged", hadnlePriceChange);
-	}, []);
+	
 
 	useEffect(() => {
 		const params = new URLSearchParams(window.location.search);
@@ -57,8 +52,6 @@ export default function TransactionsTable({
 		const sortOrder = params.get("sortOrder");
 		const startDate = params.get("startDate");
 		const endDate = params.get("endDate");
-		const minPrice = params.get("minPrice");
-		const maxPrice = params.get("maxPrice");
 
 		console.log("TransactionsTable:: useEffect called");
 		console.log("TransactionsTable:: params:", params);
@@ -66,8 +59,6 @@ export default function TransactionsTable({
 		console.log("TransactionsTable:: sortOrder:", sortOrder);
 		console.log("TransactionsTable:: startDate:", startDate);
 		console.log("TransactionsTable:: endDate:", endDate);
-		console.log("TransactionsTable:: minPrice:", minPrice);
-		console.log("TransactionsTable:: maxPrice:", maxPrice);
 		
 
 		if (sortBy && sortOrder) {
@@ -78,14 +69,12 @@ export default function TransactionsTable({
 			setDateRange({ startDate: startDate || "", endDate: endDate || "" });
 		}
 
-		if (minPrice || maxPrice) {
-			console.log("TransactionsTable:: setPriceRange called");
-			console.log("TransactionsTable:: useEffect minPrice:", minPrice);
-			console.log("TransactionsTable:: useEffect maxPrice:", maxPrice);
-			
-			setPriceRange({ minPrice: minPrice || 0, maxPrice: maxPrice || null });
-		}
+		
 	}, []);
+
+	useEffect(() => {
+		setPriceRange(initialPriceRange);
+	}, [initialPriceRange]);
 
 	useEffect(() => {
 		const controller = new AbortController();

@@ -68,7 +68,9 @@ export async function GET({ request }: APIContext) {
 		query = query.eq("stock_in.supplier_id", parseInt(supplierId));
 	}
 	
-	query = query.order(sortBy, { ascending: sortOrder === "asc" });
+	const validSortBy = ["invoice_no", "transaction_datetime", "total_price", "total_quantity", "status"];
+	const sortColumn = validSortBy.includes(sortBy) ? sortBy : "transaction_datetime";
+	query = query.order(sortColumn, { ascending: sortOrder === "asc" });
 	query = query.range(offset, offset + limit - 1);
 	let { data, error: queryError } = await query;
 
