@@ -117,11 +117,12 @@ export default function ProductInventoryPreview({ limit = 10, hidePageNumbers = 
   return (
     <div>
       {/* Table Headers */}
-      <div className="grid grid-cols-5 items-center bg-primary text-sm font-semibold px-3 py-3 border-b border-border_color rounded-t text-textColor-primary">
+      <div className="grid grid-cols-6 items-center bg-primary text-sm font-semibold px-3 py-3 border-b border-border_color rounded-t text-textColor-primary">
         <span>SKU</span>
         <span>Name</span>
         <span>Category</span>
         <span>Created At</span>
+        <span>Unit Price</span>
         <span className="text-center">Status</span>
       </div>
 
@@ -136,13 +137,14 @@ export default function ProductInventoryPreview({ limit = 10, hidePageNumbers = 
           return (
             <div
               key={item.id}
-              className="grid grid-cols-5 items-center border-b px-3 py-3 text-sm hover:bg-btn-hover rounded transition cursor-pointer"
+              className="grid grid-cols-6 items-center border-b px-3 py-3 text-sm hover:bg-btn-hover rounded transition cursor-pointer"
               onClick={() => handleRowClick(item)}
             >
               <span>{item.sku}</span>
               <span>{item.name}</span>
               <span>{item.category?.name || "—"}</span>
               <span>{item.added_items?.created_at ? new Date(item.added_items.created_at).toLocaleDateString() : "—"}</span>
+              <span>₱{item.unit_price?.toLocaleString()}</span>
               <span
                 className={`flex justify-center items-center px-4 py-1 rounded-md text-sm font-semibold ${getStatusStyle(
                   status

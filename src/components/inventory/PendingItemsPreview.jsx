@@ -128,14 +128,14 @@ export default function PendingItemsPreview({ limit = 10, paginated = true }) {
 
           {/* Status Filter */}
           <select
-            className="p-2 rounded border text-black"
+            className="p-2 rounded border text-textColor-primary"
             value={statusFilter}
             onChange={(e) => {
               setPage(1);
               setStatusFilter(e.target.value);
             }}
             aria-label="Filter by status"
-            disabled={sortBy === "recently_added"} // disable filter when sorting recently_added
+            enabled={sortBy === "recently_added"} // disable filter when sorting recently_added
           >
             <option value="All">All</option>
             <option value="Pending">Pending</option>
@@ -144,7 +144,7 @@ export default function PendingItemsPreview({ limit = 10, paginated = true }) {
 
           {/* Sort By Filter */}
           <select
-            className="p-2 rounded border text-black"
+            className="p-2 rounded border text-textColor-primary"
             value={sortBy}
             onChange={(e) => {
               setPage(1);
