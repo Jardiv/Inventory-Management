@@ -1,13 +1,16 @@
 ---
 import Layout from '../layouts/Layout.astro';
 import DashboardTransactions from '../components/transactions/DashboardTransactions.jsx';
+import DashboardTransferTable from '../components/tracking/DashboardTransferTable.jsx';
 ---
 
 <!-- DASHBOARD -->
 <Layout>
     <div class=" h-full grid grid-cols-5 grid-rows-5 gap-4">
         <div class="bg-primary col-span-2 row-span-3"></div>
-        <div class="bg-primary col-span-3 row-span-2"></div>
+        <div class="bg-primary col-span-3 row-span-2 overflow-auto">
+            <DashboardTransferTable client:load />
+        </div>
         <div class="bg-primary col-span-3 row-span-4"></div>
         <div class="bg-primary overflow-auto col-span-2 row-span-2 ">
             <DashboardTransactions client:load />
