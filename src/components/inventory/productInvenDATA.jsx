@@ -80,7 +80,7 @@ export default function ProductInventoryPreview({ limit = 10, hidePageNumbers = 
       <button
         key={1}
         onClick={() => setPage(1)}
-        className={`px-2 py-1 rounded hover:bg-primary ${page === 1 ? "bg-primary font-bold" : ""}`}
+        className={`px-2 py-1 rounded hover:bg-[var(--color-tbl-hover)] ${page === 1 ? "bg-[var(--color-tbl-hover)] font-bold" : ""}`}
       >
         1
       </button>
@@ -88,7 +88,7 @@ export default function ProductInventoryPreview({ limit = 10, hidePageNumbers = 
     if (page > 3) buttons.push(<span key="start-ellipsis">...</span>);
     if (page > 1 && page < totalPages) {
       buttons.push(
-        <button key={page} onClick={() => setPage(page)} className="px-2 py-1 rounded bg-gray-300 font-bold">
+        <button key={page} onClick={() => setPage(page)} className="px-2 py-1 rounded bg-[var(--color-tbl-hover)] font-bold">
           {page}
         </button>
       );
@@ -99,7 +99,7 @@ export default function ProductInventoryPreview({ limit = 10, hidePageNumbers = 
         <button
           key={totalPages}
           onClick={() => setPage(totalPages)}
-          className={`px-2 py-1 rounded hover:bg-gray-200 ${page === totalPages ? "bg-gray-300 font-bold" : ""}`}
+          className={`px-2 py-1 rounded hover:bg-[var(--color-tbl-hover)] ${page === totalPages ? "bg-[var(--color-tbl-hover)] font-bold" : ""}`}
         >
           {totalPages}
         </button>
@@ -115,9 +115,9 @@ export default function ProductInventoryPreview({ limit = 10, hidePageNumbers = 
   };
 
   return (
-    <div>
+    <div className="w-full bg-primary rounded-md text-textColor-primary font-[Poppins]">
       {/* Table Headers */}
-      <div className="grid grid-cols-6 items-center bg-primary text-sm font-semibold px-3 py-3 border-b border-border_color rounded-t text-textColor-primary">
+      <div className="grid grid-cols-6 items-center text-sm font-semibold px-3 py-3 border-b border-border_color rounded-t">
         <span>SKU</span>
         <span>Name</span>
         <span>Category</span>
@@ -137,7 +137,7 @@ export default function ProductInventoryPreview({ limit = 10, hidePageNumbers = 
           return (
             <div
               key={item.id}
-              className="grid grid-cols-6 items-center border-b px-3 py-3 text-sm hover:bg-btn-hover rounded transition cursor-pointer"
+              className="grid grid-cols-6 items-center border-b px-3 py-3 text-sm cursor-pointer transition hover:bg-[var(--color-tbl-hover)]"
               onClick={() => handleRowClick(item)}
             >
               <span>{item.sku}</span>
@@ -159,16 +159,24 @@ export default function ProductInventoryPreview({ limit = 10, hidePageNumbers = 
 
       {/* Pagination Footer */}
       {paginated && totalPages > 1 && (
-        <div className="flex items-center justify-between mt-4 text-sm">
+        <div className="flex items-center justify-between mt-4 px-3 text-sm">
           <div>
             Showing {(page - 1) * limit + 1}-{Math.min(page * limit, total)} of {total} items
           </div>
           <div className="flex items-center gap-1">
-            <button onClick={() => setPage((p) => Math.max(p - 1, 1))} disabled={page === 1}>
+            <button
+              onClick={() => setPage((p) => Math.max(p - 1, 1))}
+              disabled={page === 1}
+              className="px-2 py-1 rounded"
+            >
               &lt;
             </button>
             {!hidePageNumbers && renderPageButtons()}
-            <button onClick={() => setPage((p) => Math.min(p + 1, totalPages))} disabled={page === totalPages}>
+            <button
+              onClick={() => setPage((p) => Math.min(p + 1, totalPages))}
+              disabled={page === totalPages}
+              className="px-2 py-1 rounded"
+            >
               &gt;
             </button>
           </div>
