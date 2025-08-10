@@ -46,9 +46,9 @@ export default function ProductInventoryPreview({ limit = 10, hidePageNumbers = 
         id,
         sku,
         name,
-        unit_price,
         min_quantity,
         max_quantity,
+        unit_price,
         category ( name ),
         added_items!inner ( status, created_at )
       `)
@@ -117,13 +117,10 @@ export default function ProductInventoryPreview({ limit = 10, hidePageNumbers = 
   return (
     <div>
       {/* Table Headers */}
-      <div className="grid grid-cols-8 items-center bg-primary text-sm font-semibold px-3 py-3 border-b border-border_color rounded-t text-textColor-primary">
+      <div className="grid grid-cols-5 items-center bg-primary text-sm font-semibold px-3 py-3 border-b border-border_color rounded-t text-textColor-primary">
         <span>SKU</span>
         <span>Name</span>
         <span>Category</span>
-        <span>Min Qty</span>
-        <span>Max Qty</span>
-        <span>Unit Price</span>
         <span>Created At</span>
         <span className="text-center">Status</span>
       </div>
@@ -139,15 +136,12 @@ export default function ProductInventoryPreview({ limit = 10, hidePageNumbers = 
           return (
             <div
               key={item.id}
-              className="grid grid-cols-8 items-center border-b px-3 py-3 text-sm hover:bg-btn-hover rounded transition cursor-pointer"
+              className="grid grid-cols-5 items-center border-b px-3 py-3 text-sm hover:bg-btn-hover rounded transition cursor-pointer"
               onClick={() => handleRowClick(item)}
             >
               <span>{item.sku}</span>
               <span>{item.name}</span>
               <span>{item.category?.name || "—"}</span>
-              <span>{item.min_quantity}</span>
-              <span>{item.max_quantity}</span>
-              <span>₱{item.unit_price?.toFixed(2)}</span>
               <span>{item.added_items?.created_at ? new Date(item.added_items.created_at).toLocaleDateString() : "—"}</span>
               <span
                 className={`flex justify-center items-center px-4 py-1 rounded-md text-sm font-semibold ${getStatusStyle(
@@ -184,7 +178,7 @@ export default function ProductInventoryPreview({ limit = 10, hidePageNumbers = 
         <ProductOverviewModal
           product={selectedProduct}
           onClose={() => setShowModal(false)}
-          onUpdated={fetchProducts} // Pass refresh function here
+          onUpdated={fetchProducts}
         />
       )}
     </div>

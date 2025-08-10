@@ -7,6 +7,7 @@ export default function PendingItemsPreview({ limit = 10, paginated = true }) {
   const [page, setPage] = useState(1);
   const [total, setTotal] = useState(0);
   const [statusFilter, setStatusFilter] = useState("All");
+  const [sortBy, setSortBy] = useState("order"); // default sorting by order (id ascending)
 
   useEffect(() => {
     async function fetchItems() {
@@ -14,15 +15,33 @@ export default function PendingItemsPreview({ limit = 10, paginated = true }) {
       const from = (page - 1) * limit;
       const to = from + limit - 1;
 
-      let query = supabase
-        .from("added_items")
-        .select("*", { count: "exact" })
-        .order("id", { ascending: true });  // Order by id ascending only
+      let query = supabase.from("added_items").select("*", { count: "exact" });
 
-      if (statusFilter !== "All") {
+      // Exclude Completed items
+      query = query.neq("status", "Completed");
+
+      // Apply status filter logic
+      if (sortBy === "recently_added") {
+        if (statusFilter === "All") {
+          query = query.eq("status", "Pending"); // Only force Pending when All is selected
+        } else {
+          query = query.eq("status", statusFilter); // Respect dropdown choice
+        }
+      } else if (statusFilter !== "All") {
         query = query.eq("status", statusFilter);
       }
-      if (paginated) query = query.range(from, to);
+
+      // Apply sorting
+      if (sortBy === "recently_added") {
+        query = query.order("id", { ascending: false }); // Newest first by ID
+      } else if (sortBy === "order") {
+        query = query.order("id", { ascending: true }); // Oldest first by ID
+      }
+
+      // Apply pagination if enabled
+      if (paginated) {
+        query = query.range(from, to);
+      }
 
       const { data, error, count } = await query;
       if (error) {
@@ -34,16 +53,80 @@ export default function PendingItemsPreview({ limit = 10, paginated = true }) {
       setLoading(false);
     }
     fetchItems();
-  }, [page, statusFilter, limit, paginated]);
+  }, [page, statusFilter, sortBy, limit, paginated]);
 
   const totalPages = Math.ceil(total / limit);
 
+  const renderPageButtons = () => {
+    const buttons = [];
+    buttons.push(
+      <button
+        key={1}
+        onClick={() => setPage(1)}
+        className={`px-2 py-1 rounded transition-colors duration-200 ${
+          page === 1
+            ? "font-bold text-white"
+            : "hover:bg-[var(--color-btn-hover)]"
+        }`}
+        style={{
+          backgroundColor:
+            page === 1 ? "var(--color-btn-hover)" : "transparent",
+        }}
+      >
+        1
+      </button>
+    );
+    if (page > 3) buttons.push(<span key="start-ellipsis">...</span>);
+    if (page > 1 && page < totalPages) {
+      buttons.push(
+        <button
+          key={page}
+          onClick={() => setPage(page)}
+          className={`px-2 py-1 rounded transition-colors duration-200 ${
+            page === page
+              ? "font-bold text-white"
+              : "hover:bg-[var(--color-btn-hover)]"
+          }`}
+          style={{
+            backgroundColor:
+              page === page ? "var(--color-btn-hover)" : "transparent",
+          }}
+        >
+          {page}
+        </button>
+      );
+    }
+    if (page < totalPages - 2) buttons.push(<span key="end-ellipsis">...</span>);
+    if (totalPages > 1) {
+      buttons.push(
+        <button
+          key={totalPages}
+          onClick={() => setPage(totalPages)}
+          className={`px-2 py-1 rounded transition-colors duration-200 ${
+            page === totalPages
+              ? "font-bold text-white"
+              : "hover:bg-[var(--color-btn-hover)]"
+          }`}
+          style={{
+            backgroundColor:
+              page === totalPages ? "var(--color-btn-hover)" : "transparent",
+          }}
+        >
+          {totalPages}
+        </button>
+      );
+    }
+    return buttons;
+  };
+
   return (
     <div>
-      {/* Header: Title + Filter + Back Button */}
+      {/* Header: Title + Filters + Back Button */}
       <div className="flex items-center justify-between mb-6 relative z-10">
         <div className="flex items-center gap-4">
           <h2 className="text-xl font-semibold">Pending Products</h2>
+
+          {/* Status Filter */}
           <select
             className="p-2 rounded border text-black"
             value={statusFilter}
@@ -51,10 +134,26 @@ export default function PendingItemsPreview({ limit = 10, paginated = true }) {
               setPage(1);
               setStatusFilter(e.target.value);
             }}
+            aria-label="Filter by status"
+            disabled={sortBy === "recently_added"} // disable filter when sorting recently_added
           >
             <option value="All">All</option>
             <option value="Pending">Pending</option>
-            <option value="Canceled">Canceled</option> {/* Fixed spelling */}
+            <option value="Canceled">Canceled</option>
+          </select>
+
+          {/* Sort By Filter */}
+          <select
+            className="p-2 rounded border text-black"
+            value={sortBy}
+            onChange={(e) => {
+              setPage(1);
+              setSortBy(e.target.value);
+            }}
+            aria-label="Sort items"
+          >
+            <option value="order">Sort by Order (ID Asc)</option>
+            <option value="recently_added">Sort by Recently Added</option>
           </select>
         </div>
 
@@ -108,19 +207,19 @@ export default function PendingItemsPreview({ limit = 10, paginated = true }) {
 
       {/* Pagination */}
       {paginated && totalPages > 1 && (
-        <div className="flex justify-center mt-4 space-x-2">
-          <button onClick={() => setPage((prev) => Math.max(prev - 1, 1))} disabled={page === 1}>
-            Prev
-          </button>
-          <span>
-            Page {page} of {totalPages}
-          </span>
-          <button
-            onClick={() => setPage((prev) => Math.min(prev + 1, totalPages))}
-            disabled={page === totalPages}
-          >
-            Next
-          </button>
+        <div className="flex items-center justify-between mt-4 text-sm">
+          <div>
+            Showing {(page - 1) * limit + 1}-{Math.min(page * limit, total)} of {total} items
+          </div>
+          <div className="flex items-center gap-1">
+            <button onClick={() => setPage((p) => Math.max(p - 1, 1))} disabled={page === 1}>
+              &lt;
+            </button>
+            {renderPageButtons()}
+            <button onClick={() => setPage((p) => Math.min(p + 1, totalPages))} disabled={page === totalPages}>
+              &gt;
+            </button>
+          </div>
         </div>
       )}
     </div>
