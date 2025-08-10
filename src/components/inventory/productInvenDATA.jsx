@@ -1,6 +1,19 @@
 import { useEffect, useState } from "react";
 import { supabase } from "../../utils/supabaseClient";
-import ProductOverviewModal from "./ProductOverviewModal.jsx"; // 👈 Updated import
+import ProductOverviewModal from "./ProductOverviewModal.jsx";
+
+const getStatusStyle = (status) => {
+  switch (status) {
+    case "Normal":
+      return "text-green bg-green/10";
+    case "Low Stock":
+      return "text-orange bg-orange/10";
+    case "Out of Stock":
+      return "text-red bg-red/10";
+    default:
+      return "text-textColor-tertiary bg-textColor-tertiary/10";
+  }
+};
 
 export default function ProductInventoryPreview({ limit = 10, hidePageNumbers = false }) {
   const [products, setProducts] = useState([]);
@@ -14,45 +27,45 @@ export default function ProductInventoryPreview({ limit = 10, hidePageNumbers = 
 
   const totalPages = Math.ceil(total / limit);
 
-  useEffect(() => {
-    async function fetchProducts() {
-      setLoading(true);
+  async function fetchProducts() {
+    setLoading(true);
 
-      const { count } = await supabase
-        .from("items")
-        .select("id, added_items!inner(status)", { count: "exact", head: true })
-        .eq("added_items.status", "Completed");
+    const { count } = await supabase
+      .from("items")
+      .select("id, added_items!inner(status)", { count: "exact", head: true })
+      .eq("added_items.status", "Completed");
 
-      setTotal(count || 0);
+    setTotal(count || 0);
 
-      const from = (page - 1) * limit;
-      const to = from + limit - 1;
+    const from = (page - 1) * limit;
+    const to = from + limit - 1;
 
-      const { data, error } = await supabase
-        .from("items")
-        .select(`
-          id,
-          sku,
-          name,
-          unit_price,
-          min_quantity,
-          max_quantity,
-          category ( name ),
-          added_items!inner ( status, created_at )
-        `)
-        .eq("added_items.status", "Completed")
-        .order("id", { ascending: true })
-        .range(from, to);
+    const { data, error } = await supabase
+      .from("items")
+      .select(`
+        id,
+        sku,
+        name,
+        min_quantity,
+        max_quantity,
+        unit_price,
+        category ( name ),
+        added_items!inner ( status, created_at )
+      `)
+      .eq("added_items.status", "Completed")
+      .order("id", { ascending: true })
+      .range(from, to);
 
-      if (!error) {
-        setProducts(data);
-      } else {
-        console.error(error);
-      }
-
-      setLoading(false);
+    if (!error) {
+      setProducts(data);
+    } else {
+      console.error(error);
     }
 
+    setLoading(false);
+  }
+
+  useEffect(() => {
     fetchProducts();
   }, [limit, page]);
 
@@ -75,11 +88,7 @@ export default function ProductInventoryPreview({ limit = 10, hidePageNumbers = 
     if (page > 3) buttons.push(<span key="start-ellipsis">...</span>);
     if (page > 1 && page < totalPages) {
       buttons.push(
-        <button
-          key={page}
-          onClick={() => setPage(page)}
-          className="px-2 py-1 rounded bg-gray-300 font-bold"
-        >
+        <button key={page} onClick={() => setPage(page)} className="px-2 py-1 rounded bg-gray-300 font-bold">
           {page}
         </button>
       );
@@ -99,18 +108,21 @@ export default function ProductInventoryPreview({ limit = 10, hidePageNumbers = 
     return buttons;
   };
 
+  const getStatusLabel = (item) => {
+    if (item.max_quantity > item.min_quantity) return "Normal";
+    if (item.max_quantity > 0 && item.max_quantity <= item.min_quantity) return "Low Stock";
+    return "Out of Stock";
+  };
+
   return (
     <div>
       {/* Table Headers */}
-      <div className="grid grid-cols-8 items-center bg-primary text-sm font-semibold px-3 py-3 border-b border-border_color rounded-t text-texctColor-primary">
+      <div className="grid grid-cols-5 items-center bg-primary text-sm font-semibold px-3 py-3 border-b border-border_color rounded-t text-textColor-primary">
         <span>SKU</span>
         <span>Name</span>
         <span>Category</span>
-        <span>Status</span>
-        <span>Min Qty</span>
-        <span>Max Qty</span>
-        <span>Unit Price</span>
         <span>Created At</span>
+        <span className="text-center">Status</span>
       </div>
 
       {/* Table Rows */}
@@ -119,22 +131,28 @@ export default function ProductInventoryPreview({ limit = 10, hidePageNumbers = 
       ) : products.length === 0 ? (
         <p className="px-3 py-4">No products found.</p>
       ) : (
-        products.map((item) => (
-          <div
-            key={item.id}
-            className="grid grid-cols-8 items-center border-b px-3 py-3 text-sm hover:bg-btn-hover rounded transition cursor-pointer"
-            onClick={() => handleRowClick(item)}
-          >
-            <span>{item.sku}</span>
-            <span>{item.name}</span>
-            <span>{item.category?.name || "—"}</span>
-            <span>{item.added_items?.status || "—"}</span>
-            <span>{item.min_quantity}</span>
-            <span>{item.max_quantity}</span>
-            <span>₱{item.unit_price?.toFixed(2)}</span>
-            <span>{item.added_items?.created_at ? new Date(item.added_items.created_at).toLocaleDateString() : "—"}</span>
-          </div>
-        ))
+        products.map((item) => {
+          const status = getStatusLabel(item);
+          return (
+            <div
+              key={item.id}
+              className="grid grid-cols-5 items-center border-b px-3 py-3 text-sm hover:bg-btn-hover rounded transition cursor-pointer"
+              onClick={() => handleRowClick(item)}
+            >
+              <span>{item.sku}</span>
+              <span>{item.name}</span>
+              <span>{item.category?.name || "—"}</span>
+              <span>{item.added_items?.created_at ? new Date(item.added_items.created_at).toLocaleDateString() : "—"}</span>
+              <span
+                className={`flex justify-center items-center px-4 py-1 rounded-md text-sm font-semibold ${getStatusStyle(
+                  status
+                )}`}
+              >
+                {status}
+              </span>
+            </div>
+          );
+        })
       )}
 
       {/* Pagination Footer */}
@@ -144,9 +162,13 @@ export default function ProductInventoryPreview({ limit = 10, hidePageNumbers = 
             Showing {(page - 1) * limit + 1}-{Math.min(page * limit, total)} of {total} items
           </div>
           <div className="flex items-center gap-1">
-            <button onClick={() => setPage((p) => Math.max(p - 1, 1))} disabled={page === 1}>&lt;</button>
+            <button onClick={() => setPage((p) => Math.max(p - 1, 1))} disabled={page === 1}>
+              &lt;
+            </button>
             {!hidePageNumbers && renderPageButtons()}
-            <button onClick={() => setPage((p) => Math.min(p + 1, totalPages))} disabled={page === totalPages}>&gt;</button>
+            <button onClick={() => setPage((p) => Math.min(p + 1, totalPages))} disabled={page === totalPages}>
+              &gt;
+            </button>
           </div>
         </div>
       )}
@@ -156,6 +178,7 @@ export default function ProductInventoryPreview({ limit = 10, hidePageNumbers = 
         <ProductOverviewModal
           product={selectedProduct}
           onClose={() => setShowModal(false)}
+          onUpdated={fetchProducts}
         />
       )}
     </div>

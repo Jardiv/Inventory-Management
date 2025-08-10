@@ -20,14 +20,14 @@ const itemsPerPage = 10;
                         </svg>
                     </button>
                     <div class="relative" id="downloadDropdownContainer">
-                        <button id="downloadDropdownBtn" class="p-2 text-textColor-primary hover:bg-btn-hover hover:text-white rounded">
+                        <button id="downloadDropdownBtn" class="p-2 text-textColor-primary hover:bg-btn-hover hover:text-white rounded" onclick="toggleWarehouseDownload(event)">
                             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5">
                                 <path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5M16.5 12 12 16.5m0 0L7.5 12m4.5 4.5V3" />
                             </svg>
                         </button>
-                        <div id="downloadDropdown" class="absolute right-0 mt-2 w-32 bg-primary border border-gray-700 rounded shadow-lg z-10 hidden">
-                            <button class="block w-full text-left px-4 py-2 text-textColor-primary hover:bg-btn-hover hover:text-white" onclick="window.dispatchEvent(new CustomEvent('downloadTable', { detail: { type: 'csv' } }))">Download CSV</button>
-                            <button class="block w-full text-left px-4 py-2 text-textColor-primary hover:bg-btn-hover hover:text-white" onclick="window.dispatchEvent(new CustomEvent('downloadTable', { detail: { type: 'pdf' } }))">Download PDF</button>
+                        <div id="downloadDropdown" class="hidden absolute right-0 mt-2 w-40 bg-background border border-border_color rounded shadow-lg z-50">
+                            <button class="w-full text-left px-4 py-2 text-textColor-primary hover:bg-btn-hover hover:text-white" onclick="window.dispatchEvent(new CustomEvent('downloadTable', { detail: { type: 'csv' } })); hideWarehouseDownload();">Download CSV</button>
+                            <button class="w-full text-left px-4 py-2 text-textColor-primary hover:bg-btn-hover hover:text-white" onclick="window.dispatchEvent(new CustomEvent('downloadTable', { detail: { type: 'pdf' } })); hideWarehouseDownload();">Download PDF</button>
                         </div>
                     </div>
                     <a href="/reports/Dashboard" class="p-2 text-textColor-primary hover:bg-btn-hover hover:text-white rounded">
@@ -88,20 +88,21 @@ const itemsPerPage = 10;
     </div>
     <script is:inline src="/scripts/reports/warehouse.js"></script>
     <script is:inline>
-        // Dropdown logic for download button
-        const dropdownBtn = document.getElementById('downloadDropdownBtn');
-        const dropdown = document.getElementById('downloadDropdown');
-        if (dropdownBtn && dropdown) {
-            dropdownBtn.addEventListener('click', (e) => {
-                e.stopPropagation();
-                dropdown.classList.toggle('hidden');
-            });
-            document.addEventListener('click', (e) => {
-                if (!dropdown.contains(e.target) && e.target !== dropdownBtn) {
-                    dropdown.classList.add('hidden');
-                }
-            });
+        function toggleWarehouseDownload(e) {
+            e.stopPropagation();
+            const dropdown = document.getElementById('downloadDropdown');
+            dropdown.classList.toggle('hidden');
         }
+        function hideWarehouseDownload() {
+            const dropdown = document.getElementById('downloadDropdown');
+            dropdown.classList.add('hidden');
+        }
+        document.addEventListener('click', function(e) {
+            const wrapper = document.getElementById('downloadDropdownContainer');
+            if (wrapper && !wrapper.contains(e.target)) {
+                hideWarehouseDownload();
+            }
+        });
     </script>
 </Layout>
 
