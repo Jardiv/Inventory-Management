@@ -44,16 +44,44 @@ export function jsonResponse(data: unknown, status: number): Response {
 	});
 }
 
+export function toURLFormat (dateString: string): string {
+	const date = new Date(dateString);
+	const year = date.getFullYear();
+	const month = String(date.getMonth() + 1).padStart(2, '0');
+	const day = String(date.getDate()).padStart(2, '0'); 
+	return `${year}-${month}-${day}`;
+}
+
 export function getUrlParams(request: Request) {
     const url = new URL(request.url);
-	return {
+	const data = {
         limit: parseLimit(url.searchParams.get("limit")),
         offset: parseOffset(url.searchParams.get("offset")),
-        status: url.searchParams.get("status"),
         sortBy: url.searchParams.get("sortBy") || "transaction_datetime",
         sortOrder: url.searchParams.get("sortOrder") || "desc",
         startDate: url.searchParams.get("startDate"),
         endDate: url.searchParams.get("endDate"),
 		search: url.searchParams.get("search"),
+        minPrice: url.searchParams.get("minPrice"),
+        maxPrice: url.searchParams.get("maxPrice"),
+        warehouseId: url.searchParams.get("warehouseId"),
+        supplierId: url.searchParams.get("supplierId"),
     };
+	console.log("=====================================================");
+	console.log("getUrlParams:: called", request.url);
+	console.log("getUrlParams:: data:", data);
+	console.log("getUrlParams:: limit:", data.limit);
+	console.log("getUrlParams:: offset:", data.offset);
+	console.log("getUrlParams:: sortBy:", data.sortBy);
+	console.log("getUrlParams:: sortOrder:", data.sortOrder);
+	console.log("getUrlParams:: startDate:", data.startDate);
+	console.log("getUrlParams:: endDate:", data.endDate);
+	console.log("getUrlParams:: search:", data.search);
+	console.log("getUrlParams:: minPrice:", data.minPrice);
+	console.log("getUrlParams:: maxPrice:", data.maxPrice);
+	console.log("getUrlParams:: warehouseId:", data.warehouseId);
+	console.log("getUrlParams:: supplierId:", data.supplierId);
+	console.log("=====================================================");
+	
+	return data;
 }

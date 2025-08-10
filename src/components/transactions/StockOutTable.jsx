@@ -19,9 +19,10 @@ export default function StockOutTable(props) {
             render: (log) => log.total_price.toFixed(2) 
         },
         {
-            header: () => <StatusFilter availableStatuses={availableStatuses} onFilterChange={setStatusFilters} isAbleToSort={props.isAbleToSort} />, 
+            // header: () => <StatusFilter availableStatuses={availableStatuses} onFilterChange={setStatusFilters} isAbleToSort={props.isAbleToSort} />, 
+            header: 'Status',
             accessor: 'status', 
-            sortable: false, 
+            sortable: true, 
             className: 'text-center', 
             render: (log) => ( 
                 <span 
