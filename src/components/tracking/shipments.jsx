@@ -191,14 +191,14 @@ const Shipments = () => {
 
 
   return (
-    <div className="w-full max-w-[100%] bg-primary rounded-md mx-auto p-6 text-textColor-primary font-poppins">
+    <div className="w-full max-w-[100%] bg-primary rounded-md mx-auto p-6 text-textColor-primary font-sans">
       {/* Title & Buttons */}
       <div className="flex justify-between items-center mb-6">
         <h2 className="text-2xl font-semibold">Incoming Shipments</h2>
         <div className="flex gap-4">
           <button
             onClick={() => setShowModal(true)}
-            className="flex items-center gap-2 px-4 py-2 border border-transparent rounded hover:border-btn-hover hover:text-textColor-secondary transition"
+            className="flex items-center gap-2 px-4 py-2 border border-transparent rounded hover:border-btn-hover transition"
           >
             <span>Assign Items</span>
             <svg xmlns="http://www.w3.org/2000/svg" className="size-6" viewBox="0 0 24 24" fill="currentColor">
@@ -212,7 +212,7 @@ const Shipments = () => {
             <div className="relative inline-block text-center">
               <button
                 onClick={() => setShowDropdown(!showDropdown)}
-                className="bg-primary text-secondary rounded px-4 py-3 text-sm hover:text-textColor-secondary hover:bg-violet-600 w-[60px]"
+                className="bg-primary text-textColor-primary rounded px-4 py-3 text-sm hover:text-textColor-secondary hover:bg-btn-hover w-[60px]"
               >
                 <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
                   <line x1="3" y1="6" x2="21" y2="6" />
@@ -232,7 +232,7 @@ const Shipments = () => {
                           setShowDropdown(false);
                           setCurrentPage(1); // reset to first page
                         }}
-                        className="block w-full text-left px-4 py-2 hover:bg-btn-hover"
+                        className="block w-full text-left px-4 py-2 hover:bg-tbl-hover"
                       >
                         Pending
                       </button>
@@ -244,7 +244,7 @@ const Shipments = () => {
                           setShowDropdown(false);
                           setCurrentPage(1); // reset to first page
                         }}
-                        className="block w-full text-left px-4 py-2 hover:bg-btn-hover"
+                        className="block w-full text-left px-4 py-2 hover:bg-tbl-hover"
                       >
                         Delivered
                       </button>
@@ -256,7 +256,7 @@ const Shipments = () => {
                           setShowDropdown(false);
                           setCurrentPage(1); // reset to first page
                         }}
-                        className="block w-full text-left px-4 py-2 hover:bg-btn-hover"
+                        className="block w-full text-left px-4 py-2 hover:bg-tbl-hover"
                       >
                         All
                       </button>
@@ -267,7 +267,7 @@ const Shipments = () => {
             </div>
 
             <a href="/tracking/Dashboard">
-              <button className="bg-primary text-secondary rounded px-4 py-3 text-sm hover:text-textColor-secondary hover:bg-violet-600 w-[60px]">
+              <button className="bg-primary text-textColor-primary rounded px-4 py-3 text-sm hover:text-textColor-secondary hover:bg-btn-hover w-[60px]">
                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
                      strokeWidth="1.5" stroke="currentColor" className="w-5 h-5 mx-auto">
                   <path strokeLinecap="round" strokeLinejoin="round" d="M6 18 18 6M6 6l12 12" />
@@ -297,10 +297,10 @@ const Shipments = () => {
                   key={i}
                   className="grid grid-cols-4 text-center text-lg py-4 font-normal animate-pulse"
                 >
-                  <div className="mx-auto w-20 h-5 bg-gray-700 rounded"></div>
-                  <div className="mx-auto w-24 h-5 bg-gray-700 rounded"></div>
-                  <div className="mx-auto w-16 h-5 bg-gray-700 rounded"></div>
-                  <div className="mx-auto w-20 h-5 bg-gray-700 rounded"></div>
+                  <div className="mx-auto w-20 h-5 bg-textColor-tertiary/10 rounded"></div>
+                  <div className="mx-auto w-24 h-5 bg-textColor-tertiary/10 rounded"></div>
+                  <div className="mx-auto w-16 h-5 bg-textColor-tertiary/10 rounded"></div>
+                  <div className="mx-auto w-20 h-5 bg-textColor-tertiary/10 rounded"></div>
                 </div>
               ))
             ) : (
@@ -335,7 +335,7 @@ const Shipments = () => {
       </div>
 
       {/* Pagination */}
-      <div className="flex justify-between items-center border-t border-border_color pt-4 mt-4 text-sm text-gray-700">
+      <div className="flex justify-between items-center border-t border-border_color pt-4 mt-4 text-sm text-textColor-tertiary">
         <div>
           Showing <span className="font-medium">{(currentPage - 1) * itemsPerPage + 1}</span>–
           <span className="font-medium">{Math.min(currentPage * itemsPerPage, filteredShipments.length)}</span> of
@@ -345,7 +345,7 @@ const Shipments = () => {
           {currentPage > 1 && (
             <button
               onClick={() => setCurrentPage(currentPage - 1)}
-              className="px-2 py-1 hover:text-gray-700 flex items-center justify-center rounded-full"
+              className="px-2 py-1 hover:text-textColor-primary flex items-center justify-center rounded-full"
             >
               <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
@@ -365,8 +365,8 @@ const Shipments = () => {
                   onClick={() => setCurrentPage(page)}
                   className={`px-3 py-1.5 rounded-lg transition-colors duration-200 ${
                     currentPage === page
-                      ? "bg-[#8A00C4] font-medium text-white"
-                      : "hover:bg-tbl-hover hover:text-[#8A00C4] text-textColor-primary"
+                      ? "bg-btn-primary font-medium text-textColor-secondary"
+                      : "hover:bg-tbl-hover hover:text-btn-primary text-textColor-primary"
                   }`}
                 >
                   {page}
@@ -387,7 +387,7 @@ const Shipments = () => {
           {currentPage < Math.ceil(shipments.length / itemsPerPage) && (
             <button
               onClick={() => setCurrentPage(currentPage + 1)}
-              className="px-2 py-1 hover:text-gray-700 flex items-center justify-center rounded-full"
+              className="px-2 py-1 hover:text-textColor-primary flex items-center justify-center rounded-full"
             >
               <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
@@ -400,7 +400,7 @@ const Shipments = () => {
       {/* Modal */}
       {showModal && (
         <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50">
-          <div className="relative bg-[#121212] border border-[#676767] shadow-[0_4px_4px_797px_rgba(0,0,0,0.49)] rounded-lg w-[711px] h-[854px] text-white font-poppins overflow-hidden">
+          <div className="relative bg-primary border border-border_color shadow-[0_4px_4px_797px_rgba(0,0,0,0.49)] rounded-lg w-[711px] h-[854px] text-textColor-primary font-sans overflow-hidden">
             {/* Close Button */}
             <button 
               onClick={() => setShowModal(false)} 
@@ -416,7 +416,7 @@ const Shipments = () => {
             <h2 className="absolute top-5 left-7 text-2xl font-semibold">Assign Items</h2>
 
             {/* Warehouse Section */}
-            <div className="absolute top-[95px] left-10 text-white text-xl">Warehouse</div>
+            <div className="absolute top-[95px] left-10 text-textColor-primary text-xl">Warehouse</div>
             <div className="absolute top-[133px] left-[39px] w-[636px] h-[65px]">
               <div className="relative w-full h-full">
                 <select
@@ -439,7 +439,7 @@ const Shipments = () => {
                     }
                   }}
                   disabled={isAssigning}
-                  className="w-full h-full bg-[#121212] border border-white rounded-md text-white text-lg px-4 appearance-none disabled:opacity-50"
+                  className="w-full h-full bg-primary border border-border_color rounded-md text-textColor-primary text-lg px-4 appearance-none disabled:opacity-50"
                 >
                   <option value="" disabled>Select a warehouse</option>
                   {warehouses?.map((wh) => (
@@ -449,7 +449,7 @@ const Shipments = () => {
                   ))}
                 </select>
                 {/* Down Arrow Icon */}
-                <div className="pointer-events-none absolute top-1/2 right-4 transform -translate-y-1/2 text-white">
+                <div className="pointer-events-none absolute top-1/2 right-4 transform -translate-y-1/2 text-textColor-primary">
                   <svg xmlns="http://www.w3.org/2000/svg"fill="none"viewBox="0 0 24 24"strokeWidth="1.5"stroke="currentColor"className="w-4 h-4">
                     <path strokeLinecap="round"strokeLinejoin="round"d="M19 9l-7 7-7-7"/>
                   </svg>
@@ -457,7 +457,7 @@ const Shipments = () => {
               </div>
             </div>
             {/* Product Section */}
-            <div className="absolute top-[223px] left-10 text-white text-xl">Product</div>
+            <div className="absolute top-[223px] left-10 text-textColor-primary text-xl">Product</div>
             <div className="absolute top-[267px] left-[39px] w-[565px] h-[65px]">
               <div className="relative w-full h-full">
                 <select
@@ -468,7 +468,7 @@ const Shipments = () => {
                     setSelectedProducts(updated);
                   }}
                   disabled={isAssigning}
-                  className="w-full h-full bg-[#121212] border border-white rounded-md text-white text-lg px-4 appearance-none disabled:opacity-50"
+                  className="w-full h-full bg-primary border border-border_color rounded-md text-textColor-primary text-lg px-4 appearance-none disabled:opacity-50"
                 >
                   <option value="" disabled>Select a product</option>
                   {shipmentProducts.map((product, idx) => (
@@ -479,7 +479,7 @@ const Shipments = () => {
                 </select>
 
                 {/* Down arrow icon */}
-                <div className="pointer-events-none absolute top-1/2 right-4 transform -translate-y-1/2 text-white">
+                <div className="pointer-events-none absolute top-1/2 right-4 transform -translate-y-1/2 text-textColor-primary">
                   <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
                       strokeWidth="1.5" stroke="currentColor" className="w-4 h-4">
                     <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
@@ -509,7 +509,7 @@ const Shipments = () => {
                 }
               }}
               disabled={isAssigning}
-              className="absolute top-[267px] right-[25px] w-[65px] h-[65px] bg-[#029F37] rounded-md flex items-center justify-center disabled:opacity-50"
+              className="absolute top-[267px] right-[25px] w-[65px] h-[65px] bg-green rounded-md flex items-center justify-center disabled:opacity-50"
             >
               <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-6 h-6">
                 <path fillRule="evenodd" d="M12 3.75a.75.75 0 0 1 .75.75v6.75h6.75a.75.75 0 0 1 0 1.5h-6.75v6.75a.75.75 0 0 1-1.5 0v-6.75H4.5a.75.75 0 0 1 0-1.5h6.75V4.5a.75.75 0 0 1 .75-.75Z" clipRule="evenodd" />
@@ -517,14 +517,14 @@ const Shipments = () => {
             </button>
 
             {/* Products Table */}
-            <div className="absolute top-[378px] left-[41px] w-[644px] h-[335px] border border-white rounded-md overflow-y-auto px-4 pt-6">
+            <div className="absolute top-[378px] left-[41px] w-[644px] h-[335px] border border-border_color rounded-md overflow-y-auto px-4 pt-6">
               {/* Table Header */}
               <div className="grid grid-cols-3 text-xl mb-4 px-2">
                 <div className="text-left">Product</div>
                 <div className="text-center">Quantity</div>
                 <div className="text-right">Action</div>
               </div>
-              <hr className="border-white opacity-50" />
+              <hr className="border-border_color opacity-50" />
 
               {/* Sample Product Rows */}
               {assignedProducts.map((product, idx) => (
@@ -534,7 +534,7 @@ const Shipments = () => {
                     <div className="text-lg text-center">{product.quantity}</div>
                     <div className="flex justify-end">
                       <button
-                        className="text-red-500 hover:text-red-700 transition disabled:opacity-50"
+                        className="text-red hover:text-red/80 transition disabled:opacity-50"
                         disabled={isAssigning}
                         onClick={() =>
                           setAssignedProducts((prev) => prev.filter((_, i) => i !== idx))
@@ -557,13 +557,13 @@ const Shipments = () => {
                       </button>
                     </div>
                   </div>
-                  <hr className="border-white opacity-50" />
+                  <hr className="border-border_color opacity-50" />
                 </div>
               ))}
             </div>
 
             {/* Zone Capacity (now outside the scrollable product list) */}
-            <div className="absolute top-[723px] right-[39px] text-white text-lg text-right">
+            <div className="absolute top-[723px] right-[39px] text-textColor-primary text-lg text-right">
               Warehouse Capacity: {warehouseCapacity.current}/{warehouseCapacity.max}
             </div>
 
@@ -572,14 +572,14 @@ const Shipments = () => {
               <button 
                 onClick={() => setShowModal(false)} 
                 disabled={isAssigning}
-                className="bg-[#FF2C2C] w-[153px] h-[42px] rounded-md text-white text-[17px] font-medium disabled:opacity-50"
+                className="bg-red w-[153px] h-[42px] rounded-md text-textColor-secondary text-[17px] font-medium disabled:opacity-50"
               >
                 Cancel
               </button>
               <button 
                 onClick={handleAssignItems}
                 disabled={isAssigning || !selectedWarehouse || assignedProducts.length === 0}
-                className="bg-[#029F37] w-[153px] h-[42px] rounded-md text-white text-[17px] font-medium disabled:opacity-50 flex items-center justify-center"
+                className="bg-green w-[153px] h-[42px] rounded-md text-textColor-secondary text-[17px] font-medium disabled:opacity-50 flex items-center justify-center"
               >
                 {isAssigning ? 'Assigning...' : 'Assign'}
               </button>

@@ -356,7 +356,7 @@ const TransferList = () => {
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-6">
         <div className="text-[25px] font-semibold">Transfer List</div>
         <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2 sm:gap-4">
-          <button onClick={() => setShowTransferModal(true)} className="flex items-center gap-2 px-4 py-2 border border-transparent rounded hover:border-btn-hover hover:text-textColor-secondary transition w-full sm:w-auto">
+          <button onClick={() => setShowTransferModal(true)} className="flex items-center gap-2 px-4 py-2 border border-transparent rounded hover:border-btn-hover transition w-full sm:w-auto">
             <svg xmlns="http://www.w3.org/2000/svg" fill="currentColor" className="w-6 h-6" viewBox="0 0 24 24">
               <path fillRule="evenodd" d="M15.97 2.47a.75.75 0 0 1 1.06 0l4.5 4.5a.75.75 0 0 1 0 1.06l-4.5 4.5a.75.75 0 1 1-1.06-1.06l3.22-3.22H7.5a.75.75 0 0 1 0-1.5h11.69l-3.22-3.22a.75.75 0 0 1 0-1.06Zm-7.94 9a.75.75 0 0 1 0 1.06l-3.22 3.22H16.5a.75.75 0 0 1 0 1.5H4.81l3.22 3.22a.75.75 0 1 1-1.06 1.06l-4.5-4.5a.75.75 0 0 1 0-1.06l4.5-4.5a.75.75 0 0 1 1.06 0Z" clipRule="evenodd" />
             </svg>
@@ -551,7 +551,7 @@ const TransferList = () => {
                     value={fromWarehouse}
                     onChange={handleFromWarehouseChange}
                     disabled={isTransferring}
-                    className="w-full border border-border_color rounded-md px-4 py-3 bg-primary text-white appearance-none disabled:opacity-50"
+                    className="w-full border border-border_color rounded-md px-4 py-3 bg-primary appearance-none disabled:opacity-50"
                   >
                     <option value="">Select Warehouse</option>
                     {warehouses.map((wh) => (
@@ -559,7 +559,7 @@ const TransferList = () => {
                     ))}
                   </select>
                   <div className="pointer-events-none absolute translate-y-[19%] inset-y-0 right-3 flex items-center">
-                    <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" />
                     </svg>
                   </div>
@@ -571,7 +571,7 @@ const TransferList = () => {
                     value={toWarehouse}
                     onChange={(e) => setToWarehouse(e.target.value)}
                     disabled={isTransferring}
-                    className="w-full border border-border_color rounded-md px-4 py-3 bg-primary text-white appearance-none disabled:opacity-50"
+                    className="w-full border border-border_color rounded-md px-4 py-3 bg-primary appearance-none disabled:opacity-50"
                   >
                     <option value="">Select Warehouse</option>
                     {warehouses
@@ -581,7 +581,7 @@ const TransferList = () => {
                       ))}
                   </select>
                   <div className="pointer-events-none absolute translate-y-[19%] inset-y-0 right-3 flex items-center">
-                    <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <svg className="w-5 h-5 " fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" />
                     </svg>
                   </div>
@@ -675,17 +675,17 @@ const TransferList = () => {
       {/* Add Items Modal */}
       {showAddItemsModal && (
         <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/60">
-          <div className="w-[996px] max-w-[95%] bg-primary border border-border_color rounded-md p-6 text-textColor-primary font-[Poppins] shadow-xl space-y-6 overflow-y-auto max-h-[95vh] relative">
+          <div className="w-[996px] max-w-[95%] bg-primary border border-border_color rounded-md p-6 text-textColor-primary font-sans shadow-xl space-y-6 overflow-y-auto max-h-[95vh] relative">
             <div className="flex justify-between items-center">
               <h2 className="text-3xl font-medium">{getSelectedWarehouseName()}</h2>
               <button onClick={() => setShowAddItemsModal(false)} className="w-10 h-10 flex items-center justify-center rounded-full hover:bg-border_color/20 transition">
-                <svg xmlns="http://www.w3.org/2000/svg" className="w-6 h-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <svg xmlns="http://www.w3.org/2000/svg" className="w-6 h-6 text-textColor-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
                 </svg>
               </button>
             </div>
 
-            <div className="grid grid-cols-[1fr_1fr_1fr_1fr_1fr] gap-4 font-semibold text-xl border-b border-border_color pb-2 text-white">
+            <div className="grid grid-cols-[1fr_1fr_1fr_1fr_1fr] gap-4 font-semibold text-xl border-b border-border_color pb-2 text-textColor-primary">
               <div className="text-center"></div>
               <div className="text-center">Item SKU</div>
               <div className="text-center">Item</div>
@@ -695,25 +695,25 @@ const TransferList = () => {
 
             <div className="space-y-4 max-h-[400px] overflow-y-auto">
               {loadingItems ? (
-                <div className="text-center py-8 text-white">Loading items...</div>
+                <div className="text-center py-8 text-textColor-primary">Loading items...</div>
               ) : warehouseItems.length === 0 ? (
-                <div className="text-center py-8 text-gray-400">No items found in this warehouse</div>
+                <div className="text-center py-8 text-textColor-tertiary">No items found in this warehouse</div>
               ) : (
                 warehouseItems.map((item) => (
-                  <div key={item.id} className="grid grid-cols-[1fr_1fr_1fr_1fr_1fr] gap-4 items-center text-white">
+                  <div key={item.id} className="grid grid-cols-[1fr_1fr_1fr_1fr_1fr] gap-4 items-center text-textColor-primary">
                     <div className="flex justify-center">
                       <input 
                         type="checkbox" 
                         checked={selectedWarehouseItems.includes(item.id)}
                         onChange={() => handleItemSelection(item.id)}
-                        className="w-5 h-5 border border-white rounded-md" 
+                        className="w-5 h-5 border border-border_color rounded-md accent-btn-primary" 
                       />
                     </div>
                     <div className="text-center text-lg">{item.items?.sku || 'N/A'}</div>
                     <div className="text-center text-lg">{item.items?.name || 'Unknown'}</div>
                     <div className="text-center text-lg">{item.quantity}</div>
                     <div className="flex justify-center">
-                      <div className="border border-white rounded-md px-3 py-1 w-24">
+                      <div className="border border-border_color rounded-md px-3 py-1 w-24">
                         <input 
                           type="number" 
                           min="0" 
@@ -722,7 +722,7 @@ const TransferList = () => {
                           onChange={(e) => handleQuantityChange(item.id, e.target.value)}
                           disabled={!selectedWarehouseItems.includes(item.id)}
                           placeholder="Qty" 
-                          className="bg-transparent w-full text-white text-sm text-center outline-none disabled:opacity-50" 
+                          className="bg-transparent w-full text-textColor-primary text-sm text-center outline-none disabled:opacity-50 placeholder:text-textColor-tertiary" 
                         />
                       </div>
                     </div>
@@ -734,17 +734,17 @@ const TransferList = () => {
             <div className="flex justify-between pt-4">
               <button 
                 onClick={clearAllSelections}
-                className="bg-red hover:bg-red/80 text-white font-medium text-lg px-6 py-2 rounded-md"
+                className="bg-red hover:bg-red/80 text-textColor-secondary font-medium text-lg px-6 py-2 rounded-md transition"
               >
                 Clear All
               </button>
               <button 
                 onClick={addItemsToTransfer}
                 disabled={selectedWarehouseItems.length === 0 || !Object.values(quantities).some(q => q > 0)}
-                className={`font-medium text-lg px-6 py-2 rounded-md ${
+                className={`font-medium text-lg px-6 py-2 rounded-md transition ${
                   selectedWarehouseItems.length === 0 || !Object.values(quantities).some(q => q > 0)
-                    ? 'bg-gray-500 text-gray-300 cursor-not-allowed'
-                    : 'bg-green hover:bg-green/80 text-white'
+                    ? 'bg-textColor-tertiary/20 text-textColor-tertiary cursor-not-allowed'
+                    : 'bg-green hover:bg-green/80 text-textColor-secondary'
                 }`}
               >
                 Add

@@ -99,7 +99,7 @@ export default function WarehouseSummary() {
       </div>
 
       {/* Table Header */}
-      <div className="grid grid-cols-4 text-lg font-semibold border-b border-border_color py-3">
+      <div className="grid grid-cols-4 text-base font-semibold border-b border-border_color py-3">
         <div className="text-center">Item ID</div>
         <div className="text-center">Name</div>
         <div className="text-center">Quantity</div>
@@ -109,9 +109,8 @@ export default function WarehouseSummary() {
       {/* Table Rows */}
       <div className="divide-y divide-border_color">
         {loading ? (
-          // Skeleton rows (fixed height so table doesn't resize)
           Array.from({ length: 5 }).map((_, i) => (
-            <div key={`skeleton-${i}`} className="grid grid-cols-4 py-4 text-center text-lg">
+            <div key={`skeleton-${i}`} className="grid grid-cols-4 py-4 text-center text-base">
               {[...Array(4)].map((_, j) => (
                 <div key={j} className="flex justify-center">
                   <div className="h-5 w-20 bg-gray-300 animate-pulse rounded"></div>
@@ -122,16 +121,15 @@ export default function WarehouseSummary() {
         ) : (
           <>
             {warehouseItems.map((item, idx) => (
-              <div key={idx} className="grid grid-cols-4 py-4 text-center text-lg">
+              <div key={idx} className="grid grid-cols-4 py-4 text-center text-base">
                 <div>{item.items?.sku || '-'}</div>
                 <div>{item.items?.name || '-'}</div>
                 <div>{item.quantity}</div>
-                <div className="font-semibold text-base">{item.items?.category?.name || '-'}</div>
+                <div className="font-semibold">{item.items?.category?.name || '-'}</div>
               </div>
             ))}
-            {/* Fill up to 5 rows */}
             {Array.from({ length: Math.max(0, 5 - warehouseItems.length) }).map((_, i) => (
-              <div key={`empty-${i}`} className="grid grid-cols-4 py-4 text-center text-lg text-transparent">
+              <div key={`empty-${i}`} className="grid grid-cols-4 py-4 text-center text-base text-transparent">
                 <div>-</div><div>-</div><div>-</div><div>-</div>
               </div>
             ))}

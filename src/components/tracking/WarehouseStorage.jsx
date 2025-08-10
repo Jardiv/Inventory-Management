@@ -146,7 +146,6 @@ export default function WarehouseStorage({ initialItems, total, limit, page }) {
                 clipRule="evenodd"
               />
             </svg>
-            Add Warehouse
           </button>
           
           {/* Download button */}
