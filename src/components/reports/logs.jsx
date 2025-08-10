@@ -591,16 +591,146 @@ const PurchaseOrderLogs = () => {
   }
 
   // PDF download for purchase order details modal
-  const handleDownloadPDF = (po) => {
+  const handleDownloadPDF = async (po) => {
     if (!po) return;
     try {
       const doc = new jsPDF();
-      doc.setFontSize(22);
-      doc.text('Purchase Order Details', 14, 18);
+      const pageWidth = doc.internal.pageSize.getWidth();
+      const margin = 14;
+
+      // Helper to load public logo as data URL with fallbacks
+      const loadImageAsDataURL = async (paths) => {
+        const tryLoad = (src) => new Promise((resolve, reject) => {
+          const img = new Image();
+          img.crossOrigin = 'anonymous';
+          img.onload = () => {
+            const canvas = document.createElement('canvas');
+            canvas.width = img.width;
+            canvas.height = img.height;
+            const ctx = canvas.getContext('2d');
+            ctx.drawImage(img, 0, 0);
+            resolve(canvas.toDataURL('image/png'));
+          };
+          img.onerror = reject;
+          img.src = src;
+        });
+        for (const p of paths) {
+          try { return await tryLoad(p); } catch (_) { /* try next */ }
+        }
+        throw new Error('Logo not found');
+      };
+
+      // Helpers to embed Poppins if available in /public/fonts
+      const arrayBufferToBase64 = (buffer) => {
+        const bytes = new Uint8Array(buffer);
+        let binary = '';
+        const chunkSize = 0x8000;
+        for (let i = 0; i < bytes.length; i += chunkSize) {
+          const chunk = bytes.subarray(i, i + chunkSize);
+          binary += String.fromCharCode.apply(null, chunk);
+        }
+        return btoa(binary);
+      };
+
+      const tryEmbedFont = async (path, vfsName, family, style) => {
+        const res = await fetch(path);
+        if (!res.ok) throw new Error('font fetch failed');
+        const buf = await res.arrayBuffer();
+        doc.addFileToVFS(vfsName, arrayBufferToBase64(buf));
+        doc.addFont(vfsName, family, style);
+      };
+
+      let hasPoppins = false;
+      try {
+        await Promise.all([
+          tryEmbedFont('/fonts/Poppins-Regular.ttf', 'Poppins-Regular.ttf', 'Poppins', 'normal'),
+          tryEmbedFont('/fonts/Poppins-Bold.ttf', 'Poppins-Bold.ttf', 'Poppins', 'bold')
+        ]);
+        hasPoppins = true;
+      } catch (_) {
+        // fallback to default fonts silently
+      }
+
+      // Branded header with improved spacing
+      let headerBottomY = 56; // default fallback
+      try {
+        const logoDataUrl = await loadImageAsDataURL([
+          '/ims_logo.png',           // preferred
+          '/ims%20logo.png',         // URL-encoded space
+          '/ims logo.png',           // literal space
+          '/logo.png'                // generic fallback
+        ]);
+
+        const logoX = margin;
+        const logoY = 12;
+        const logoW = 30;
+        const logoH = 30;
+        doc.addImage(logoDataUrl, 'PNG', logoX, logoY, logoW, logoH);
+
+        const textX = logoX + logoW + 6; // closer to logo
+        let lineY = logoY + Math.round(logoH / 2); // align IMS vertically to logo center
+        if (hasPoppins) { doc.setFont('Poppins', 'bold'); } else { doc.setFont('helvetica', 'bold'); }
+        doc.setFontSize(26);
+        doc.text('IMS', textX, lineY);
+        const imsBaselineY = lineY; // keep IMS baseline for alignment
+
+        lineY += 6; // tight spacing for subtitle
+        if (hasPoppins) { doc.setFont('Poppins', 'normal'); } else { doc.setFont('helvetica', 'normal'); }
+        doc.setFontSize(12);
+        doc.text('Inventory Management System', textX, lineY);
+
+        lineY += 6; // tight spacing for contact line
+        doc.setFontSize(9);
+        doc.text('Address • Phone • Email • Website', textX, lineY);
+
+        // Right-aligned stacked PURCHASE / ORDER (not bold), back to original placement
+        const rightX = pageWidth - margin;
+        if (hasPoppins) { doc.setFont('Poppins', 'normal'); } else { doc.setFont('helvetica', 'normal'); }
+        doc.setFontSize(28);
+        const purchaseTop = imsBaselineY; // align PURCHASE baseline with IMS
+        doc.text('PURCHASE', rightX, purchaseTop, { align: 'right' });
+        doc.text('ORDER', rightX, purchaseTop + 14, { align: 'right' });
+        // Ensure modest bottom padding beneath left text block, closer line to header
+        const leftTextBottom = lineY; // after contact line
+        headerBottomY = Math.max(logoY + logoH, leftTextBottom + 6, purchaseTop + 14) + 4; // reduced spacing
+      } catch (e) {
+        // Text-only fallback header
+        if (hasPoppins) { doc.setFont('Poppins', 'bold'); } else { doc.setFont('helvetica', 'bold'); }
+        doc.setFontSize(26);
+        doc.text('IMS', margin, 24);
+        if (hasPoppins) { doc.setFont('Poppins', 'normal'); } else { doc.setFont('helvetica', 'normal'); }
+        doc.setFontSize(12);
+        doc.text('Inventory Management System', margin, 30);
+        // Stacked PURCHASE / ORDER (not bold) on the right
+        if (hasPoppins) { doc.setFont('Poppins', 'normal'); } else { doc.setFont('helvetica', 'normal'); }
+        doc.setFontSize(28);
+        doc.text('PURCHASE', pageWidth - margin, 24, { align: 'right' }); // align to IMS baseline 24
+        doc.text('ORDER', pageWidth - margin, 38, { align: 'right' });
+        // Ensure modest bottom padding beneath left text block (fallback)
+        const leftTextBottomFallback = 30;
+        headerBottomY = Math.max(46, leftTextBottomFallback + 6);
+      }
+
+      // Divider line below header (even closer)
+      doc.setDrawColor(0);
+      doc.setLineWidth(0.6);
+      const dividerY = headerBottomY - 2;
+      doc.line(margin, dividerY, pageWidth - margin, dividerY);
+
+      // Content title under header
+      let cursorY = dividerY + 10; // slightly less padding
+      if (hasPoppins) { doc.setFont('Poppins', 'bold'); } else { doc.setFont('helvetica', 'bold'); }
+      doc.setFontSize(16);
+      doc.text('Purchase Order Details', margin, cursorY);
+      cursorY += 10;
+
+      // Color constants for table headers
+      const HEADER_PURPLE = [143, 0, 179]; // slightly darker
 
       // Primary Details
+      if (hasPoppins) doc.setFont('Poppins', 'bold');
       doc.setFontSize(14);
-      doc.text('Primary Details', 14, 30);
+      doc.text('Primary Details', margin, cursorY);
       const primaryDetails = [
         ['Invoice Number', po.poNumber],
         ['Date Generated', po.dateCreated],
@@ -610,16 +740,18 @@ const PurchaseOrderLogs = () => {
       autoTable(doc, {
         head: [['Field', 'Value']],
         body: primaryDetails,
-        startY: 34,
+        startY: cursorY + 4,
         theme: 'grid',
         styles: { fontSize: 12 },
-        margin: { left: 14 },
+        headStyles: { fillColor: HEADER_PURPLE, textColor: 255 },
+        margin: { left: margin },
       });
 
       // Summary
       let summaryY = doc.lastAutoTable.finalY + 8;
+      if (hasPoppins) doc.setFont('Poppins', 'bold');
       doc.setFontSize(14);
-      doc.text('Summary', 14, summaryY);
+      doc.text('Summary', margin, summaryY);
       const summaryDetails = [
         ['Total Quantity', po.totalQuantity + ' pcs'],
         ['Total Amount', po.totalAmount],
@@ -631,13 +763,15 @@ const PurchaseOrderLogs = () => {
         startY: summaryY + 4,
         theme: 'grid',
         styles: { fontSize: 12 },
-        margin: { left: 14 },
+        headStyles: { fillColor: HEADER_PURPLE, textColor: 255 },
+        margin: { left: margin },
       });
 
       // Purchased Products Table
       let productsY = doc.lastAutoTable.finalY + 8;
+      if (hasPoppins) doc.setFont('Poppins', 'bold');
       doc.setFontSize(14);
-      doc.text('Purchased Products', 14, productsY);
+      doc.text('Purchased Products', margin, productsY);
       let products = [];
       if (poDetails && Array.isArray(poDetails.items)) {
         products = poDetails.items;
@@ -659,7 +793,8 @@ const PurchaseOrderLogs = () => {
         startY: productsY + 4,
         theme: 'grid',
         styles: { fontSize: 12 },
-        margin: { left: 14 },
+        headStyles: { fillColor: HEADER_PURPLE, textColor: 255 },
+        margin: { left: margin },
       });
 
       doc.save(`purchase_order_${po.poNumber || 'details'}.pdf`);
@@ -1270,7 +1405,7 @@ const PurchaseOrderLogs = () => {
             <div className="flex justify-end gap-3 p-4 flex-shrink-0">
               <button
                 onClick={() => handleDownloadPDF(selectedPO)}
-                className="px-4 py-2 bg-green hover:bg-green/80 text-white rounded font-medium transition-colors"
+                className="px-4 py-2 bg-btn-primary hover:bg-btn-hover text-white rounded font-medium transition-colors"
               >
                 Download PDF
               </button>
