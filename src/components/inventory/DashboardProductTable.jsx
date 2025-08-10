@@ -66,9 +66,10 @@ export default function ProductInventoryPreview({ limit = 10 }) {
       {/* Header */}
       <div className="flex justify-between items-center mb-4">
         <h2 className="text-lg font-semibold">Product Inventory</h2>
-        <a href="/inventory/products" className="text-btn-primary text-sm hover:underline">
-          See All
-        </a>
+        {/* Updated the href to point to the new path */}
+        <a href="/inventory/ProductInventoryTBL/">
+            <button class="text-btn-primary hover:text-purple-300 px-4 py-2 pr-0 text-sm sm:text-base">See All</button>
+          </a>
       </div>
 
       {/* Table Header */}
@@ -104,7 +105,6 @@ export default function ProductInventoryPreview({ limit = 10 }) {
             return (
               <div
                 key={item.id}
-                // Updated this line to use the custom CSS variable for hover background
                 className="grid grid-cols-6 text-center text-sm py-3 cursor-pointer transition hover:bg-[var(--color-tbl-hover)]"
                 onClick={() => {
                   setSelectedProduct(item);
