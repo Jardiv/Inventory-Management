@@ -1,11 +1,25 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import TransactionsTable from './TransactionsTable';
-import StatusFilter from './utils/StatusFilter';
-
-const availableStatuses = ["Delivered", "Completed", "Pending", "Canceled"];
 
 export default function StockOutTable(props) {
     const [statusFilters, setStatusFilters] = useState([]);
+    const [priceRange, setPriceRange] = useState({ minPrice: "", maxPrice: "" });
+
+    useEffect(() => {
+        if (typeof window !== 'undefined') {
+            const params = new URLSearchParams(window.location.search);
+            const statusesFromUrl = params.getAll("status");
+            if (statusesFromUrl.length > 0) {
+                setStatusFilters(statusesFromUrl);
+            } else {
+                setStatusFilters([]); // Clear if no statuses in URL
+            }
+            setPriceRange({
+                minPrice: params.get("minPrice") || "",
+                maxPrice: params.get("maxPrice") || ""
+            });
+        }
+    }, [typeof window !== 'undefined' ? window.location.search : null]); // Conditional dependency
 
     const columns = [ 
         { header: 'Invoice no', accessor: 'invoice_no', sortable: true }, 
@@ -19,9 +33,10 @@ export default function StockOutTable(props) {
             render: (log) => log.total_price.toFixed(2) 
         },
         {
-            header: () => <StatusFilter availableStatuses={availableStatuses} onFilterChange={setStatusFilters} isAbleToSort={props.isAbleToSort} />, 
+            // header: () => <StatusFilter availableStatuses={availableStatuses} onFilterChange={setStatusFilters} isAbleToSort={props.isAbleToSort} />, 
+            header: 'Status',
             accessor: 'status', 
-            sortable: false, 
+            sortable: true, 
             className: 'text-center', 
             render: (log) => ( 
                 <span 
@@ -39,5 +54,5 @@ export default function StockOutTable(props) {
         } 
     ]; 
 
-    return <TransactionsTable {...props} columns={columns} direction="out" statusFilters={statusFilters} />;
+    return <TransactionsTable {...props} columns={columns} direction="out" statusFilters={statusFilters} priceRange={priceRange} />;
 }
