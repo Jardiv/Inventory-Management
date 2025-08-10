@@ -77,6 +77,7 @@ export default function FilterModal({ tableType }) {
 
 	const handleApplyFilters = () => {
 		console.log("FilterModal:: handleApplyFilters called");
+		console.log("FilterModal:: selectedStatuses at apply:", selectedStatuses);
 
 		const params = new URLSearchParams(window.location.search);
 		const setParam = (key, value) => {
@@ -92,9 +93,6 @@ export default function FilterModal({ tableType }) {
 		setParam("minPrice", minPrice);
 		setParam("maxPrice", maxPrice);
 
-		console.log("FilterModal::handleApplyFiltersL:: params:", params.toString());
-
-		// Set status filters (multiple values)
 		params.delete("status");
 		selectedStatuses.forEach((status) => params.append("status", status));
 
@@ -107,11 +105,12 @@ export default function FilterModal({ tableType }) {
 		// Reset to first page when applying filters
 		params.set("page", "1");
 
+		console.log("FilterModal::handleApplyFiltersL:: params:", params.toString());
+
 		// Apply the new URL
-		setTimeout(() =>{
-			window.location.search = params.toString();
-		}, 50000);
-		// window.location.search = params.toString();
+		console.log("FilterModal::handleApplyFiltersL:: window.location.search:", window.location.search);
+		// debugger;
+		window.location.search = params.toString();
 		closeModal();
 	};
 

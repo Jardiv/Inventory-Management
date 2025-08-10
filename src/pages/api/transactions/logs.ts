@@ -4,8 +4,7 @@ import type { APIContext } from "astro";
 
 export async function GET({ request }: APIContext) {
 	const url = new URL(request.url);
-	const { limit, offset, sortBy, sortOrder, startDate, endDate, search } = getUrlParams(request);
-	const statuses = url.searchParams.getAll("status");
+	const { limit, offset, sortBy, sortOrder, startDate, endDate, maxPrice, minPrice, warehouseId , statuses, search } = getUrlParams(request);
 
 	// Helper function to get transaction IDs that match supplier/warehouse/item search
 	const getTransactionIdsByRelatedSearch = async (searchTerm: string) => {

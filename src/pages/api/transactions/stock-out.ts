@@ -4,9 +4,9 @@ import type { APIContext } from "astro";
 
 export async function GET({ request }: APIContext) {
 	const url = new URL(request.url);
-	const { limit, offset, sortBy, sortOrder, startDate, endDate, maxPrice, minPrice, warehouseId } = getUrlParams(request);
+	const { limit, offset, sortBy, sortOrder, startDate, endDate, maxPrice, minPrice, warehouseId , statuses } = getUrlParams(request);
 	// Get filter parameters
-	const statuses = url.searchParams.getAll("status");
+	// const statuses = url.searchParams.getAll("status");
 	console.log("=====================================================");
 	console.log("stock-out:: GET called");
 	console.log("stock-out:: url:", url.searchParams.toString());
@@ -26,10 +26,7 @@ export async function GET({ request }: APIContext) {
 	// COUNT QUERY
 	let countQuery = supabase.from("stock_out").select(`
 		transactions!inner(
-			id,
-			status,
-			transaction_datetime,
-			total_price
+			id
 		)
 	`, { count: "exact", head: true });
 

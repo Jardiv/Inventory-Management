@@ -1,11 +1,22 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import TransactionsTable from './TransactionsTable';
-import StatusFilter from './utils/StatusFilter';
 
 const availableStatuses = ["Delivered", "Completed", "Pending", "Canceled"];
 
 export default function StockOutTable(props) {
     const [statusFilters, setStatusFilters] = useState([]);
+
+    useEffect(() => {
+        if (typeof window !== 'undefined') {
+            const params = new URLSearchParams(window.location.search);
+            const statusesFromUrl = params.getAll("status");
+            if (statusesFromUrl.length > 0) {
+                setStatusFilters(statusesFromUrl);
+            } else {
+                setStatusFilters([]); // Clear if no statuses in URL
+            }
+        }
+    }, [typeof window !== 'undefined' ? window.location.search : null]); // Conditional dependency
 
     const columns = [ 
         { header: 'Invoice no', accessor: 'invoice_no', sortable: true }, 

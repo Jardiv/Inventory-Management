@@ -124,6 +124,14 @@ export default function TransactionsTable({
 					console.log("TransactionsTable:: statusFilters:", statusFilters);
                 }
 
+                // Add warehouseId/supplierId from URL
+                const urlParams = new URLSearchParams(window.location.search);
+                const warehouseId = urlParams.get("warehouseId");
+                const supplierId = urlParams.get("supplierId");
+
+                if (warehouseId) params.append('warehouseId', warehouseId);
+                if (supplierId) params.append('supplierId', supplierId);
+
 				const res = await fetch(`${basePath}?${params.toString()}`, { signal });
 				const data = await res.json();
 				console.log("TransactionsTable:: Transactions data:", data);

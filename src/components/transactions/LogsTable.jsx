@@ -1,12 +1,27 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import TransactionsTable from './TransactionsTable';
-import StatusFilter from './utils/StatusFilter';
 
 const availableStatuses = ["Delivered", "Completed", "Pending", "Canceled"];
 
 export default function LogsTable(props) {
     const [statusFilters, setStatusFilters] = useState([]);
-	
+    const [warehouseId, setWarehouseId] = useState("");
+    const [supplierId, setSupplierId] = useState("");
+
+    useEffect(() => {
+        if (typeof window !== 'undefined') {
+            const params = new URLSearchParams(window.location.search);
+            const statusesFromUrl = params.getAll("status");
+            if (statusesFromUrl.length > 0) {
+                setStatusFilters(statusesFromUrl);
+            } else {
+                setStatusFilters([]);
+            }
+            setWarehouseId(params.get("warehouseId") || "");
+            setSupplierId(params.get("supplierId") || "");
+        }
+    }, [typeof window !== 'undefined' ? window.location.search : null]);
+
     const columns = [
         { header: "Invoice no", accessor: "invoice_no", sortable: true },
         { header: "Date", accessor: "transaction_datetime", sortable: true },
@@ -20,9 +35,9 @@ export default function LogsTable(props) {
             render: (log) => log.total_price.toFixed(2),
         },
         {
-            header: () => <StatusFilter availableStatuses={availableStatuses} onFilterChange={setStatusFilters} />,
+            header: 'Status',
             accessor: "status",
-            sortable: false,
+            sortable: true,
             className: "text-center",
             render: (log) => (
                 <span
@@ -39,5 +54,5 @@ export default function LogsTable(props) {
         },
     ];
 
-    return <TransactionsTable {...props} columns={columns} statusFilters={statusFilters} searchTerm={props.searchTerm} />;
+    return <TransactionsTable {...props} columns={columns} statusFilters={statusFilters} searchTerm={props.searchTerm} warehouseId={warehouseId} supplierId={supplierId} />;
 }

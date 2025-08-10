@@ -66,6 +66,7 @@ export function getUrlParams(request: Request) {
         maxPrice: url.searchParams.get("maxPrice"),
         warehouseId: url.searchParams.get("warehouseId"),
         supplierId: url.searchParams.get("supplierId"),
+		statuses: url.searchParams.getAll("status")
     };
 	console.log("=====================================================");
 	console.log("getUrlParams:: called", request.url);
@@ -81,6 +82,7 @@ export function getUrlParams(request: Request) {
 	console.log("getUrlParams:: maxPrice:", data.maxPrice);
 	console.log("getUrlParams:: warehouseId:", data.warehouseId);
 	console.log("getUrlParams:: supplierId:", data.supplierId);
+	console.log("getUrlParams:: statuses:", data.statuses);
 	console.log("=====================================================");
 	
 	return data;
