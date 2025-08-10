@@ -39,7 +39,7 @@ export default function StockInTable(props) {
             className: 'text-center',
             render: (log) => (
                 <span
-                    className={`inline-block w-[6rem] px-3 py-1 text-sm font-semibold rounded-full ${{
+                    className={`inline-block w-[6rem] px-3 py-1 text-sm font-semibold rounded-lg ${{
                         Delivered: "bg-green/10 text-green",
                         Completed: "bg-green/10 text-green",
                         Pending: "bg-yellow-500/20 text-yellow-400",
