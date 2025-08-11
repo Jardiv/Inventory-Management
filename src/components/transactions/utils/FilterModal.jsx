@@ -12,6 +12,7 @@ export default function FilterModal({ tableType }) {
 	const [selectedStatuses, setSelectedStatuses] = useState([]);
 	const [warehouseId, setWarehouseId] = useState("");
 	const [supplierId, setSupplierId] = useState("");
+	const [priceError, setPriceError] = useState("");
 
 	// Data for dropdowns
 	const [warehouses, setWarehouses] = useState([]);
@@ -66,9 +67,37 @@ export default function FilterModal({ tableType }) {
 		}
 	}, [isOpen, type, setFiltersFromURL]);
 
-	const closeModal = () => setIsOpen(false);
+	useEffect(() => {
+		if (minPrice && maxPrice && parseFloat(minPrice) > parseFloat(maxPrice)) {
+			setPriceError("Minimum price cannot be greater than maximum price.");
+		} else {
+			setPriceError("");
+		}
+	}, [minPrice, maxPrice]);
+
+	const handleFromDateChange = (e) => {
+		const newFromDate = e.target.value;
+		setFromDate(newFromDate);
+		if (toDate && newFromDate > toDate) {
+			setToDate(newFromDate);
+		}
+	};
+
+	const handleToDateChange = (e) => {
+		const newToDate = e.target.value;
+		setToDate(newToDate);
+		if (fromDate && newToDate < fromDate) {
+			setFromDate(newToDate);
+		}
+	};
+
+	const closeModal = () => {
+		setIsOpen(false);
+		setPriceError("");
+	};
 
 	const handleApplyFilters = () => {
+		if (priceError) return;
 		const params = new URLSearchParams(window.location.search);
 		const setParam = (key, value) => value ? params.set(key, value) : params.delete(key);
 
@@ -129,9 +158,9 @@ export default function FilterModal({ tableType }) {
 						<div className="flex flex-col gap-2">
 							<label className="text-textColor-secondary">Date Range</label>
 							<div className="flex items-center gap-2">
-								<input type="datetime-local" value={fromDate} onChange={(e) => setFromDate(e.target.value)} className="w-full bg-background border border-border_color rounded-md p-2 text-textColor-primary focus:outline-none focus:ring-2 focus:ring-btn-primary" />
+								<input type="datetime-local" value={fromDate} onChange={handleFromDateChange} className="w-full bg-background border border-border_color rounded-md p-2 text-textColor-primary focus:outline-none focus:ring-2 focus:ring-btn-primary" />
 								<span className="text-textColor-tertiary">to</span>
-								<input type="datetime-local" value={toDate} onChange={(e) => setToDate(e.target.value)} className="w-full bg-background border border-border_color rounded-md p-2 text-textColor-primary focus:outline-none focus:ring-2 focus:ring-btn-primary" />
+								<input type="datetime-local" value={toDate} onChange={handleToDateChange} className="w-full bg-background border border-border_color rounded-md p-2 text-textColor-primary focus:outline-none focus:ring-2 focus:ring-btn-primary" />
 							</div>
 						</div>
 						<div className="flex flex-col gap-2">
@@ -141,6 +170,7 @@ export default function FilterModal({ tableType }) {
 								<span className="text-textColor-tertiary">-</span>
 								<input type="number" placeholder="Max" value={maxPrice} onChange={(e) => setMaxPrice(e.target.value)} min="0" step="0.01" className="w-full bg-background border border-border_color rounded-md p-2 text-textColor-primary focus:outline-none focus:ring-2 focus:ring-btn-primary" />
 							</div>
+							{priceError && <p className="text-sm text-red-500">{priceError}</p>}
 						</div>
 					</div>
 
@@ -170,7 +200,7 @@ export default function FilterModal({ tableType }) {
 					<button onClick={handleClearFilters} className="px-6 py-2 rounded-lg text-textColor-primary bg-tbl-hover hover:bg-border_color transition-colors font-semibold">
 						Clear Filters
 					</button>
-					<button onClick={handleApplyFilters} className="px-6 py-2 rounded-lg bg-btn-primary text-white hover:bg-btn-hover transition-colors font-semibold">
+					<button onClick={handleApplyFilters} disabled={!!priceError} className="px-6 py-2 rounded-lg bg-btn-primary text-white hover:bg-btn-hover transition-colors font-semibold disabled:opacity-50 disabled:cursor-not-allowed">
 						Apply Filters
 					</button>
 				</div>

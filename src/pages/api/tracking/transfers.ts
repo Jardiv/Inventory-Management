@@ -20,7 +20,7 @@ export const GET: APIRoute = async ({ request }) => {
         id, 
         name,
         sku
-      ),
+      ), 
       from_warehouse (
         id,
         name

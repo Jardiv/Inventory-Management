@@ -1,4 +1,4 @@
-// src/pages/api/tracking/create-transfer.ts - Debug Version
+// src/pages/api/tracking/create-transfer.ts - Fixed Version with Record Deletion
 import { supabase } from "../../../utils/supabaseClient";
 import type { APIRoute } from 'astro';
 
@@ -38,43 +38,31 @@ export const POST: APIRoute = async ({ request }) => {
         throw new Error(`Invalid item data: itemId=${itemId}, quantity=${quantity}`);
       }
 
-      // Debug: Check what's in warehouse_items for this warehouse
-      console.log("Checking all items in warehouse", fromWarehouse);
-      const { data: allWarehouseItems, error: debugError } = await supabase
-        .from('warehouse_items')
-        .select('*')
-        .eq('warehouse_id', fromWarehouse);
-      
-      console.log("All items in source warehouse:", allWarehouseItems);
-      if (debugError) console.log("Debug query error:", debugError);
-
-      // Check if the item exists in source warehouse
-      console.log(`Looking for item_id=${itemId} in warehouse_id=${fromWarehouse}`);
-      const { data: warehouseItem, error: checkError } = await supabase
+      // Get ALL records for this item in source warehouse and sum quantities
+      console.log(`Looking for all records of item_id=${itemId} in warehouse_id=${fromWarehouse}`);
+      const { data: warehouseItems, error: checkError } = await supabase
         .from('warehouse_items')
         .select('quantity, item_id, id')
         .eq('warehouse_id', fromWarehouse)
-        .eq('item_id', itemId)
-        .single();
+        .eq('item_id', itemId); 
 
-      console.log("Query result:", { warehouseItem, checkError });
+      console.log("Query result:", { warehouseItems, checkError });
 
       if (checkError) {
         console.error("Database error:", checkError);
-        if (checkError.code === 'PGRST116') {
-          throw new Error(`Item ${itemId} not found in source warehouse ${fromWarehouse}`);
-        }
         throw new Error(`Database error: ${checkError.message}`);
       }
 
-      if (!warehouseItem) {
+      if (!warehouseItems || warehouseItems.length === 0) {
         throw new Error(`Item ${itemId} not found in source warehouse ${fromWarehouse}`);
       }
 
-      console.log(`Found warehouse item:`, warehouseItem);
+      // Calculate total available quantity
+      const totalAvailable = warehouseItems.reduce((sum, item) => sum + item.quantity, 0);
+      console.log(`Total available quantity: ${totalAvailable} (from ${warehouseItems.length} records)`);
 
-      if (warehouseItem.quantity < quantity) {
-        throw new Error(`Insufficient quantity for item ${itemId}. Available: ${warehouseItem.quantity}, Requested: ${quantity}`);
+      if (totalAvailable < quantity) {
+        throw new Error(`Insufficient quantity for item ${itemId}. Available: ${totalAvailable}, Requested: ${quantity}`);
       }
 
       // Create transfer record
@@ -98,46 +86,83 @@ export const POST: APIRoute = async ({ request }) => {
 
       console.log("Transfer created:", transfer);
 
-      // Update source warehouse quantity (decrease)
-      console.log(`Updating source warehouse: ${warehouseItem.quantity} - ${quantity} = ${warehouseItem.quantity - quantity}`);
-      const { error: decreaseError } = await supabase
-        .from('warehouse_items')
-        .update({ 
-          quantity: warehouseItem.quantity - quantity
-        })
-        .eq('warehouse_id', fromWarehouse)
-        .eq('item_id', itemId);
+      // Decrease quantities from source warehouse (handle multiple records)
+      let remainingToDecrease = quantity;
+      const recordsToDelete = []; // Track records that become 0
+      
+      for (const warehouseItem of warehouseItems) {
+        if (remainingToDecrease <= 0) break;
+        
+        const decreaseAmount = Math.min(warehouseItem.quantity, remainingToDecrease);
+        const newQuantity = warehouseItem.quantity - decreaseAmount;
+        
+        console.log(`Processing record ${warehouseItem.id}: ${warehouseItem.quantity} - ${decreaseAmount} = ${newQuantity}`);
+        
+        if (newQuantity === 0) {
+          // Mark for deletion instead of updating to 0
+          recordsToDelete.push(warehouseItem.id);
+          console.log(`Record ${warehouseItem.id} will be deleted (quantity became 0)`);
+        } else {
+          // Update with new quantity
+          const { error: decreaseError } = await supabase
+            .from('warehouse_items')
+            .update({ quantity: newQuantity })
+            .eq('id', warehouseItem.id);
 
-      if (decreaseError) {
-        console.error('Decrease error:', decreaseError);
-        throw new Error(`Failed to update source warehouse quantity: ${decreaseError.message}`);
+          if (decreaseError) {
+            console.error('Decrease error:', decreaseError);
+            throw new Error(`Failed to update source warehouse quantity: ${decreaseError.message}`);
+          }
+          console.log(`Updated record ${warehouseItem.id} to quantity ${newQuantity}`);
+        }
+        
+        remainingToDecrease -= decreaseAmount;
       }
 
+      // Delete records that became 0
+      if (recordsToDelete.length > 0) {
+        console.log(`Deleting ${recordsToDelete.length} records with 0 quantity:`, recordsToDelete);
+        
+        const { error: deleteError } = await supabase
+          .from('warehouse_items')
+          .delete()
+          .in('id', recordsToDelete);
+
+        if (deleteError) {
+          console.error('Delete error:', deleteError);
+          throw new Error(`Failed to delete empty warehouse records: ${deleteError.message}`);
+        }
+        console.log(`Successfully deleted ${recordsToDelete.length} empty records`);
+      }
+
+      // Handle destination warehouse
+      console.log(`Handling destination warehouse item ${itemId} in warehouse ${toWarehouse}`);
+      
       // Check if item exists in destination warehouse
-      console.log(`Checking if item ${itemId} exists in destination warehouse ${toWarehouse}`);
-      const { data: destItem, error: destCheckError } = await supabase
+      const { data: destItems, error: destCheckError } = await supabase
         .from('warehouse_items')
         .select('quantity, id')
         .eq('warehouse_id', toWarehouse)
         .eq('item_id', itemId)
-        .single();
+        .limit(1);
 
-      console.log("Destination check result:", { destItem, destCheckError });
-
-      if (destCheckError && destCheckError.code !== 'PGRST116') {
+      if (destCheckError) {
+        console.error('Destination check error:', destCheckError);
         throw new Error(`Error checking destination warehouse: ${destCheckError.message}`);
       }
 
-      if (destItem) {
-        // Item exists in destination, update quantity
-        console.log(`Updating destination warehouse: ${destItem.quantity} + ${quantity} = ${destItem.quantity + quantity}`);
+      if (destItems && destItems.length > 0) {
+        // Item exists, update the first record found
+        const destItem = destItems[0];
+        console.log(`Updating existing destination record: ${destItem.quantity} + ${quantity} = ${destItem.quantity + quantity}`);
+        
         const { error: increaseError } = await supabase
           .from('warehouse_items')
           .update({ 
-            quantity: destItem.quantity + quantity
+            quantity: destItem.quantity + quantity,
+            status: 'Active'
           })
-          .eq('warehouse_id', toWarehouse)
-          .eq('item_id', itemId);
+          .eq('id', destItem.id);
 
         if (increaseError) {
           console.error('Increase error:', increaseError);
@@ -145,7 +170,7 @@ export const POST: APIRoute = async ({ request }) => {
         }
         console.log("Destination warehouse updated successfully");
       } else {
-        // Item doesn't exist in destination, create new record
+        // Item doesn't exist, create new record
         console.log(`Creating new item in destination warehouse with quantity ${quantity}`);
         const { error: insertError } = await supabase
           .from('warehouse_items')

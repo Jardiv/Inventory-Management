@@ -40,7 +40,7 @@ export default function StockOutTable(props) {
             className: 'text-center', 
             render: (log) => ( 
                 <span 
-                    className={`inline-block w-[6rem] px-3 py-1 text-sm font-semibold rounded-full ${{ 
+                    className={`inline-block w-[6rem] px-3 py-1 text-sm font-semibold rounded-lg ${{ 
                         Delivered: "bg-green/10 text-green", 
                         Completed: "bg-green/10 text-green", 
                         "In Transit": "bg-orange/10 text-orange", 
