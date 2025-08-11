@@ -44,7 +44,7 @@ export const POST: APIRoute = async ({ request }) => {
         .from('warehouse_items')
         .select('quantity, item_id, id')
         .eq('warehouse_id', fromWarehouse)
-        .eq('item_id', itemId);
+        .eq('item_id', itemId); 
 
       console.log("Query result:", { warehouseItems, checkError });
 
