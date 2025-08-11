@@ -3,12 +3,12 @@ import React, { useState, useEffect } from "react";
 const DashboardTransactionSkeleton = () => (
     <li className="p-2 rounded-md flex justify-between items-center">
         <div className="w-1/2">
-            <div className="h-4 bg-gray-700 rounded w-3/4 mb-2 animate-pulse"></div>
-            <div className="h-3 bg-gray-700 rounded w-1/2 animate-pulse"></div>
+            <div className="h-4 skeleton-loading rounded w-3/4 mb-2 animate-pulse"></div>
+            <div className="h-3 skeleton-loading w-1/2 animate-pulse"></div>
         </div>
         <div className="flex items-center gap-4 w-1/2 justify-end">
-            <div className="h-4 bg-gray-700 rounded w-24 animate-pulse"></div>
-            <div className="h-6 bg-gray-700 rounded-full w-24 animate-pulse"></div>
+            <div className="h-4 skeleton-loading rounded w-24 animate-pulse"></div>
+            <div className="h-6 skeleton-loading rounded-full w-24 animate-pulse"></div>
         </div>
     </li>
 );
@@ -40,9 +40,9 @@ export default function DashboardTransactions() {
     const handleRowClick = (id) => {
         window.location.href = `/transaction/details?id=${id}`;
     };
-
+     
     return (
-        <div className="flex flex-col gap-1 w-full bg-primary rounded-lg">
+        <div className="flex flex-col gap-1 w-full py-4 px-2 bg-primary h-full rounded-lg">
             <div className="w-full z-10 flex justify-between sticky bg-primary p-4 top-0">
                 <h1 className="text-xl font-bold">Recent Transactions</h1>
                 <a href="/transaction/logs/" className="w-fit">
@@ -51,7 +51,7 @@ export default function DashboardTransactions() {
                     </button>
                 </a>
             </div>
-            <div className="p-2">
+            <div className={`p-2 ${loading ? 'scrollbar-hidden overflow-hidden' : 'overflow-auto '}`}>
                 {loading ? (
                     <ul className="flex flex-col gap-2">
                         {[...Array(5)].map((_, i) => (

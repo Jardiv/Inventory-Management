@@ -30,7 +30,7 @@ export const GET: APIRoute = async () => {
       .in('id', stockInIds)
       .gte('transaction_datetime', firstDayOfMonth.toISOString())
       .lte('transaction_datetime', lastDayOfMonth.toISOString());
-    console.log("summary:: stockInData:", stockInData);
+    // console.log("summary:: stockInData:", stockInData);
     
     if (stockInError) throw stockInError;
     const totalStockIn = stockInData.reduce((acc, item) => acc + item.total_quantity, 0);
