@@ -11,6 +11,10 @@ const TransferList = () => {
   const [totalCount, setTotalCount] = useState(0);
   const [warehouses, setWarehouses] = useState([]);
   
+  // NEW: Warehouse capacity state
+  const [warehouseCapacities, setWarehouseCapacities] = useState({});
+  const [loadingCapacities, setLoadingCapacities] = useState(false);
+  
   // Transfer form state
   const [fromWarehouse, setFromWarehouse] = useState('');
   const [toWarehouse, setToWarehouse] = useState('');
@@ -45,6 +49,73 @@ const TransferList = () => {
 
     fetchWarehouses();
   }, []);
+
+  // NEW: Fetch warehouse capacities when transfer modal opens
+  useEffect(() => {
+    if (showTransferModal && warehouses.length > 0) {
+      fetchWarehouseCapacities();
+    }
+  }, [showTransferModal, warehouses]);
+
+  // NEW: Function to fetch all warehouse capacities
+  const fetchWarehouseCapacities = async () => {
+    setLoadingCapacities(true);
+    const capacities = {};
+    
+    try {
+      await Promise.all(
+        warehouses.map(async (warehouse) => {
+          try {
+            const res = await fetch(`/api/tracking/warehouse-capacity?warehouse_id=${warehouse.id}`);
+            const data = await res.json();
+            
+            if (res.ok) {
+              capacities[warehouse.id] = {
+                current: data.current_quantity || 0,
+                max: data.max_capacity || 0,
+                availableSpace: (data.max_capacity || 0) - (data.current_quantity || 0)
+              };
+            } else {
+              console.error(`Failed to fetch capacity for warehouse ${warehouse.id}:`, data.error);
+              capacities[warehouse.id] = { current: 0, max: 0, availableSpace: 0 };
+            }
+          } catch (err) {
+            console.error(`Error fetching capacity for warehouse ${warehouse.id}:`, err);
+            capacities[warehouse.id] = { current: 0, max: 0, availableSpace: 0 };
+          }
+        })
+      );
+      
+      setWarehouseCapacities(capacities);
+    } catch (err) {
+      console.error('Error fetching warehouse capacities:', err);
+    } finally {
+      setLoadingCapacities(false);
+    }
+  };
+
+  // NEW: Helper function to check if warehouse can receive items
+  const canWarehouseReceiveItems = (warehouseId, itemsToTransfer = []) => {
+    const capacity = warehouseCapacities[warehouseId];
+    if (!capacity) return false;
+    
+    const totalToTransfer = itemsToTransfer.reduce((sum, item) => sum + item.selectedQty, 0);
+    return capacity.availableSpace >= totalToTransfer;
+  };
+
+  // NEW: Helper function to get warehouse capacity info
+  const getWarehouseCapacityInfo = (warehouseId) => {
+    const capacity = warehouseCapacities[warehouseId];
+    if (!capacity) return null;
+    
+    const percentage = capacity.max > 0 ? (capacity.current / capacity.max) * 100 : 0;
+    return {
+      ...capacity,
+      percentage,
+      isFull: percentage >= 100,
+      isNearFull: percentage >= 90
+    };
+  };
 
   useEffect(() => {
     const fetchTransfers = async () => {
@@ -88,7 +159,7 @@ const TransferList = () => {
       const result = await res.json();
       
       if (res.ok) {
-        console.log("Warehouse items fetched:", result.data); // Debug log
+        console.log("Warehouse items fetched:", result.data);
         setWarehouseItems(result.data || []);
       } else {
         console.error("Failed to load warehouse items:", result.error);
@@ -120,6 +191,25 @@ const TransferList = () => {
     }
   };
 
+  // NEW: Handle "To" warehouse selection with capacity validation
+  const handleToWarehouseChange = (e) => {
+    const selectedId = e.target.value;
+    
+    // Check if this warehouse can receive the current items
+    if (selectedId && selectedItems.length > 0) {
+      const canReceive = canWarehouseReceiveItems(selectedId, selectedItems);
+      const capacityInfo = getWarehouseCapacityInfo(selectedId);
+      
+      if (!canReceive || capacityInfo?.isFull) {
+        const totalToTransfer = selectedItems.reduce((sum, item) => sum + item.selectedQty, 0);
+        alert(`Cannot select this warehouse as destination.\n\nWarehouse Capacity: ${capacityInfo?.current || 0}/${capacityInfo?.max || 0}\nAvailable Space: ${capacityInfo?.availableSpace || 0}\nItems to Transfer: ${totalToTransfer}\n\nPlease select a warehouse with sufficient capacity.`);
+        return;
+      }
+    }
+    
+    setToWarehouse(selectedId);
+  };
+
   // Handle item selection in add items modal
   const handleItemSelection = (itemId) => {
     setSelectedWarehouseItems(prev => {
@@ -145,7 +235,7 @@ const TransferList = () => {
     }));
   };
 
-  // Add selected items to transfer list
+  // UPDATED: Add selected items to transfer list with capacity validation
   const addItemsToTransfer = () => {
     console.log("=== DEBUG: Adding items to transfer ===");
     console.log("Selected warehouse items:", selectedWarehouseItems);
@@ -160,11 +250,9 @@ const TransferList = () => {
         console.log(`Processing item with id ${itemId}:`, item);
         console.log("Item structure keys:", item ? Object.keys(item) : 'item is null/undefined');
         
-        // With your API structure, item_id should be directly available
         let actualItemId = null;
         if (item) {
-          actualItemId = item.item_id; // This should now be available from the API
-          
+          actualItemId = item.item_id;
           console.log("Found actualItemId:", actualItemId);
         }
         
@@ -176,10 +264,10 @@ const TransferList = () => {
         }
         
         return {
-          id: itemId, // This is the warehouse_items.id
-          itemId: actualItemId, // This should be the items.id from warehouse_items.item_id
-          productId: item?.items?.sku || 'N/A', // From the nested items object
-          name: item?.items?.name || 'Unknown', // From the nested items object
+          id: itemId,
+          itemId: actualItemId,
+          productId: item?.items?.sku || 'N/A',
+          name: item?.items?.name || 'Unknown',
           availableQty: item?.quantity || 0,
           selectedQty: quantities[itemId] || 0
         };
@@ -187,7 +275,6 @@ const TransferList = () => {
 
     console.log("Items to add before filtering:", itemsToAdd);
 
-    // Filter out items with undefined itemId
     const validItems = itemsToAdd.filter(item => {
       if (!item.itemId) {
         console.error("❌ Skipping item with undefined itemId:", item);
@@ -209,18 +296,29 @@ const TransferList = () => {
       return;
     }
 
+    // NEW: Check if adding these items would exceed "To" warehouse capacity
+    if (toWarehouse) {
+      const newItemsTotal = validItems.reduce((sum, item) => sum + item.selectedQty, 0);
+      const existingItemsTotal = selectedItems.reduce((sum, item) => sum + item.selectedQty, 0);
+      const totalToTransfer = newItemsTotal + existingItemsTotal;
+      
+      const canReceive = canWarehouseReceiveItems(toWarehouse, [...selectedItems, ...validItems]);
+      const capacityInfo = getWarehouseCapacityInfo(toWarehouse);
+      
+      if (!canReceive) {
+        setTransferError(`Cannot add these items. Destination warehouse capacity would be exceeded.\n\nWarehouse Capacity: ${capacityInfo?.current || 0}/${capacityInfo?.max || 0}\nAvailable Space: ${capacityInfo?.availableSpace || 0}\nTotal to Transfer: ${totalToTransfer}`);
+        return;
+      }
+    }
+
     setSelectedItems(prev => {
-      // Remove duplicates and add new items
       const existingIds = prev.map(item => item.id);
       const newItems = validItems.filter(item => !existingIds.includes(item.id));
       console.log("Adding new items to transfer:", newItems);
       return [...prev, ...newItems];
     });
 
-    // Clear error if we got here successfully
     setTransferError('');
-
-    // Close modal and reset selections
     setShowAddItemsModal(false);
     setSelectedWarehouseItems([]);
     setQuantities({});
@@ -251,6 +349,7 @@ const TransferList = () => {
     setWarehouseItems([]);
     setTransferMessage('');
     setTransferError('');
+    setWarehouseCapacities({});
   };
 
   // Get selected warehouse name
@@ -259,7 +358,7 @@ const TransferList = () => {
     return warehouse ? warehouse.name : 'Select Warehouse';
   };
 
-  // Handle transfer initiation - FIXED VERSION
+  // UPDATED: Handle transfer initiation with final capacity check
   const handleInitiateTransfer = async () => {
     if (!fromWarehouse || !toWarehouse || selectedItems.length === 0) {
       setTransferError('Please select warehouses and items for transfer');
@@ -274,18 +373,27 @@ const TransferList = () => {
       return;
     }
 
+    // NEW: Final capacity check before initiating transfer
+    const canReceive = canWarehouseReceiveItems(toWarehouse, selectedItems);
+    const capacityInfo = getWarehouseCapacityInfo(toWarehouse);
+    
+    if (!canReceive) {
+      const totalToTransfer = selectedItems.reduce((sum, item) => sum + item.selectedQty, 0);
+      setTransferError(`Transfer cannot be completed. Destination warehouse capacity would be exceeded.\n\nWarehouse: ${capacityInfo?.current || 0}/${capacityInfo?.max || 0}\nAvailable Space: ${capacityInfo?.availableSpace || 0}\nItems to Transfer: ${totalToTransfer}`);
+      return;
+    }
+
     setIsTransferring(true);
     setTransferError('');
     setTransferMessage('');
 
     try {
-      // Prepare transfer data - ENSURE PROPER DATA TYPES
       const transferData = {
         fromWarehouse: parseInt(fromWarehouse),
         toWarehouse: parseInt(toWarehouse),
         items: selectedItems.map(item => ({
-          itemId: parseInt(item.itemId), // ✅ ENSURE INTEGER
-          quantity: parseInt(item.selectedQty) // ✅ ENSURE INTEGER
+          itemId: parseInt(item.itemId),
+          quantity: parseInt(item.selectedQty)
         })),
         createdBy: 'System User'
       };
@@ -308,10 +416,8 @@ const TransferList = () => {
       if (response.ok) {
         setTransferMessage(result.message || 'Transfer completed successfully!');
         
-        // Clear the form after successful transfer
         setTimeout(() => {
           closeTransferModal();
-          // Refresh the transfers list
           const fetchTransfers = async () => {
             try {
               const res = await fetch(`/api/tracking/transfers?page=${currentPage}&limit=10`);
@@ -406,7 +512,6 @@ const TransferList = () => {
         </div>
         <div className="divide-y divide-border_color">
           {loading ? (
-            // Skeleton table rows
             Array.from({ length: 10 }).map((_, idx) => (
               <div
                 key={`skeleton-${idx}`}
@@ -531,6 +636,13 @@ const TransferList = () => {
             </div>
             
             <div className="p-6 space-y-6">
+              {/* Loading Capacities Indicator */}
+              {loadingCapacities && (
+                <div className="bg-blue-50 border border-blue-200 text-blue-700 px-4 py-3 rounded-md">
+                  Loading warehouse capacities...
+                </div>
+              )}
+
               {/* Status Messages */}
               {transferMessage && (
                 <div className="bg-green/20 border border-green text-green px-4 py-3 rounded-md">
@@ -539,52 +651,151 @@ const TransferList = () => {
               )}
               
               {transferError && (
-                <div className="bg-red/20 border border-red text-red px-4 py-3 rounded-md">
+                <div className="bg-red/20 border border-red text-red px-4 py-3 rounded-md whitespace-pre-line">
                   {transferError}
                 </div>
               )}
 
               <div className="grid grid-cols-2 gap-6">
+                {/* From Warehouse (No capacity restrictions) */}
                 <div className="relative">
                   <label className="text-lg mb-2 block">From:</label>
-                  <select 
-                    value={fromWarehouse}
-                    onChange={handleFromWarehouseChange}
-                    disabled={isTransferring}
-                    className="w-full border border-border_color rounded-md px-4 py-3 bg-primary appearance-none disabled:opacity-50"
-                  >
-                    <option value="">Select Warehouse</option>
-                    {warehouses.map((wh) => (
-                      <option key={wh.id} value={wh.id}>{wh.name}</option>
-                    ))}
-                  </select>
-                  <div className="pointer-events-none absolute translate-y-[19%] inset-y-0 right-3 flex items-center">
-                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" />
-                    </svg>
+                  <div className="relative">
+                    <select 
+                      value={fromWarehouse}
+                      onChange={handleFromWarehouseChange}
+                      disabled={isTransferring || loadingCapacities}
+                      className="w-full border border-border_color rounded-md px-4 py-3 pr-10 bg-primary appearance-none disabled:opacity-50"
+                    >
+                      <option value="">Select Warehouse</option>
+                      {warehouses.map((wh) => {
+                        const capacityInfo = getWarehouseCapacityInfo(wh.id);
+                        return (
+                          <option key={wh.id} value={wh.id}>
+                            {wh.name} {capacityInfo ? `(${capacityInfo.current}/${capacityInfo.max})` : ''}
+                          </option>
+                        );
+                      })}
+                    </select>
+                    <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
+                      <svg className="w-5 h-5 text-textColor-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" />
+                      </svg>
+                    </div>
                   </div>
                 </div>
-
+                {/* To Warehouse (WITH capacity restrictions) */}
                 <div className="relative">
                   <label className="text-lg mb-2 block">To:</label>
-                  <select 
-                    value={toWarehouse}
-                    onChange={(e) => setToWarehouse(e.target.value)}
-                    disabled={isTransferring}
-                    className="w-full border border-border_color rounded-md px-4 py-3 bg-primary appearance-none disabled:opacity-50"
-                  >
-                    <option value="">Select Warehouse</option>
-                    {warehouses
-                      .filter(wh => wh.id !== parseInt(fromWarehouse))
-                      .map((wh) => (
-                        <option key={wh.id} value={wh.id}>{wh.name}</option>
-                      ))}
-                  </select>
-                  <div className="pointer-events-none absolute translate-y-[19%] inset-y-0 right-3 flex items-center">
-                    <svg className="w-5 h-5 " fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" />
-                    </svg>
+                  <div className="relative">
+                    <select 
+                      value={toWarehouse}
+                      onChange={handleToWarehouseChange}
+                      disabled={isTransferring || loadingCapacities}
+                      className="w-full border border-border_color rounded-md px-4 py-3 pr-10 bg-primary appearance-none disabled:opacity-50"
+                    >
+                      <option value="">Select Warehouse</option>
+                      {warehouses
+                        .filter(wh => wh.id !== parseInt(fromWarehouse))
+                        .map((wh) => {
+                          const capacityInfo = getWarehouseCapacityInfo(wh.id);
+                          const totalToTransfer = selectedItems.reduce((sum, item) => sum + item.selectedQty, 0);
+                          const canReceive = capacityInfo ? capacityInfo.availableSpace >= totalToTransfer : true;
+                          
+                          return (
+                            <option 
+                              key={wh.id} 
+                              value={wh.id}
+                              disabled={capacityInfo?.isFull || (totalToTransfer > 0 && !canReceive)}
+                              className={capacityInfo?.isFull || (totalToTransfer > 0 && !canReceive) ? 'text-gray-400' : ''}
+                            >
+                              {wh.name} {capacityInfo ? `(${capacityInfo.current}/${capacityInfo.max})` : ''} 
+                              {capacityInfo?.isFull ? ' - FULL' : capacityInfo?.isNearFull ? ' - NEAR FULL' : ''}
+                            </option>
+                          );
+                        })}
+                    </select>
+                    <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
+                      <svg className="w-5 h-5 text-textColor-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" />
+                      </svg>
+                    </div>
                   </div>
+                  
+                  {/* Capacity Info for Selected To Warehouse */}
+                  {toWarehouse && (
+                    <div className="mt-2 text-sm">
+                      {(() => {
+                        const capacityInfo = getWarehouseCapacityInfo(toWarehouse);
+                        const totalToTransfer = selectedItems.reduce((sum, item) => sum + item.selectedQty, 0);
+                        
+                        if (!capacityInfo) return null;
+                        
+                        return (
+                          <div className="space-y-1">
+                            <div className="flex justify-between">
+                              <span>Current Capacity:</span>
+                              <span className={capacityInfo.percentage >= 90 ? 'text-red-600 font-medium' : capacityInfo.percentage >= 70 ? 'text-yellow-600' : 'text-green-600'}>
+                                {capacityInfo.current}/{capacityInfo.max} ({capacityInfo.percentage.toFixed(1)}%)
+                              </span>
+                            </div>
+                            <div className="flex justify-between">
+                              <span>Available Space:</span>
+                              <span className={capacityInfo.availableSpace <= 0 ? 'text-red-600 font-medium' : 'text-green-600'}>
+                                {capacityInfo.availableSpace}
+                              </span>
+                            </div>
+                            {totalToTransfer > 0 && (
+                              <div className="flex justify-between">
+                                <span>To Transfer:</span>
+                                <span className={totalToTransfer > capacityInfo.availableSpace ? 'text-red-600 font-medium' : 'text-blue-600'}>
+                                  {totalToTransfer}
+                                </span>
+                              </div>
+                            )}
+                            {totalToTransfer > 0 && (
+                              <div className="flex justify-between">
+                                <span>After Transfer:</span>
+                                <span className={(capacityInfo.current + totalToTransfer) > capacityInfo.max ? 'text-red-600 font-medium' : 'text-green-600'}>
+                                  {capacityInfo.current + totalToTransfer}/{capacityInfo.max}
+                                </span>
+                              </div>
+                            )}
+                            
+                            {/* Visual Progress Bar */}
+                            <div className="mt-2">
+                              <div className="w-full bg-gray-200 rounded-full h-2">
+                                <div 
+                                  className={`h-2 rounded-full ${
+                                    capacityInfo.percentage >= 90 
+                                      ? 'bg-red-500' 
+                                      : capacityInfo.percentage >= 70 
+                                      ? 'bg-yellow-500' 
+                                      : 'bg-green-500'
+                                  }`}
+                                  style={{ width: `${Math.min(capacityInfo.percentage, 100)}%` }}
+                                />
+                                {/* Show projected capacity if items are selected */}
+                                {totalToTransfer > 0 && (
+                                  <div 
+                                    className="h-2 rounded-full bg-blue-300 opacity-60 relative -mt-2"
+                                    style={{ 
+                                      width: `${Math.min(((capacityInfo.current + totalToTransfer) / capacityInfo.max) * 100, 100)}%` 
+                                    }}
+                                  />
+                                )}
+                              </div>
+                              {totalToTransfer > 0 && (
+                                <div className="text-xs text-blue-600 mt-1">
+                                  Blue overlay shows projected capacity after transfer
+                                </div>
+                              )}
+                            </div>
+                          </div>
+                        );
+                      })()}
+                    </div>
+                  )}
                 </div>
               </div>
 
@@ -652,9 +863,9 @@ const TransferList = () => {
               </button>
               <button 
                 onClick={handleInitiateTransfer}
-                disabled={selectedItems.length === 0 || !fromWarehouse || !toWarehouse || isTransferring}
+                disabled={selectedItems.length === 0 || !fromWarehouse || !toWarehouse || isTransferring || loadingCapacities}
                 className={`px-6 py-2 rounded-md transition flex items-center gap-2 ${
-                  selectedItems.length === 0 || !fromWarehouse || !toWarehouse || isTransferring
+                  selectedItems.length === 0 || !fromWarehouse || !toWarehouse || isTransferring || loadingCapacities
                     ? 'bg-gray-500 text-gray-300 cursor-not-allowed'
                     : 'bg-green hover:bg-green/80 text-white'
                 }`}
@@ -672,7 +883,6 @@ const TransferList = () => {
         </div>
       )}
 
-      {/* Add Items Modal */}
       {/* Add Items Modal */}
       {showAddItemsModal && (
         <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/60">
