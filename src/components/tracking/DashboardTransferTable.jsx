@@ -32,7 +32,7 @@ const DashboardTransferTable = () => {
             }
         };
 
-        fetchTransfers();
+        fetchTransfers(); 
     }, []);
 
   const emptyRows = Math.max(10 - transfers.length, 0);
