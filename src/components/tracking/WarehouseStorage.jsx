@@ -9,6 +9,7 @@ export default function WarehouseStorage({ initialItems, total, limit, page }) {
 
   // Form states for the modal
   const [warehouseName, setWarehouseName] = useState('');
+  const [location, setLocation] = useState(''); // NEW: Location field
   const [description, setDescription] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitMessage, setSubmitMessage] = useState('');
@@ -103,6 +104,11 @@ export default function WarehouseStorage({ initialItems, total, limit, page }) {
       return;
     }
 
+    if (!location.trim()) {
+      setSubmitMessage('Location is required');
+      return;
+    }
+
     setIsSubmitting(true);
     setSubmitMessage('');
 
@@ -114,6 +120,7 @@ export default function WarehouseStorage({ initialItems, total, limit, page }) {
         },
         body: JSON.stringify({
           warehouse_name: warehouseName,
+          location: location, // NEW: Include location in the request
           description: description
         }),
       });
@@ -126,6 +133,7 @@ export default function WarehouseStorage({ initialItems, total, limit, page }) {
         
         // Clear form
         setWarehouseName('');
+        setLocation(''); // NEW: Clear location field
         setDescription('');
         
         // Close modal after 2 seconds
@@ -149,6 +157,7 @@ export default function WarehouseStorage({ initialItems, total, limit, page }) {
   const handleCloseModal = () => {
     setShowModal(false);
     setWarehouseName('');
+    setLocation(''); // NEW: Reset location field
     setDescription('');
     setSubmitMessage('');
     setIsSubmitting(false);
@@ -257,6 +266,18 @@ export default function WarehouseStorage({ initialItems, total, limit, page }) {
                 disabled={isSubmitting}
               />
 
+              {/* NEW: Location Input */}
+              <label className="block mb-1">Location</label>
+              <input
+                type="text"
+                value={location}
+                onChange={(e) => setLocation(e.target.value)}
+                placeholder="Enter warehouse location"
+                className="w-full border border-border_color rounded px-3 py-2 mb-4 bg-primary text-textColor-primary"
+                required
+                disabled={isSubmitting}
+              />
+
               {/* Description Input */}
               <label className="block mb-1">Description</label>
               <textarea
@@ -307,7 +328,7 @@ export default function WarehouseStorage({ initialItems, total, limit, page }) {
         </div>
       )}
 
-      {/* Continue with Table & Pagination UI */}
+      {/* Continue with Table & Pagination UI - keeping existing code */}
       <div className="overflow-x-auto">
         <table className="w-full table-fixed border-collapse">
         <thead>
