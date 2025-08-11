@@ -472,22 +472,6 @@ const TransferList = () => {
           {/* Filter and Cancel */}
           <div className="flex items-center gap-2">
             <div className="relative inline-block">
-              <button onClick={() => setFilterOpen(!filterOpen)} className="bg-primary text-secondary rounded px-3 py-2 text-sm hover:text-textColor-secondary hover:bg-violet-600">
-                <svg width="24" height="24" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-                  <line x1="3" y1="6" x2="21" y2="6" />
-                  <line x1="6" y1="12" x2="18" y2="12" />
-                  <line x1="9" y1="18" x2="15" y2="18" />
-                </svg>
-              </button>
-              {filterOpen && (
-                <div className="absolute mt-2 bg-primary border border-border_color rounded shadow-md z-10 w-[130px]">
-                  <ul className="py-1 text-sm text-textColor-primary text-left">
-                    <li><a href="#" className="block px-4 py-2 hover:bg-btn-hover">Date</a></li>
-                    <li><a href="#" className="block px-4 py-2 hover:bg-btn-hover">Warehouse</a></li>
-                    <li><a href="#" className="block px-4 py-2 hover:bg-btn-hover">Transfer ID</a></li>
-                  </ul>
-                </div>
-              )}
             </div>
             <a href="/tracking/Dashboard">
               <button className="bg-primary text-secondary rounded px-3 py-2 text-sm hover:text-textColor-secondary hover:bg-violet-600">
