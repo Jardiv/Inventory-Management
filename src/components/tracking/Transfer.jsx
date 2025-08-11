@@ -673,18 +673,25 @@ const TransferList = () => {
       )}
 
       {/* Add Items Modal */}
+      {/* Add Items Modal */}
       {showAddItemsModal && (
         <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/60">
           <div className="w-[996px] max-w-[95%] bg-primary border border-border_color rounded-md p-6 text-textColor-primary font-sans shadow-xl space-y-6 overflow-y-auto max-h-[95vh] relative">
+            
+            {/* Header */}
             <div className="flex justify-between items-center">
               <h2 className="text-3xl font-medium">{getSelectedWarehouseName()}</h2>
-              <button onClick={() => setShowAddItemsModal(false)} className="w-10 h-10 flex items-center justify-center rounded-full hover:bg-border_color/20 transition">
+              <button 
+                onClick={() => setShowAddItemsModal(false)} 
+                className="w-10 h-10 flex items-center justify-center rounded-full hover:bg-border_color/20 transition"
+              >
                 <svg xmlns="http://www.w3.org/2000/svg" className="w-6 h-6 text-textColor-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
                 </svg>
               </button>
             </div>
 
+            {/* Table Header */}
             <div className="grid grid-cols-[1fr_1fr_1fr_1fr_1fr] gap-4 font-semibold text-xl border-b border-border_color pb-2 text-textColor-primary">
               <div className="text-center"></div>
               <div className="text-center">Item SKU</div>
@@ -693,44 +700,59 @@ const TransferList = () => {
               <div className="text-center">Selected Qty</div>
             </div>
 
+            {/* Table Content */}
             <div className="space-y-4 max-h-[400px] overflow-y-auto">
               {loadingItems ? (
                 <div className="text-center py-8 text-textColor-primary">Loading items...</div>
-              ) : warehouseItems.length === 0 ? (
-                <div className="text-center py-8 text-textColor-tertiary">No items found in this warehouse</div>
+              ) : warehouseItems.filter(item => item.quantity > 0).length === 0 ? (
+                <div className="text-center py-8 text-textColor-tertiary">
+                  No items found in this warehouse
+                </div>
               ) : (
-                warehouseItems.map((item) => (
-                  <div key={item.id} className="grid grid-cols-[1fr_1fr_1fr_1fr_1fr] gap-4 items-center text-textColor-primary">
-                    <div className="flex justify-center">
-                      <input 
-                        type="checkbox" 
-                        checked={selectedWarehouseItems.includes(item.id)}
-                        onChange={() => handleItemSelection(item.id)}
-                        className="w-5 h-5 border border-border_color rounded-md accent-btn-primary" 
-                      />
-                    </div>
-                    <div className="text-center text-lg">{item.items?.sku || 'N/A'}</div>
-                    <div className="text-center text-lg">{item.items?.name || 'Unknown'}</div>
-                    <div className="text-center text-lg">{item.quantity}</div>
-                    <div className="flex justify-center">
-                      <div className="border border-border_color rounded-md px-3 py-1 w-24">
+                warehouseItems
+                  .filter(item => item.quantity > 0)
+                  .map((item) => (
+                    <div key={item.id} className="grid grid-cols-[1fr_1fr_1fr_1fr_1fr] gap-4 items-center text-textColor-primary">
+                      {/* Checkbox */}
+                      <div className="flex justify-center">
                         <input 
-                          type="number" 
-                          min="0" 
-                          max={item.quantity}
-                          value={quantities[item.id] || ''}
-                          onChange={(e) => handleQuantityChange(item.id, e.target.value)}
-                          disabled={!selectedWarehouseItems.includes(item.id)}
-                          placeholder="Qty" 
-                          className="bg-transparent w-full text-textColor-primary text-sm text-center outline-none disabled:opacity-50 placeholder:text-textColor-tertiary" 
+                          type="checkbox" 
+                          checked={selectedWarehouseItems.includes(item.id)}
+                          onChange={() => handleItemSelection(item.id)}
+                          className="w-5 h-5 border border-border_color rounded-md accent-btn-primary" 
                         />
                       </div>
+
+                      {/* Item SKU */}
+                      <div className="text-center text-lg">{item.items?.sku || 'N/A'}</div>
+                      
+                      {/* Item Name */}
+                      <div className="text-center text-lg">{item.items?.name || 'Unknown'}</div>
+                      
+                      {/* Available Qty */}
+                      <div className="text-center text-lg">{item.quantity}</div>
+                      
+                      {/* Selected Qty Input */}
+                      <div className="flex justify-center">
+                        <div className="border border-border_color rounded-md px-3 py-1 w-24">
+                          <input 
+                            type="number" 
+                            min="0" 
+                            max={item.quantity}
+                            value={quantities[item.id] || ''}
+                            onChange={(e) => handleQuantityChange(item.id, e.target.value)}
+                            disabled={!selectedWarehouseItems.includes(item.id)}
+                            placeholder="Qty" 
+                            className="bg-transparent w-full text-textColor-primary text-sm text-center outline-none disabled:opacity-50 placeholder:text-textColor-tertiary" 
+                          />
+                        </div>
+                      </div>
                     </div>
-                  </div>
-                ))
+                  ))
               )}
             </div>
 
+            {/* Footer Buttons */}
             <div className="flex justify-between pt-4">
               <button 
                 onClick={clearAllSelections}
