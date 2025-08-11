@@ -17,6 +17,7 @@ export default function ProductModal({ product, onClose, onUpdated }) {
         max_quantity: 0,
         unit_price: 0,
         categoryName: "",
+        description: "",
     });
 
     const [loadingSave, setLoadingSave] = useState(false);
@@ -34,6 +35,7 @@ export default function ProductModal({ product, onClose, onUpdated }) {
                 max_quantity: product.max_quantity || 0,
                 unit_price: product.unit_price || 0,
                 categoryName: product.category?.name || "",
+                description: product.description || "",
             });
             setIsEditing(false);
         }
@@ -70,10 +72,7 @@ export default function ProductModal({ product, onClose, onUpdated }) {
                 .order("date", { ascending: false })
                 .then(({ data, error }) => {
                     if (error) {
-                        console.error(
-                            "Error fetching purchase history:",
-                            error
-                        );
+                        console.error("Error fetching purchase history:", error);
                         setPurchaseHistory([]);
                     } else {
                         setPurchaseHistory(data || []);
@@ -119,6 +118,7 @@ export default function ProductModal({ product, onClose, onUpdated }) {
                     min_quantity: formData.min_quantity,
                     max_quantity: formData.max_quantity,
                     unit_price: formData.unit_price,
+                    description: formData.description,
                 })
                 .eq("id", product.id);
 
@@ -164,7 +164,6 @@ export default function ProductModal({ product, onClose, onUpdated }) {
                 <button
                     onClick={onClose}
                     className="absolute px-2 py-1 rounded-md top-3 right-3 text-xl text-textColor-primary hover:bg-btn-hover hover:text-textColor-secondary"
-                    // style={{ color: "var(--color-textColor-primary)" }}
                     disabled={loadingSave || loadingDelete}
                 >
                     ✖
@@ -189,28 +188,13 @@ export default function ProductModal({ product, onClose, onUpdated }) {
                         className="space-y-2"
                         style={{ color: "var(--color-textColor-primary)" }}
                     >
-                        <p>
-                            <strong>Item Name:</strong> {product.name}
-                        </p>
-                        <p>
-                            <strong>Item Code:</strong> {product.sku}
-                        </p>
-                        <p>
-                            <strong>Category:</strong>{" "}
-                            {product.category?.name || "—"}
-                        </p>
-                        <p>
-                            <strong>Min Quantity:</strong>{" "}
-                            {product.min_quantity}
-                        </p>
-                        <p>
-                            <strong>Max Quantity:</strong>{" "}
-                            {product.max_quantity}
-                        </p>
-                        <p>
-                            <strong>Unit Price:</strong> ₱
-                            {product.unit_price?.toFixed(2)}
-                        </p>
+                        <p><strong>Item Name:</strong> {product.name}</p>
+                        <p><strong>Item Code:</strong> {product.sku}</p>
+                        <p><strong>Category:</strong> {product.category?.name || "—"}</p>
+                        <p><strong>Min Quantity:</strong> {product.min_quantity}</p>
+                        <p><strong>Max Quantity:</strong> {product.max_quantity}</p>
+                        <p><strong>Unit Price:</strong> ₱{product.unit_price?.toFixed(2)}</p>
+                        <p><strong>Description:</strong> {product.description || "No description provided"}</p>
                     </div>
                 ) : (
                     <div className="space-y-2">
@@ -247,6 +231,13 @@ export default function ProductModal({ product, onClose, onUpdated }) {
                             onChange={handleChange}
                             className="w-full p-2 border rounded"
                         />
+                        <textarea
+                            name="description"
+                            value={formData.description}
+                            onChange={handleChange}
+                            className="w-full p-2 border rounded"
+                            placeholder="Enter product description"
+                        />
                     </div>
                 )}
 
@@ -260,12 +251,10 @@ export default function ProductModal({ product, onClose, onUpdated }) {
                         onClick={() => setActiveTab("stock")}
                         className="px-4 py-2 text-sm transition-colors duration-300 focus:outline-none"
                         style={{
-                            fontWeight:
-                                activeTab === "stock" ? "bold" : "normal",
-                            color:
-                                activeTab === "stock"
-                                    ? "var(--color-btn-primary)"
-                                    : "var(--color-textColor-primary)",
+                            fontWeight: activeTab === "stock" ? "bold" : "normal",
+                            color: activeTab === "stock"
+                                ? "var(--color-btn-primary)"
+                                : "var(--color-textColor-primary)",
                         }}
                     >
                         Stock Information
@@ -275,12 +264,10 @@ export default function ProductModal({ product, onClose, onUpdated }) {
                         onClick={() => setActiveTab("purchase")}
                         className="px-4 py-2 text-sm transition-colors duration-300 focus:outline-none"
                         style={{
-                            fontWeight:
-                                activeTab === "purchase" ? "bold" : "normal",
-                            color:
-                                activeTab === "purchase"
-                                    ? "var(--color-btn-primary)"
-                                    : "var(--color-textColor-primary)",
+                            fontWeight: activeTab === "purchase" ? "bold" : "normal",
+                            color: activeTab === "purchase"
+                                ? "var(--color-btn-primary)"
+                                : "var(--color-textColor-primary)",
                         }}
                     >
                         Purchase History
@@ -308,10 +295,7 @@ export default function ProductModal({ product, onClose, onUpdated }) {
                         {/* Stock Tab */}
                         <div
                             style={{
-                                visibility:
-                                    activeTab === "stock"
-                                        ? "visible"
-                                        : "hidden",
+                                visibility: activeTab === "stock" ? "visible" : "hidden",
                                 height: activeTab === "stock" ? "auto" : 0,
                                 overflow: "hidden",
                             }}
@@ -346,10 +330,7 @@ export default function ProductModal({ product, onClose, onUpdated }) {
                         {/* Purchase History Tab */}
                         <div
                             style={{
-                                visibility:
-                                    activeTab === "purchase"
-                                        ? "visible"
-                                        : "hidden",
+                                visibility: activeTab === "purchase" ? "visible" : "hidden",
                                 height: activeTab === "purchase" ? "auto" : 0,
                                 overflow: "hidden",
                             }}
@@ -387,103 +368,88 @@ export default function ProductModal({ product, onClose, onUpdated }) {
                 </div>
 
                 {/* Action Buttons */}
-<div className="mt-6 flex justify-end gap-3">
-  {!isEditing ? (
-    <>
-      {/* Delete First */}
-      <button
-        onClick={handleDelete}
-        disabled={loadingDelete}
-        className="px-4 py-2 rounded transition-colors duration-200"
-        style={{
-          backgroundColor: "var(--color-red)",
-          color: "var(--color-textColor-secondary)",
-          opacity: loadingDelete ? 0.6 : 1,
-          cursor: loadingDelete ? "not-allowed" : "pointer",
-        }}
-        onMouseEnter={(e) => {
-          if (!loadingDelete) e.target.style.backgroundColor = "#b71c1c";
-        }}
-        onMouseLeave={(e) => {
-          if (!loadingDelete)
-            e.target.style.backgroundColor = "var(--color-red)";
-        }}
-      >
-        {loadingDelete ? "Deleting..." : "Delete"}
-      </button>
-
-      {/* Edit Second */}
-      <button
-        onClick={() => setIsEditing(true)}
-        className="px-7 py-2 rounded transition-colors duration-200"
-        style={{
-          backgroundColor: "var(--color-btn-primary)",
-          color: "var(--color-textColor-secondary)",
-        }}
-        onMouseEnter={(e) =>
-          (e.target.style.backgroundColor = "var(--color-btn-hover)")
-        }
-        onMouseLeave={(e) =>
-          (e.target.style.backgroundColor = "var(--color-btn-primary)")
-        }
-      >
-        Edit
-      </button>
-    </>
-  ) : (
-    <>
-      {/* Cancel First */}
-      <button
-        onClick={() => {
-          setIsEditing(false);
-          setFormData({
-            name: product.name || "",
-            sku: product.sku || "",
-            min_quantity: product.min_quantity || 0,
-            max_quantity: product.max_quantity || 0,
-            unit_price: product.unit_price || 0,
-            categoryName: product.category?.name || "",
-          });
-        }}
-        className="px-4 py-2 rounded transition-colors duration-200"
-        style={{
-          backgroundColor: "var(--color-red)",
-          color: "var(--color-textColor-secondary)",
-        }}
-        onMouseEnter={(e) => (e.target.style.backgroundColor = "#b71c1c")}
-        onMouseLeave={(e) =>
-          (e.target.style.backgroundColor = "var(--color-red)")
-        }
-      >
-        Cancel
-      </button>
-
-      {/* Save Second */}
-      <button
-        onClick={handleSave}
-        disabled={loadingSave}
-        className="px-4 py-2 rounded transition-colors duration-200"
-        style={{
-          backgroundColor: "var(--color-btn-primary)",
-          color: "var(--color-textColor-secondary)",
-          opacity: loadingSave ? 0.6 : 1,
-          cursor: loadingSave ? "not-allowed" : "pointer",
-        }}
-        onMouseEnter={(e) => {
-          if (!loadingSave)
-            e.target.style.backgroundColor = "var(--color-btn-hover)";
-        }}
-        onMouseLeave={(e) => {
-          if (!loadingSave)
-            e.target.style.backgroundColor = "var(--color-btn-primary)";
-        }}
-      >
-        {loadingSave ? "Saving..." : "Save"}
-      </button>
-    </>
-  )}
-</div>
-
+                <div className="mt-6 flex justify-end gap-3">
+                    {!isEditing ? (
+                        <>
+                            <button
+                                onClick={handleDelete}
+                                disabled={loadingDelete}
+                                className="px-4 py-2 rounded transition-colors duration-200"
+                                style={{
+                                    backgroundColor: "var(--color-red)",
+                                    color: "var(--color-textColor-secondary)",
+                                    opacity: loadingDelete ? 0.6 : 1,
+                                    cursor: loadingDelete ? "not-allowed" : "pointer",
+                                }}
+                                onMouseEnter={(e) => {
+                                    if (!loadingDelete) e.target.style.backgroundColor = "#b71c1c";
+                                }}
+                                onMouseLeave={(e) => {
+                                    if (!loadingDelete) e.target.style.backgroundColor = "var(--color-red)";
+                                }}
+                            >
+                                {loadingDelete ? "Deleting..." : "Delete"}
+                            </button>
+                            <button
+                                onClick={() => setIsEditing(true)}
+                                className="px-7 py-2 rounded transition-colors duration-200"
+                                style={{
+                                    backgroundColor: "var(--color-btn-primary)",
+                                    color: "var(--color-textColor-secondary)",
+                                }}
+                                onMouseEnter={(e) => (e.target.style.backgroundColor = "var(--color-btn-hover)")}
+                                onMouseLeave={(e) => (e.target.style.backgroundColor = "var(--color-btn-primary)")}
+                            >
+                                Edit
+                            </button>
+                        </>
+                    ) : (
+                        <>
+                            <button
+                                onClick={() => {
+                                    setIsEditing(false);
+                                    setFormData({
+                                        name: product.name || "",
+                                        sku: product.sku || "",
+                                        min_quantity: product.min_quantity || 0,
+                                        max_quantity: product.max_quantity || 0,
+                                        unit_price: product.unit_price || 0,
+                                        categoryName: product.category?.name || "",
+                                        description: product.description || "",
+                                    });
+                                }}
+                                className="px-4 py-2 rounded transition-colors duration-200"
+                                style={{
+                                    backgroundColor: "var(--color-red)",
+                                    color: "var(--color-textColor-secondary)",
+                                }}
+                                onMouseEnter={(e) => (e.target.style.backgroundColor = "#b71c1c")}
+                                onMouseLeave={(e) => (e.target.style.backgroundColor = "var(--color-red)")}
+                            >
+                                Cancel
+                            </button>
+                            <button
+                                onClick={handleSave}
+                                disabled={loadingSave}
+                                className="px-4 py-2 rounded transition-colors duration-200"
+                                style={{
+                                    backgroundColor: "var(--color-btn-primary)",
+                                    color: "var(--color-textColor-secondary)",
+                                    opacity: loadingSave ? 0.6 : 1,
+                                    cursor: loadingSave ? "not-allowed" : "pointer",
+                                }}
+                                onMouseEnter={(e) => {
+                                    if (!loadingSave) e.target.style.backgroundColor = "var(--color-btn-hover)";
+                                }}
+                                onMouseLeave={(e) => {
+                                    if (!loadingSave) e.target.style.backgroundColor = "var(--color-btn-primary)";
+                                }}
+                            >
+                                {loadingSave ? "Saving..." : "Save"}
+                            </button>
+                        </>
+                    )}
+                </div>
             </div>
         </div>
     );
