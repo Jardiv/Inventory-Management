@@ -518,7 +518,7 @@ const Shipments = () => {
                     <div>
                       <span className={`px-3 py-1 rounded-full text-sm font-medium ${
                         t.status === 'Pending' 
-                          ? 'bg-yellow-100 text-yellow-800' 
+                          ? 'bg-yellow-100 text-yellow-800'  
                           : t.status === 'Delivered' 
                           ? 'bg-green-100 text-green-800'
                           : 'bg-gray-100 text-gray-800' // fallback for any other status

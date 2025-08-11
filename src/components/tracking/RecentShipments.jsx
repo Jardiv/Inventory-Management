@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 
 const RecentShipments = () => {
   const [shipments, setShipments] = useState([]);
-  const [loading, setLoading] = useState(true); // ✅ Added loading state
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const fetchShipments = async () => {
@@ -18,7 +18,7 @@ const RecentShipments = () => {
       } catch (err) {
         console.error('Fetch failed:', err);
       } finally {
-        setLoading(false); // ✅ Done loading
+        setLoading(false);
       }
     };
 
@@ -31,7 +31,7 @@ const RecentShipments = () => {
   return (
     <div className="space-y-2 text-sm">
       {loading
-        ? // ✅ Skeleton rows when loading
+        ? // Skeleton rows when loading
           Array.from({ length: 4 }).map((_, idx) => (
             <div
               key={`skeleton-${idx}`}
@@ -43,7 +43,7 @@ const RecentShipments = () => {
               <span className="mx-auto w-14 h-4 bg-gray-700 rounded"></span>
             </div>
           ))
-        : // ✅ Actual data when loaded
+        : // Actual data when loaded
           shipments.map((shipment, idx) => (
             <div
               key={idx}
@@ -52,17 +52,26 @@ const RecentShipments = () => {
               <span>{shipment.id}</span>
               <span>{shipment.name}</span>
               <span>{shipment.qty}</span>
-              <span
-                className={
-                  shipment.status === 'RECEIVED'
-                    ? 'text-green-500 font-semibold'
-                    : shipment.status === 'PENDING'
-                    ? 'text-yellow-500 font-semibold'
-                    : 'font-semibold'
-                }
-              >
-                {shipment.status.toUpperCase()}
-              </span>
+              <div>
+                <span 
+                  className="px-3 py-1 rounded-full text-sm font-medium border"
+                  style={{
+                    backgroundColor: shipment.status === 'Delivered' 
+                      ? 'color-mix(in srgb, var(--color-green) 10%, transparent)'
+                      : shipment.status === 'Pending'
+                      ? 'color-mix(in srgb, var(--color-orange) 10%, transparent)'
+                      : 'color-mix(in srgb, var(--color-textColor-tertiary) 10%, transparent)',
+                    color: shipment.status === 'Delivered'
+                      ? 'var(--color-green)'
+                      : shipment.status === 'Pending'
+                      ? 'var(--color-orange)'
+                      : 'var(--color-textColor-tertiary)',
+                    borderColor: 'var(--color-border_color)'
+                  }}
+                >
+                  {shipment.status.toUpperCase()}
+                </span>
+              </div>
             </div>
           ))}
 
