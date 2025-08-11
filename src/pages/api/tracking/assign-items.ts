@@ -36,7 +36,7 @@ export const POST: APIRoute = async ({ request }) => {
           continue;
         }
 
-        const itemId = itemData.id;
+        const itemId = itemData.id; 
         console.log(`Found item_id: ${itemId} for ${item.name}`);
 
         // 🚫 Check shipment status before continuing

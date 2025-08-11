@@ -712,17 +712,8 @@ const PurchaseOrderLogs = () => {
       }
 
       // Divider line below header (even closer)
-      doc.setDrawColor(0);
-      doc.setLineWidth(0.6);
-      const dividerY = headerBottomY - 2;
-      doc.line(margin, dividerY, pageWidth - margin, dividerY);
-
-      // Content title under header
-      let cursorY = dividerY + 10; // slightly less padding
-      if (hasPoppins) { doc.setFont('Poppins', 'bold'); } else { doc.setFont('helvetica', 'bold'); }
-      doc.setFontSize(16);
-      doc.text('Purchase Order Details', margin, cursorY);
-      cursorY += 10;
+      // Removed divider line and 'Purchase Order Details' text as requested
+      let cursorY = headerBottomY + 8; // adjust spacing after header
 
       // Color constants for table headers
       const HEADER_PURPLE = [143, 0, 179]; // slightly darker

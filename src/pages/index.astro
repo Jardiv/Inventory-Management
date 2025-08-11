@@ -3,22 +3,27 @@ import Layout from '../layouts/Layout.astro';
 import DashboardTransactions from '../components/transactions/DashboardTransactions.jsx';
 import DashboardProductTable from '../components/inventory/DashboardProductTable.jsx';
 import DashboardTransferTable from '../components/tracking/DashboardTransferTable.jsx';
+import LowQuantityStockCard from '../components/reports/LowQuantityStockCard.jsx';
 ---
 
 <!-- DASHBOARD -->
 <Layout>
-    <div class=" h-full grid grid-cols-5 grid-rows-5 gap-4">
-        <div class="bg-primary col-span-2 row-span-3"></div>
+    <div class=" h-full grid grid-cols-5 grid-rows-5 gap-4 ">
 
-        <div class="bg-primary col-span-3 row-span-2 overflow-auto">
+        <div class="bg-primary col-span-2 row-span-3 rounded-lg">
+            <LowQuantityStockCard client:load />
+        </div>
+
+
+        <div class="bg-primary col-span-3 row-span-2 flex flex-col p-4 rounded-lg">
             <DashboardTransferTable client:load />
         </div>
 
-        <div class="bg-primary col-span-3 row-span-4 overflow-auto">
+        <div class="bg-primary col-span-3 row-span-4 rounded-lg">
             <DashboardProductTable client:load />
         </div>
 
-        <div class="bg-primary overflow-auto col-span-2 row-span-2 ">
+        <div class="bg-primary col-span-2 row-span-2 overflow-auto rounded-lg">
             <DashboardTransactions client:load />
         </div>
     </div>
