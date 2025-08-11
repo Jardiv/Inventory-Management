@@ -42,14 +42,19 @@ export default function WarehouseStorage({ initialItems, total, limit, page }) {
       try {
         const res = await fetch('/api/tracking/warehouses');
         const result = await res.json();
-        setWarehouseList(result.data || []);
         
-        if (result.data && result.data.length > 0) {
+        // Sort warehouses by ID to ensure consistent ordering
+        const sortedWarehouses = (result.data || []).sort((a, b) => parseInt(a.id) - parseInt(b.id));
+        setWarehouseList(sortedWarehouses);
+        
+        if (sortedWarehouses && sortedWarehouses.length > 0) {
           const urlParams = new URLSearchParams(window.location.search);
           const warehouseIdFromURL = urlParams.get('warehouse_id');
 
           if (!warehouseIdFromURL) {
-            setSelectedWarehouse(result.data[0].id);
+            // Always default to warehouse with ID "1" if it exists, otherwise use the first one
+            const defaultWarehouse = sortedWarehouses.find(w => w.id === '1' || w.id === 1) || sortedWarehouses[0];
+            setSelectedWarehouse(String(defaultWarehouse.id));
           }
         }
       } catch (err) {

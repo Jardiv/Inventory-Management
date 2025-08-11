@@ -13,8 +13,13 @@ export default function WarehouseSummary() {
         const res = await fetch('/api/tracking/warehouses');
         const result = await res.json();
         if (result.data?.length) {
-          setWarehouseList(result.data);
-          setSelectedWarehouse(result.data[0].id); // Default to first
+          // Sort warehouses by ID to ensure consistent ordering
+          const sortedWarehouses = result.data.sort((a, b) => parseInt(a.id) - parseInt(b.id));
+          setWarehouseList(sortedWarehouses);
+          
+          // Always default to warehouse with ID "1" if it exists, otherwise use the first one
+          const defaultWarehouse = sortedWarehouses.find(w => w.id === '1' || w.id === 1) || sortedWarehouses[0];
+          setSelectedWarehouse(defaultWarehouse.id);
         }
       } catch (err) {
         console.error("Error fetching warehouses", err);
@@ -72,19 +77,21 @@ export default function WarehouseSummary() {
                 className="hidden absolute mt-2 bg-primary border border-border_color rounded shadow-md z-10 w-[160px] max-h-60 overflow-y-auto"
               >
                 <ul className="py-1 text-sm text-textColor-primary">
-                  {warehouseList.map(w => (
-                    <li key={w.id}>
-                      <button
-                        onClick={() => {
-                          setSelectedWarehouse(w.id);
-                          document.getElementById('dropdown')?.classList.add('hidden');
-                        }}
-                        className="block px-4 py-2 w-full text-left hover:bg-btn-hover hover:text-textColor-secondary"
-                      >
-                        {w.name}
-                      </button>
-                    </li>
-                  ))}
+                  {warehouseList
+                    .sort((a, b) => parseInt(a.id) - parseInt(b.id)) // Ensure sorted display
+                    .map(w => (
+                      <li key={w.id}>
+                        <button
+                          onClick={() => {
+                            setSelectedWarehouse(w.id);
+                            document.getElementById('dropdown')?.classList.add('hidden');
+                          }}
+                          className="block px-4 py-2 w-full text-left hover:bg-btn-hover hover:text-textColor-secondary"
+                        >
+                          {w.name}
+                        </button>
+                      </li>
+                    ))}
                 </ul>
               </div>
             </div>
