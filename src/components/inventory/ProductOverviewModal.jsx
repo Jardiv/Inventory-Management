@@ -387,107 +387,103 @@ export default function ProductModal({ product, onClose, onUpdated }) {
                 </div>
 
                 {/* Action Buttons */}
-                <div className="mt-6 flex justify-end gap-3">
-                    {!isEditing ? (
-                        <button
-                            onClick={() => setIsEditing(true)}
-                            className="px-7 py-2 rounded transition-colors duration-200"
-                            style={{
-                                backgroundColor: "var(--color-btn-primary)",
-                                color: "var(--color-textColor-secondary)",
-                            }}
-                            onMouseEnter={(e) =>
-                                (e.target.style.backgroundColor =
-                                    "var(--color-btn-hover)")
-                            }
-                            onMouseLeave={(e) =>
-                                (e.target.style.backgroundColor =
-                                    "var(--color-btn-primary)")
-                            }
-                        >
-                            Edit
-                        </button>
-                    ) : (
-                        <button
-                            onClick={handleSave}
-                            disabled={loadingSave}
-                            className="px-4 py-2 rounded transition-colors duration-200"
-                            style={{
-                                backgroundColor: "var(--color-btn-primary)",
-                                color: "var(--color-textColor-secondary)",
-                                opacity: loadingSave ? 0.6 : 1,
-                                cursor: loadingSave ? "not-allowed" : "pointer",
-                            }}
-                            onMouseEnter={(e) => {
-                                if (!loadingSave)
-                                    e.target.style.backgroundColor =
-                                        "var(--color-btn-hover)";
-                            }}
-                            onMouseLeave={(e) => {
-                                if (!loadingSave)
-                                    e.target.style.backgroundColor =
-                                        "var(--color-btn-primary)";
-                            }}
-                        >
-                            {loadingSave ? "Saving..." : "Save"}
-                        </button>
-                    )}
+<div className="mt-6 flex justify-end gap-3">
+  {!isEditing ? (
+    <>
+      {/* Delete First */}
+      <button
+        onClick={handleDelete}
+        disabled={loadingDelete}
+        className="px-4 py-2 rounded transition-colors duration-200"
+        style={{
+          backgroundColor: "var(--color-red)",
+          color: "var(--color-textColor-secondary)",
+          opacity: loadingDelete ? 0.6 : 1,
+          cursor: loadingDelete ? "not-allowed" : "pointer",
+        }}
+        onMouseEnter={(e) => {
+          if (!loadingDelete) e.target.style.backgroundColor = "#b71c1c";
+        }}
+        onMouseLeave={(e) => {
+          if (!loadingDelete)
+            e.target.style.backgroundColor = "var(--color-red)";
+        }}
+      >
+        {loadingDelete ? "Deleting..." : "Delete"}
+      </button>
 
-                    {!isEditing ? (
-                        <button
-                            onClick={handleDelete}
-                            disabled={loadingDelete}
-                            className="px-4 py-2 rounded transition-colors duration-200"
-                            style={{
-                                backgroundColor: "var(--color-red)",
-                                color: "var(--color-textColor-secondary)",
-                                opacity: loadingDelete ? 0.6 : 1,
-                                cursor: loadingDelete
-                                    ? "not-allowed"
-                                    : "pointer",
-                            }}
-                            onMouseEnter={(e) => {
-                                if (!loadingDelete)
-                                    e.target.style.backgroundColor = "#b71c1c";
-                            }}
-                            onMouseLeave={(e) => {
-                                if (!loadingDelete)
-                                    e.target.style.backgroundColor =
-                                        "var(--color-red)";
-                            }}
-                        >
-                            {loadingDelete ? "Deleting..." : "Delete"}
-                        </button>
-                    ) : (
-                        <button
-                            onClick={() => {
-                                setIsEditing(false);
-                                setFormData({
-                                    name: product.name || "",
-                                    sku: product.sku || "",
-                                    min_quantity: product.min_quantity || 0,
-                                    max_quantity: product.max_quantity || 0,
-                                    unit_price: product.unit_price || 0,
-                                    categoryName: product.category?.name || "",
-                                });
-                            }}
-                            className="px-4 py-2 rounded transition-colors duration-200"
-                            style={{
-                                backgroundColor: "var(--color-red)",
-                                color: "var(--color-textColor-secondary)",
-                            }}
-                            onMouseEnter={(e) =>
-                                (e.target.style.backgroundColor = "#b71c1c")
-                            }
-                            onMouseLeave={(e) =>
-                                (e.target.style.backgroundColor =
-                                    "var(--color-red)")
-                            }
-                        >
-                            Cancel
-                        </button>
-                    )}
-                </div>
+      {/* Edit Second */}
+      <button
+        onClick={() => setIsEditing(true)}
+        className="px-7 py-2 rounded transition-colors duration-200"
+        style={{
+          backgroundColor: "var(--color-btn-primary)",
+          color: "var(--color-textColor-secondary)",
+        }}
+        onMouseEnter={(e) =>
+          (e.target.style.backgroundColor = "var(--color-btn-hover)")
+        }
+        onMouseLeave={(e) =>
+          (e.target.style.backgroundColor = "var(--color-btn-primary)")
+        }
+      >
+        Edit
+      </button>
+    </>
+  ) : (
+    <>
+      {/* Cancel First */}
+      <button
+        onClick={() => {
+          setIsEditing(false);
+          setFormData({
+            name: product.name || "",
+            sku: product.sku || "",
+            min_quantity: product.min_quantity || 0,
+            max_quantity: product.max_quantity || 0,
+            unit_price: product.unit_price || 0,
+            categoryName: product.category?.name || "",
+          });
+        }}
+        className="px-4 py-2 rounded transition-colors duration-200"
+        style={{
+          backgroundColor: "var(--color-red)",
+          color: "var(--color-textColor-secondary)",
+        }}
+        onMouseEnter={(e) => (e.target.style.backgroundColor = "#b71c1c")}
+        onMouseLeave={(e) =>
+          (e.target.style.backgroundColor = "var(--color-red)")
+        }
+      >
+        Cancel
+      </button>
+
+      {/* Save Second */}
+      <button
+        onClick={handleSave}
+        disabled={loadingSave}
+        className="px-4 py-2 rounded transition-colors duration-200"
+        style={{
+          backgroundColor: "var(--color-btn-primary)",
+          color: "var(--color-textColor-secondary)",
+          opacity: loadingSave ? 0.6 : 1,
+          cursor: loadingSave ? "not-allowed" : "pointer",
+        }}
+        onMouseEnter={(e) => {
+          if (!loadingSave)
+            e.target.style.backgroundColor = "var(--color-btn-hover)";
+        }}
+        onMouseLeave={(e) => {
+          if (!loadingSave)
+            e.target.style.backgroundColor = "var(--color-btn-primary)";
+        }}
+      >
+        {loadingSave ? "Saving..." : "Save"}
+      </button>
+    </>
+  )}
+</div>
+
             </div>
         </div>
     );

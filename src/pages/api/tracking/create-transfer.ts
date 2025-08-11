@@ -1,4 +1,4 @@
-// src/pages/api/tracking/create-transfer.ts - Fixed Version without Schema Changes
+// src/pages/api/tracking/create-transfer.ts - Fixed Version with Record Deletion
 import { supabase } from "../../../utils/supabaseClient";
 import type { APIRoute } from 'astro';
 
@@ -44,7 +44,7 @@ export const POST: APIRoute = async ({ request }) => {
         .from('warehouse_items')
         .select('quantity, item_id, id')
         .eq('warehouse_id', fromWarehouse)
-        .eq('item_id', itemId);
+        .eq('item_id', itemId); 
 
       console.log("Query result:", { warehouseItems, checkError });
 
@@ -88,6 +88,7 @@ export const POST: APIRoute = async ({ request }) => {
 
       // Decrease quantities from source warehouse (handle multiple records)
       let remainingToDecrease = quantity;
+      const recordsToDelete = []; // Track records that become 0
       
       for (const warehouseItem of warehouseItems) {
         if (remainingToDecrease <= 0) break;
@@ -95,19 +96,43 @@ export const POST: APIRoute = async ({ request }) => {
         const decreaseAmount = Math.min(warehouseItem.quantity, remainingToDecrease);
         const newQuantity = warehouseItem.quantity - decreaseAmount;
         
-        console.log(`Updating record ${warehouseItem.id}: ${warehouseItem.quantity} - ${decreaseAmount} = ${newQuantity}`);
+        console.log(`Processing record ${warehouseItem.id}: ${warehouseItem.quantity} - ${decreaseAmount} = ${newQuantity}`);
         
-        const { error: decreaseError } = await supabase
-          .from('warehouse_items')
-          .update({ quantity: newQuantity })
-          .eq('id', warehouseItem.id);
+        if (newQuantity === 0) {
+          // Mark for deletion instead of updating to 0
+          recordsToDelete.push(warehouseItem.id);
+          console.log(`Record ${warehouseItem.id} will be deleted (quantity became 0)`);
+        } else {
+          // Update with new quantity
+          const { error: decreaseError } = await supabase
+            .from('warehouse_items')
+            .update({ quantity: newQuantity })
+            .eq('id', warehouseItem.id);
 
-        if (decreaseError) {
-          console.error('Decrease error:', decreaseError);
-          throw new Error(`Failed to update source warehouse quantity: ${decreaseError.message}`);
+          if (decreaseError) {
+            console.error('Decrease error:', decreaseError);
+            throw new Error(`Failed to update source warehouse quantity: ${decreaseError.message}`);
+          }
+          console.log(`Updated record ${warehouseItem.id} to quantity ${newQuantity}`);
         }
         
         remainingToDecrease -= decreaseAmount;
+      }
+
+      // Delete records that became 0
+      if (recordsToDelete.length > 0) {
+        console.log(`Deleting ${recordsToDelete.length} records with 0 quantity:`, recordsToDelete);
+        
+        const { error: deleteError } = await supabase
+          .from('warehouse_items')
+          .delete()
+          .in('id', recordsToDelete);
+
+        if (deleteError) {
+          console.error('Delete error:', deleteError);
+          throw new Error(`Failed to delete empty warehouse records: ${deleteError.message}`);
+        }
+        console.log(`Successfully deleted ${recordsToDelete.length} empty records`);
       }
 
       // Handle destination warehouse

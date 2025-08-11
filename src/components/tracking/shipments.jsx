@@ -4,6 +4,7 @@ const Shipments = () => {
   const [shipments, setShipments] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false); 
+  const [showAddModal, setShowAddModal] = useState(false);
   const [showDropdown, setShowDropdown] = useState(false);
   const [selectedWarehouse, setSelectedWarehouse] = useState('');
   const [warehouseCapacity, setWarehouseCapacity] = useState({ current: 0, max: 0 });
@@ -18,12 +19,20 @@ const Shipments = () => {
   const itemsPerPage = 10;
   const [filterStatus, setFilterStatus] = useState('All');
 
-
+  // New shipment form state - modified to use item_id input
+  const [newShipment, setNewShipment] = useState({
+    item_id: '',
+    quantity: '',
+    note: ''
+  });
+  const [isAddingShipment, setIsAddingShipment] = useState(false);
+  const [itemPreview, setItemPreview] = useState(null); // To show item details when valid ID is entered
+  const [validationTimeout, setValidationTimeout] = useState(null); // For debouncing validation
 
   useEffect(() => {
     const fetchShipments = async () => {
       try {
-        const res = await fetch('/api/tracking/shipments');
+        const res = await fetch('/api/tracking/shipments'); 
         const data = await res.json();
 
         if (res.ok) {
@@ -100,6 +109,86 @@ const Shipments = () => {
 
     fetchWarehouseCapacity();
   }, [selectedWarehouse, showModal]);
+
+  // Debounced validation function
+  const debouncedValidateItemId = (itemId) => {
+    // Clear existing timeout
+    if (validationTimeout) {
+      clearTimeout(validationTimeout);
+    }
+    
+    // Set new timeout
+    const timeout = setTimeout(() => {
+      validateItemId(itemId);
+    }, 500); // Wait 500ms after user stops typing
+    
+    setValidationTimeout(timeout);
+  };
+
+  // FIXED: New function to validate and preview item details
+  const validateItemId = async (itemId) => {
+    if (!itemId || itemId.trim() === '' || isNaN(itemId)) {
+      setItemPreview(null);
+      return;
+    }
+
+    try {
+      // FIXED: Try multiple possible API endpoints
+      let res, data;
+      
+      // First try the standard items endpoint
+      res = await fetch(`/api/tracking/items`);
+      
+      // If that fails, try alternative endpoints
+      if (!res.ok) {
+        console.log('Trying alternative endpoint...');
+        res = await fetch(`/api/items`);
+      }
+      
+      // If still failing, try direct database query endpoint
+      if (!res.ok) {
+        console.log('Trying direct query endpoint...');
+        res = await fetch(`/api/tracking/validate-item?id=${itemId}`);
+      }
+
+      // Check if the response is JSON
+      const contentType = res.headers.get('content-type');
+      if (!contentType || !contentType.includes('application/json')) {
+        console.error('Response is not JSON, likely received HTML error page');
+        setItemPreview({ error: 'API endpoint not found' });
+        return;
+      }
+
+      data = await res.json();
+      
+      console.log('Items API response:', data); // Debug log
+      console.log('Looking for item ID:', parseInt(itemId)); // Debug log
+      
+      if (res.ok && Array.isArray(data)) {
+        const item = data.find(item => {
+          console.log('Checking item:', item.id, 'against', parseInt(itemId)); // Debug log
+          return item.id === parseInt(itemId);
+        });
+        
+        if (item) {
+          console.log('Found item:', item); // Debug log
+          setItemPreview(item);
+        } else {
+          console.log('Item not found in data'); // Debug log
+          setItemPreview({ error: 'Item not found' });
+        }
+      } else if (res.ok && data.id) {
+        // Single item response
+        setItemPreview(data);
+      } else {
+        console.log('API response not ok or not array:', res.ok, Array.isArray(data)); // Debug log
+        setItemPreview({ error: data.error || 'Error loading items' });
+      }
+    } catch (err) {
+      console.error('Error validating item:', err);
+      setItemPreview({ error: 'Error validating item - check console for details' });
+    }
+  };
 
   const handleAssignItems = async () => {
     if (!selectedWarehouse) {
@@ -178,6 +267,86 @@ const Shipments = () => {
     }
   };
 
+  // FIXED: Better error handling and validation
+  const handleAddShipment = async () => {
+    if (!newShipment.item_id || !newShipment.quantity) {
+      alert('Please fill in all required fields (Item ID and Quantity)');
+      return;
+    }
+
+    if (parseInt(newShipment.quantity) <= 0) {
+      alert('Quantity must be greater than 0');
+      return;
+    }
+
+    if (itemPreview?.error) {
+      alert('Please enter a valid Item ID');
+      return;
+    }
+
+    setIsAddingShipment(true);
+
+    try {
+      console.log('Sending add shipment request:', {
+        item_id: parseInt(newShipment.item_id),
+        quantity: parseInt(newShipment.quantity),
+        note: newShipment.note || null
+      });
+
+      const response = await fetch('/api/tracking/add-shipment', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          item_id: parseInt(newShipment.item_id),
+          quantity: parseInt(newShipment.quantity),
+          note: newShipment.note || null
+        })
+      });
+
+      // Check if the response is JSON
+      const contentType = response.headers.get('content-type');
+      if (!contentType || !contentType.includes('application/json')) {
+        console.error('Response is not JSON, likely received HTML error page');
+        alert('API endpoint not found. Please check your server configuration.');
+        return;
+      }
+
+      const data = await response.json();
+      console.log('Add shipment response:', data);
+
+      if (response.ok) {
+        alert('Shipment added successfully!');
+        
+        // Reset form
+        setNewShipment({
+          item_id: '',
+          quantity: '',
+          note: ''
+        });
+        setItemPreview(null);
+        setShowAddModal(false);
+
+        // Refresh shipments data
+        const res = await fetch('/api/tracking/shipments');
+        const shipmentsData = await res.json();
+        if (res.ok) {
+          setShipments(shipmentsData);
+        }
+        
+      } else {
+        console.error('Add shipment failed:', data);
+        alert(`Failed to add shipment: ${data.error || 'Unknown error'}`);
+      }
+    } catch (error) {
+      console.error('Error adding shipment:', error);
+      alert('Failed to add shipment. Please check the console for details.');
+    } finally {
+      setIsAddingShipment(false);
+    }
+  };
+
   const filteredShipments = filterStatus === 'All'
     ? shipments
     : shipments.filter(shipment => shipment.status === filterStatus);
@@ -189,13 +358,24 @@ const Shipments = () => {
 
   const emptyRows = itemsPerPage - paginatedShipments.length;
 
-
   return (
     <div className="w-full max-w-[100%] bg-primary rounded-md mx-auto p-6 text-textColor-primary font-sans">
       {/* Title & Buttons */}
       <div className="flex justify-between items-center mb-6">
         <h2 className="text-2xl font-semibold">Incoming Shipments</h2>
         <div className="flex gap-4">
+          {/* Add Shipment Button */}
+          <button
+            onClick={() => setShowAddModal(true)}
+            className="flex items-center gap-2 px-4 py-2 border border-transparent rounded hover:border-btn-hover transition"
+          >
+            <span>Add Shipment</span>
+            <svg xmlns="http://www.w3.org/2000/svg" className="size-6" viewBox="0 0 24 24" fill="currentColor">
+              <path fillRule="evenodd" d="M12 3.75a.75.75 0 0 1 .75.75v6.75h6.75a.75.75 0 0 1 0 1.5h-6.75v6.75a.75.75 0 0 1-1.5 0v-6.75H4.5a.75.75 0 0 1 0-1.5h6.75V4.5a.75.75 0 0 1 .75-.75Z" clipRule="evenodd" />
+            </svg>
+          </button>
+
+          {/* Assign Items Button */}
           <button
             onClick={() => setShowModal(true)}
             className="flex items-center gap-2 px-4 py-2 border border-transparent rounded hover:border-btn-hover transition"
@@ -230,7 +410,7 @@ const Shipments = () => {
                         onClick={() => {
                           setFilterStatus('Pending');
                           setShowDropdown(false);
-                          setCurrentPage(1); // reset to first page
+                          setCurrentPage(1);
                         }}
                         className="block w-full text-left px-4 py-2 hover:bg-tbl-hover"
                       >
@@ -242,7 +422,7 @@ const Shipments = () => {
                         onClick={() => {
                           setFilterStatus('Delivered');
                           setShowDropdown(false);
-                          setCurrentPage(1); // reset to first page
+                          setCurrentPage(1);
                         }}
                         className="block w-full text-left px-4 py-2 hover:bg-tbl-hover"
                       >
@@ -254,7 +434,7 @@ const Shipments = () => {
                         onClick={() => {
                           setFilterStatus('All');
                           setShowDropdown(false);
-                          setCurrentPage(1); // reset to first page
+                          setCurrentPage(1);
                         }}
                         className="block w-full text-left px-4 py-2 hover:bg-tbl-hover"
                       >
@@ -397,7 +577,149 @@ const Shipments = () => {
         </nav>
       </div>
 
-      {/* Modal */}
+      {/* Add Shipment Modal - FIXED */}
+      {showAddModal && (
+        <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50">
+          <div className="relative bg-primary border border-border_color shadow-lg rounded-lg w-[500px] h-[650px] text-textColor-primary font-sans overflow-hidden">
+            {/* Close Button */}
+            <button 
+              onClick={() => {
+                setShowAddModal(false);
+                setItemPreview(null);
+                setNewShipment({ item_id: '', quantity: '', note: '' });
+                if (validationTimeout) {
+                  clearTimeout(validationTimeout);
+                }
+              }} 
+              disabled={isAddingShipment}
+              className="absolute top-4 right-4 w-[34px] h-[34px] flex items-center justify-center disabled:opacity-50"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth="1.5" stroke="currentColor" className="w-5 h-5 mx-auto">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M6 18 18 6M6 6l12 12" />
+              </svg>
+            </button>
+
+            {/* Header */}
+            <h2 className="absolute top-5 left-7 text-2xl font-semibold">Add New Shipment</h2>
+
+            {/* Form */}
+            <div className="absolute top-[80px] left-7 right-7 space-y-6">
+              {/* Item ID Input - IMPROVED */}
+              <div>
+                <label className="block text-xl mb-3">Item ID</label>
+                <input
+                  type="number"
+                  value={newShipment.item_id}
+                  onChange={(e) => {
+                    const value = e.target.value;
+                    setNewShipment(prev => ({ ...prev, item_id: value }));
+                    
+                    // Clear previous preview immediately on change
+                    if (value.trim() === '') {
+                      setItemPreview(null);
+                      if (validationTimeout) {
+                        clearTimeout(validationTimeout);
+                      }
+                    } else {
+                      debouncedValidateItemId(value);
+                    }
+                  }}
+                  disabled={isAddingShipment}
+                  min="1"
+                  className={`w-full h-[60px] bg-primary border rounded-md text-textColor-primary text-lg px-4 disabled:opacity-50 ${
+                    itemPreview?.error ? 'border-red-500' : itemPreview && !itemPreview.error ? 'border-green-500' : 'border-border_color'
+                  }`}
+                  placeholder="Enter item ID"
+                />
+                
+                {/* Item Preview - IMPROVED */}
+                {itemPreview && (
+                  <div className={`mt-2 p-3 rounded-md ${
+                    itemPreview.error 
+                      ? 'bg-red-50 border border-red-200' 
+                      : 'bg-green-50 border border-green-200'
+                  }`}>
+                    {itemPreview.error ? (
+                      <div className="text-red-600 text-sm flex items-center">
+                        <svg className="w-4 h-4 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                          <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+                        </svg>
+                        {itemPreview.error}
+                      </div>
+                    ) : (
+                      <div className="text-green-700 text-sm">
+                        <div className="flex items-center mb-1">
+                          <svg className="w-4 h-4 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                            <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                          </svg>
+                          <strong>Item Found!</strong>
+                        </div>
+                        <div><strong>Name:</strong> {itemPreview.name}</div>
+                        <div><strong>SKU:</strong> {itemPreview.sku}</div>
+                        <div><strong>Category:</strong> {itemPreview.category}</div>
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
+
+              {/* Quantity Input */}
+              <div>
+                <label className="block text-xl mb-3">Quantity</label>
+                <input
+                  type="number"
+                  value={newShipment.quantity}
+                  onChange={(e) => setNewShipment(prev => ({ ...prev, quantity: e.target.value }))}
+                  disabled={isAddingShipment}
+                  min="1"
+                  className="w-full h-[60px] bg-primary border border-border_color rounded-md text-textColor-primary text-lg px-4 disabled:opacity-50"
+                  placeholder="Enter quantity"
+                />
+              </div>
+
+              {/* Note Input */}
+              <div>
+                <label className="block text-xl mb-3">Note (Optional)</label>
+                <textarea
+                  value={newShipment.note}
+                  onChange={(e) => setNewShipment(prev => ({ ...prev, note: e.target.value }))}
+                  disabled={isAddingShipment}
+                  rows={4}
+                  className="w-full bg-primary border border-border_color rounded-md text-textColor-primary text-lg px-4 py-3 disabled:opacity-50 resize-none"
+                  placeholder="Enter any additional notes..."
+                />
+              </div>
+            </div>
+
+            {/* Modal Footer Buttons */}
+            <div className="absolute bottom-[32px] right-[32px] flex gap-4">
+              <button 
+                onClick={() => {
+                  setShowAddModal(false);
+                  setItemPreview(null);
+                  setNewShipment({ item_id: '', quantity: '', note: '' });
+                  if (validationTimeout) {
+                    clearTimeout(validationTimeout);
+                  }
+                }} 
+                disabled={isAddingShipment}
+                className="bg-red w-[120px] h-[42px] rounded-md text-textColor-secondary text-[17px] font-medium disabled:opacity-50"
+              >
+                Cancel
+              </button>
+              <button 
+                onClick={handleAddShipment}
+                disabled={isAddingShipment || !newShipment.item_id || !newShipment.quantity || itemPreview?.error}
+                className="bg-green w-[120px] h-[42px] rounded-md text-textColor-secondary text-[17px] font-medium disabled:opacity-50 flex items-center justify-center"
+              >
+                {isAddingShipment ? 'Adding...' : 'Add'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Assign Items Modal */}
       {showModal && (
         <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50">
           <div className="relative bg-primary border border-border_color shadow-[0_4px_4px_797px_rgba(0,0,0,0.49)] rounded-lg w-[711px] h-[854px] text-textColor-primary font-sans overflow-hidden">

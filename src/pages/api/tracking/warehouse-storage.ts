@@ -18,7 +18,7 @@ export const GET: APIRoute = async ({ request }) => {
       id,
       item_id,
       quantity,
-      date_assigned,
+      date_assigned, 
       status,
       warehouse_id,
       items ( 
@@ -31,7 +31,8 @@ export const GET: APIRoute = async ({ request }) => {
       )
     `,
             { count: "exact" }
-        ) // to get total count
+        )
+        .gt("quantity", 0) // Only show items with quantity greater than 0
         .range(from, to);
 
     if (warehouseId) {
