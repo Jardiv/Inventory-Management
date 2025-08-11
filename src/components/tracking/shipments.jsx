@@ -201,6 +201,28 @@ const Shipments = () => {
       return;
     }
 
+    // NEW: Calculate total quantity to be assigned
+    const totalQuantityToAssign = assignedProducts.reduce((sum, product) => sum + product.quantity, 0);
+    
+    // NEW: Check if warehouse has enough capacity
+    const availableCapacity = warehouseCapacity.max - warehouseCapacity.current;
+    
+    if (totalQuantityToAssign > availableCapacity) {
+      alert(`Cannot assign items. Warehouse capacity exceeded!\n\nTrying to assign: ${totalQuantityToAssign} items\nAvailable capacity: ${availableCapacity} items\n\nCurrent: ${warehouseCapacity.current}/${warehouseCapacity.max}`);
+      return;
+    }
+
+    // NEW: Warn if assignment will fill warehouse to near capacity (e.g., 90% or more)
+    const newTotal = warehouseCapacity.current + totalQuantityToAssign;
+    const capacityPercentage = (newTotal / warehouseCapacity.max) * 100;
+    
+    if (capacityPercentage >= 90) {
+      const confirmed = confirm(`Warning: This assignment will fill the warehouse to ${capacityPercentage.toFixed(1)}% capacity (${newTotal}/${warehouseCapacity.max}).\n\nDo you want to continue?`);
+      if (!confirmed) {
+        return;
+      }
+    }
+
     setIsAssigning(true);
 
     try {
