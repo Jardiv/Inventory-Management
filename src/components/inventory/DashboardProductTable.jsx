@@ -83,7 +83,7 @@ export default function ProductInventoryPreview({ limit = 10 }) {
       </div>
 
       {/* Scrollable Table Body */}
-      <div className="max-h-[300px] overflow-y-auto divide-y divide-border_color">
+      <div className="max-h-[400px] overflow-y-auto divide-y divide-border_color">
         {loading ? (
           // Skeleton rows
           Array.from({ length: limit }).map((_, idx) => (
