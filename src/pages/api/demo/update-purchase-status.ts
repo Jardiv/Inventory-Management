@@ -50,20 +50,16 @@ export const POST: APIRoute = async ({ request }) => {
       const transactionPromises = Object.entries(itemsBySupplier).map(async ([supplier_id, items]) => {
         const typedItems = items as { quantity: number; supplier_id: number; items: { id: number; unit_price: number } }[];
         
-        // 5a. Calculate totals for this supplier's items
         const total_quantity = typedItems.reduce((sum, item) => sum + item.quantity, 0);
         const total_price = typedItems.reduce((sum, item) => sum + (item.quantity * item.items.unit_price), 0);
-
-        // 5b. Generate a new, unique invoice number for the transaction
         const transaction_invoice_no = `${poData.invoice_no}-S${supplier_id}`;
 
-        // 5c. Construct payload
         const transactionPayload = {
           transaction_type: 'stock_in',
           invoice_no: transaction_invoice_no,
           total_quantity,
           total_price,
-          status: 'In Transit', // New transaction status
+          status: 'In Transit',
           created_by: poData.created_by,
           supplier_id: parseInt(supplier_id),
           items: typedItems.map(item => ({
@@ -73,7 +69,6 @@ export const POST: APIRoute = async ({ request }) => {
           })),
         };
 
-        // 5d. Call the insert transaction API
         const insertApiUrl = `${url.origin}/api/transactions/insert-new-transaction`;
         const insertResponse = await fetch(insertApiUrl, {
           method: 'POST',
@@ -88,15 +83,13 @@ export const POST: APIRoute = async ({ request }) => {
         return insertResponse.json();
       });
 
-      // 6. Wait for all transaction creation promises to resolve
       await Promise.all(transactionPromises);
     }
 
-    // If status is 'Completed', update the transaction status to 'Delivered'
+    // If status is 'Completed', update transaction status and create shipments
     if (status === 'Completed') {
+      // Part 1: Update associated transactions to 'Delivered'
       const updateApiUrl = `${url.origin}/api/transactions/update-status`;
-      // This part might need adjustment if a PO can have multiple transactions
-      // For now, it updates any transaction with the original invoice_no prefix
       const { data: transactionsToUpdate, error: findError } = await supabase
         .from('transactions')
         .select('invoice_no')
@@ -104,19 +97,49 @@ export const POST: APIRoute = async ({ request }) => {
 
       if (findError) throw new Error('Could not find transactions to update.');
 
-      const updatePromises = transactionsToUpdate.map(t => fetch(updateApiUrl, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ invoice_no: t.invoice_no, status: 'Delivered' }),
-      }));
-      
-      const responses = await Promise.all(updatePromises);
-      responses.forEach(async (res, i) => {
-        if(!res.ok) {
-            const errorBody = await res.json();
-            console.error(`Failed to update transaction ${transactionsToUpdate[i].invoice_no}: ${errorBody.error || res.statusText}`);
+      if (transactionsToUpdate && transactionsToUpdate.length > 0) {
+          const updatePromises = transactionsToUpdate.map(t => fetch(updateApiUrl, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ invoice_no: t.invoice_no, status: 'Delivered' }),
+          }));
+          
+          const responses = await Promise.all(updatePromises);
+          responses.forEach(async (res, i) => {
+            if(!res.ok) {
+                const errorBody = await res.json();
+                console.error(`Failed to update transaction ${transactionsToUpdate[i].invoice_no}: ${errorBody.error || res.statusText}`);
+            }
+          });
+      }
+
+      // Part 2: Create new 'Pending' shipments for each item in the PO
+      const { data: poItems, error: poItemsError } = await supabase
+        .from('purchase_orders_items')
+        .select('item_id, quantity')
+        .eq('invoice_no', invoice_no);
+
+      if (poItemsError) {
+        throw new Error(`Failed to fetch items for shipment creation: ${poItemsError.message}`);
+      }
+
+      if (poItems && poItems.length > 0) {
+        const newShipments = poItems.map(item => ({
+          item_id: item.item_id,
+          quantity: item.quantity,
+          status: 'Pending',
+          date: new Date().toISOString(),
+          note: `From Purchase Order ${invoice_no}`
+        }));
+
+        const { error: shipmentInsertError } = await supabase
+          .from('shipments')
+          .insert(newShipments);
+
+        if (shipmentInsertError) {
+          throw new Error(`Failed to create shipments: ${shipmentInsertError.message}`);
         }
-      });
+      }
     }
 
     return new Response(JSON.stringify({ success: true, message: `Purchase order status updated to ${status}.` }), {
