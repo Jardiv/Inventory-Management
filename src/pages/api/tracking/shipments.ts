@@ -13,7 +13,7 @@ export const GET: APIRoute = async () => {
       item_id,
       items (
         name  
-      )
+      ) 
     `)
     .order('date', { ascending: false });
 
