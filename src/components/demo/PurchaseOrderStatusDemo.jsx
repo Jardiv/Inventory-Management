@@ -74,6 +74,7 @@ const PurchaseOrderStatusDemo = () => {
               <option value="Pending">Pending</option>
               <option value="In Transit">In Transit</option>
               <option value="Completed">Completed</option>
+              <option value="Cancelled">Cancelled</option>
             </select>
             <div className="flex gap-4 mt-6">
               <button className="px-4 py-2 bg-background hover:bg-textColor-tertiary rounded" onClick={() => setShowModal(false)} disabled={loading}>Cancel</button>
