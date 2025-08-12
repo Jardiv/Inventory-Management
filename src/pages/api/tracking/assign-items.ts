@@ -7,6 +7,10 @@ export const POST: APIRoute = async ({ request }) => {
     const body = await request.json();
     const { warehouseId, items } = body;
 
+    console.log('Raw request body:', body);
+    console.log('Parsed warehouseId:', warehouseId, 'Type:', typeof warehouseId);
+    console.log('Parsed items:', items);
+
     if (!warehouseId || !items || !Array.isArray(items)) {
       return new Response(
         JSON.stringify({ error: "Warehouse ID and items array are required" }),
@@ -14,10 +18,25 @@ export const POST: APIRoute = async ({ request }) => {
       );
     }
 
-    console.log('Assignment request:', { warehouseId, items });
+    // Check if warehouse exists first
+    const { data: warehouseData, error: warehouseError } = await supabase
+      .from('warehouse')
+      .select('id, name, max_capacity')
+      .eq('id', parseInt(warehouseId))
+      .single();
+
+    if (warehouseError) {
+      console.error('Warehouse lookup error:', warehouseError);
+      return new Response(
+        JSON.stringify({ error: `Warehouse not found: ${warehouseError.message}` }),
+        { status: 400 }
+      );
+    }
+
+    console.log('Found warehouse:', warehouseData);
 
     const results = [];
-    const errors = [];
+    const errors = []; 
 
     for (const item of items) {
       try {
@@ -26,7 +45,7 @@ export const POST: APIRoute = async ({ request }) => {
         // First, find the item_id from items table using the name
         const { data: itemData, error: itemError } = await supabase
           .from('items')
-          .select('id')
+          .select('id, name')
           .eq('name', item.name)
           .single();
 
@@ -39,32 +58,35 @@ export const POST: APIRoute = async ({ request }) => {
         const itemId = itemData.id; 
         console.log(`Found item_id: ${itemId} for ${item.name}`);
 
-        // 🚫 Check shipment status before continuing
-        const { data: shipmentRecord, error: shipmentError } = await supabase
+        // Check shipment status before continuing
+        const { data: shipmentData, error: shipmentError } = await supabase
           .from('shipments')
-          .select('status')
+          .select('id, status, quantity')
           .eq('item_id', itemId)
+          .eq('status', 'Pending') // Only get pending shipments
           .maybeSingle();
 
         if (shipmentError) {
           console.error(`Error fetching shipment for item ${item.name}:`, shipmentError);
-          errors.push(`Error checking shipment status for ${item.name}`);
+          errors.push(`Error checking shipment status for ${item.name}: ${shipmentError.message}`);
           continue;
         }
 
-        if (!shipmentRecord || shipmentRecord.status === 'Delivered') {
-          console.warn(`Skipping delivered item: ${item.name}`);
-          errors.push(`Item ${item.name} is already delivered and cannot be reassigned.`);
+        if (!shipmentData) {
+          console.warn(`No pending shipment found for item: ${item.name}`);
+          errors.push(`No pending shipment found for item ${item.name}`);
           continue;
         }
+
+        console.log(`Found shipment:`, shipmentData);
 
         // Check if this item already exists in the warehouse_items table
         const { data: existingWarehouseItem, error: existingError } = await supabase
           .from('warehouse_items')
           .select('id, quantity')
-          .eq('warehouse_id', warehouseId)
+          .eq('warehouse_id', parseInt(warehouseId))
           .eq('item_id', itemId)
-          .maybeSingle(); // Use maybeSingle instead of single to avoid error when not found
+          .maybeSingle();
 
         if (existingError) {
           console.error(`Error checking existing warehouse item:`, existingError);
@@ -77,13 +99,14 @@ export const POST: APIRoute = async ({ request }) => {
           console.log(`Updating existing warehouse item. Current qty: ${existingWarehouseItem.quantity}, Adding: ${item.quantity}`);
           
           const newQuantity = existingWarehouseItem.quantity + item.quantity;
-          const { error: updateError } = await supabase
+          const { data: updateData, error: updateError } = await supabase
             .from('warehouse_items')
             .update({ 
               quantity: newQuantity,
               date_assigned: new Date().toISOString()
             })
-            .eq('id', existingWarehouseItem.id);
+            .eq('id', existingWarehouseItem.id)
+            .select();
 
           if (updateError) {
             console.error(`Error updating warehouse item:`, updateError);
@@ -91,20 +114,25 @@ export const POST: APIRoute = async ({ request }) => {
             continue;
           }
 
-          console.log(`Successfully updated warehouse item to quantity: ${newQuantity}`);
+          console.log(`Successfully updated warehouse item:`, updateData);
         } else {
           // Item doesn't exist in warehouse, insert new record
           console.log(`Creating new warehouse item entry`);
           
-          const { error: insertError } = await supabase
+          const insertData = {
+            item_id: itemId,
+            warehouse_id: parseInt(warehouseId),
+            quantity: item.quantity,
+            status: 'Active',
+            date_assigned: new Date().toISOString()
+          };
+
+          console.log('Inserting warehouse item with data:', insertData);
+
+          const { data: insertResult, error: insertError } = await supabase
             .from('warehouse_items')
-            .insert({
-              item_id: itemId,
-              warehouse_id: parseInt(warehouseId), // Ensure it's an integer
-              quantity: item.quantity,
-              status: 'Active',
-              date_assigned: new Date().toISOString()
-            });
+            .insert(insertData)
+            .select();
 
           if (insertError) {
             console.error(`Error inserting warehouse item:`, insertError);
@@ -112,39 +140,39 @@ export const POST: APIRoute = async ({ request }) => {
             continue;
           }
 
-          console.log(`Successfully created new warehouse item entry`);
+          console.log(`Successfully created warehouse item:`, insertResult);
         }
 
         // Update shipment status to 'Delivered'
-        const { error: shipmentUpdateError } = await supabase
+        const { data: shipmentUpdateData, error: shipmentUpdateError } = await supabase
           .from('shipments')
           .update({ status: 'Delivered' })
-          .eq('item_id', itemId)
-          .eq('status', 'Pending');
+          .eq('id', shipmentData.id)
+          .select();
 
         if (shipmentUpdateError) {
           console.error(`Error updating shipment status:`, shipmentUpdateError);
-          // Don't add to errors since warehouse update succeeded
-          console.warn(`Warning: Could not update shipment status for item ${item.name}: ${shipmentUpdateError.message}`);
+          errors.push(`Error updating shipment status for ${item.name}: ${shipmentUpdateError.message}`);
+          continue;
         } else {
-          console.log(`Successfully updated shipment status to Delivered`);
+          console.log(`Successfully updated shipment:`, shipmentUpdateData);
         }
 
         results.push({
           itemName: item.name,
           quantity: item.quantity,
           itemId: itemId,
-          warehouseId: warehouseId,
+          warehouseId: parseInt(warehouseId),
           status: 'success'
         });
 
       } catch (error) {
         console.error(`Unexpected error processing item ${item.name}:`, error);
-        errors.push(`Unexpected error processing item ${item.name}: ${error.message}`);
+        errors.push(`Unexpected error processing item ${item.name}: ${error instanceof Error ? error.message : 'Unknown error'}`);
       }
     }
 
-    console.log('Assignment results:', { results, errors });
+    console.log('Final assignment results:', { results, errors });
 
     if (errors.length > 0 && results.length === 0) {
       return new Response(
@@ -174,9 +202,12 @@ export const POST: APIRoute = async ({ request }) => {
     return new Response(
       JSON.stringify({ 
         error: "Internal server error", 
-        details: error.message 
+        details: error instanceof Error ? error.message : 'Unknown error'
       }),
-      { status: 500 }
+      { 
+        status: 500,
+        headers: { 'Content-Type': 'application/json' }
+      }
     );
   }
 };
