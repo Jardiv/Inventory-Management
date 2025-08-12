@@ -34,7 +34,7 @@ export const GET: APIRoute = async ({ url }) => {
 
     console.log('Items with pending purchase orders:', Array.from(itemsWithPendingOrders));
 
-    // Now get ALL items with warehouse quantities (no pagination limit yet)
+    // Now get ALL items with warehouse quantities and supplier name (no pagination limit yet)
     const { data: allItems, error } = await supabase
       .from('items')
       .select(`
@@ -44,6 +44,8 @@ export const GET: APIRoute = async ({ url }) => {
         min_quantity,
         max_quantity,
         unit_price,
+        curr_supplier_id,
+        suppliers:curr_supplier_id (name),
         warehouse_items (
           quantity
         )
@@ -76,34 +78,31 @@ export const GET: APIRoute = async ({ url }) => {
         if (item.warehouse_items && Array.isArray(item.warehouse_items) && item.warehouse_items.length > 0) {
           totalQuantity = item.warehouse_items[0].quantity || 0;
         }
-        
         // Calculate suggested order quantity using intelligent formula
-        // Formula: Bring stock up to max_quantity level
-        // If max_quantity is not set, suggest bringing it to 2x min_quantity as a reasonable buffer
         let suggestedOrder = 0;
         const maxQty = item.max_quantity || 0;
         const minQty = item.min_quantity || 0;
-        
         if (maxQty > 0) {
-          // Use max_quantity as target if available
           suggestedOrder = Math.max(0, maxQty - totalQuantity);
         } else if (minQty > 0) {
-          // If no max_quantity, suggest ordering to 2x minimum as a reasonable buffer
           const targetQuantity = minQty * 2;
           suggestedOrder = Math.max(0, targetQuantity - totalQuantity);
         } else {
-          // Fallback: suggest a minimum order of 10 units if no min/max is set
           suggestedOrder = Math.max(0, 10 - totalQuantity);
         }
-        
-        // Determine status (same logic as items.ts)
         let status = 'In Stock';
         if (totalQuantity === 0) {
           status = 'Out of stock';
         } else if (totalQuantity <= (item.min_quantity || 0)) {
           status = 'Low';
         }
-
+        // Format unit price as Philippine Peso
+        const formatPeso = (amount: number) => `₱${Number(amount).toLocaleString('en-PH', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+        // Get supplier name from joined suppliers table
+        let supplierName = '-';
+        if (item.suppliers && Array.isArray(item.suppliers) && item.suppliers.length > 0 && item.suppliers[0].name) {
+          supplierName = item.suppliers[0].name;
+        }
         return {
           id: item.id,
           sku: item.sku,
@@ -111,7 +110,8 @@ export const GET: APIRoute = async ({ url }) => {
           quantity: totalQuantity,
           minimum: item.min_quantity,
           toOrder: suggestedOrder,
-          unitPrice: item.unit_price || 10.00, // Default unit price if not available
+          unitPrice: formatPeso(item.unit_price || 10.00),
+          supplier: supplierName,
           status: status
         };
       })

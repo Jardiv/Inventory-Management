@@ -501,13 +501,13 @@ const PurchaseOrderLogs = () => {
           break;
         case 'unitPrice':
           // Extract numeric value from formatted currency string
-          aValue = parseFloat((a.unitPrice || '$0').replace(/[$,]/g, '')) || 0;
-          bValue = parseFloat((b.unitPrice || '$0').replace(/[$,]/g, '')) || 0;
+          aValue = parseFloat((a.unitPrice || '₱0').replace(/[₱,]/g, '')) || 0;
+          bValue = parseFloat((b.unitPrice || '₱0').replace(/[₱,]/g, '')) || 0;
           break;
         case 'totalPrice':
           // Extract numeric value from formatted currency string
-          aValue = parseFloat((a.totalPrice || '$0').replace(/[$,]/g, '')) || 0;
-          bValue = parseFloat((b.totalPrice || '$0').replace(/[$,]/g, '')) || 0;
+          aValue = parseFloat((a.totalPrice || '₱0').replace(/[₱,]/g, '')) || 0;
+          bValue = parseFloat((b.totalPrice || '₱0').replace(/[₱,]/g, '')) || 0;
           break;
         default:
           return 0;

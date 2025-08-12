@@ -4,6 +4,9 @@ import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 
 const InventoryTable = ({ itemsPerPage: initialItemsPerPage = 10 }) => {
+    const [selectedProduct, setSelectedProduct] = useState(null);
+    const [modalProduct, setModalProduct] = useState(null);
+    const [modalLoading, setModalLoading] = useState(false);
     const [inventoryData, setInventoryData] = useState([]);
     const [filteredData, setFilteredData] = useState([]);
     const [allInventoryData, setAllInventoryData] = useState([]); // Store all data
@@ -593,6 +596,59 @@ const InventoryTable = ({ itemsPerPage: initialItemsPerPage = 10 }) => {
         }
     };
 
+    // New function to fetch product details for the modal, including supplier name
+    const fetchProductDetails = async (productId) => {
+        setModalLoading(true);
+        setModalProduct(null);
+
+        try {
+            const response = await fetch(`/api/reports/productoverview-modal?id=${productId}`);
+
+            if (!response.ok) {
+                const errorText = await response.text();
+                throw new Error(`API Error: ${response.status} ${response.statusText}. ${errorText}`);
+            }
+
+            const result = await response.json();
+
+            if (result.error) {
+                throw new Error(result.error);
+            }
+
+            let productData = result.data;
+
+            // Fetch supplier name if curr_supplier_id exists
+            if (productData && productData.curr_supplier_id) {
+                try {
+                    const supplierRes = await fetch(`/api/reports/supplier-name?id=${productData.curr_supplier_id}`);
+                    const supplierResult = await supplierRes.json();
+                    if (supplierResult.success && supplierResult.data && supplierResult.data.name) {
+                        productData.supplier_name = supplierResult.data.name;
+                    } else {
+                        productData.supplier_name = String(productData.curr_supplier_id);
+                    }
+                } catch (e) {
+                    productData.supplier_name = String(productData.curr_supplier_id);
+                }
+            } else {
+                productData.supplier_name = '-';
+            }
+
+            setModalProduct(productData);
+        } catch (err) {
+            console.error('Failed to fetch product details:', err);
+            setModalProduct(null);
+        } finally {
+            setModalLoading(false);
+        }
+    };
+
+    // Open product modal with fetched details
+    const openProductModal = (productId) => {
+        fetchProductDetails(productId);
+        setShowFilterModal(true);
+    };
+
     if (loading) {
         return (
             <>
@@ -869,26 +925,128 @@ const InventoryTable = ({ itemsPerPage: initialItemsPerPage = 10 }) => {
                             </tr>
                         </thead>
                         <tbody className="min-h-[500px]">
-                            {tableRows.map((item, index) => (
-                                <tr 
-                                    key={item.id || `empty-${index}`}
-                                    className={`border-b border-gray-800 hover:bg-tbl-hover h-[50px] ${item.isVisible ? '' : 'invisible'} ${index === 9 ? 'border-b-0' : ''}`}
-                                    style={{ height: '50px' }}
-                                >
-                                    <td className="py-4 px-4 text-textColor-primary">{item.code}</td>
-                                    <td className="py-4 px-4 text-textColor-primary">{item.name}</td>
-                                    <td className="py-4 px-4 text-textColor-primary">{item.isVisible ? item.current : ''}</td>
-                                    <td className="py-4 px-4 text-textColor-primary">{item.isVisible ? item.min : ''}</td>
-                                    <td className="py-4 px-4 text-textColor-primary">{item.isVisible ? item.max : ''}</td>
-                                    <td className="py-4 px-4">
-                                        {item.isVisible && (
-                                            <span className={`text-xs font-semibold px-2 py-1 rounded ${getStatusStyle(item.status)}`}>
-                                                {item.status}
-                                            </span>
-                                        )}
-                                    </td>
-                                </tr>
-                            ))}
+                            {tableRows.map((item, index) => {
+                                // Only allow modal for real data rows
+                                const isRealRow = item.isVisible && item.id;
+                                const productData = isRealRow ? displayData[index] : null;
+                                return (
+                                    <tr 
+                                        key={item.id || `empty-${index}`}
+                                        className={`border-b border-gray-800 hover:bg-tbl-hover h-[50px] ${item.isVisible ? 'cursor-pointer' : 'invisible'} ${index === 9 ? 'border-b-0' : ''}`}
+                                        style={{ height: '50px' }}
+                                        onClick={async () => {
+                                            if (isRealRow && productData) {
+                                                setModalLoading(true);
+                                                setSelectedProduct(productData);
+                                                setModalProduct(null); // Clear previous modal data
+                                                try {
+                                                    const res = await fetch(`/api/reports/productoverview-modal?code=${encodeURIComponent(productData.code)}`);
+                                                    const result = await res.json();
+                                                    if (result.success && result.data) {
+                                                        setModalProduct(result.data);
+                                                    } else {
+                                                        setModalProduct({ ...productData, category_id: '-', unit_price: '-', supplier: '-' });
+                                                    }
+                                                } catch {
+                                                    setModalProduct({ ...productData, category_id: '-', unit_price: '-', supplier: '-' });
+                                                }
+                                                setModalLoading(false);
+                                            }
+                                        }}
+                                    >
+                                        <td className="py-4 px-4 text-textColor-primary">{item.code}</td>
+                                        <td className="py-4 px-4 text-textColor-primary">{item.name}</td>
+                                        <td className="py-4 px-4 text-textColor-primary">{item.isVisible ? item.current : ''}</td>
+                                        <td className="py-4 px-4 text-textColor-primary">{item.isVisible ? item.min : ''}</td>
+                                        <td className="py-4 px-4 text-textColor-primary">{item.isVisible ? item.max : ''}</td>
+                                        <td className="py-4 px-4">
+                                            {item.isVisible && (
+                                                <span className={`text-xs font-semibold px-2 py-1 rounded ${getStatusStyle(item.status)}`}>
+                                                    {item.status}
+                                                </span>
+                                            )}
+                                        </td>
+                                    </tr>
+                                );
+                            })}
+            {/* Product Overview Modal */}
+            {selectedProduct && (
+                <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50" onClick={() => {
+                    setSelectedProduct(null);
+                    setModalProduct(null);
+                }}>
+                    <div className="bg-primary rounded-lg p-8 w-[480px] max-w-full shadow-lg relative" onClick={e => e.stopPropagation()}>
+                        {/* <button className="absolute top-4 right-4 text-textColor-primary hover:text-red-500" onClick={() => {
+                            setSelectedProduct(null);
+                            setModalProduct(null);
+                        }}>
+                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth="1.5" stroke="currentColor" className="w-6 h-6">
+                                <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                            </svg>
+                        </button> */}
+                        <h2 className="text-2xl font-bold text-textColor-primary mb-6">Product Overview</h2>
+                        {modalLoading ? (
+                            <div className="flex items-center justify-center h-32">
+                                <span className="text-textColor-tertiary">Loading...</span>
+                            </div>
+                        ) : (
+                            <div className="space-y-4">
+                                <div className="flex justify-between">
+                                    <span className="font-medium text-textColor-tertiary">Item Code:</span>
+                                    <span className="text-textColor-primary">{modalProduct?.sku || modalProduct?.code || '-'}</span>
+                                </div>
+                                <div className="flex justify-between">
+                                    <span className="font-medium text-textColor-tertiary">Name:</span>
+                                    <span className="text-textColor-primary">{modalProduct?.name || '-'}</span>
+                                </div>
+                                <div className="flex justify-between">
+                                    <span className="font-medium text-textColor-tertiary">Category:</span>
+                                    <span className="text-textColor-primary">{modalProduct?.category_id ? modalProduct?.category_id : '-'}</span>
+                                </div>
+                                <div className="flex justify-between">
+                                    <span className="font-medium text-textColor-tertiary">Current Quantity:</span>
+                                    <span className="text-textColor-primary">{modalProduct?.current ?? modalProduct?.min_quantity ?? '-'}</span>
+                                </div>
+                                <div className="flex justify-between">
+                                    <span className="font-medium text-textColor-tertiary">Minimum Quantity:</span>
+                                    <span className="text-textColor-primary">{modalProduct?.min_quantity ?? '-'}</span>
+                                </div>
+                                <div className="flex justify-between">
+                                    <span className="font-medium text-textColor-tertiary">Maximum Quantity:</span>
+                                    <span className="text-textColor-primary">{modalProduct?.max_quantity ?? '-'}</span>
+                                </div>
+                                <div className="flex justify-between">
+                                    <span className="font-medium text-textColor-tertiary">Unit Price:</span>
+                                    <span className="text-textColor-primary">{modalProduct?.unit_price ?? '-'}</span>
+                                </div>
+                                <div className="flex justify-between">
+                                    <span className="font-medium text-textColor-tertiary">Supplier:</span>
+                                    <span className="text-textColor-primary">
+                                        {modalProduct?.supplier_name || '-'}
+                                    </span>
+                                </div>
+                            </div>
+                        )}
+                        <div className="mt-8 flex items-center justify-end gap-4">
+                            {/* <button
+                                className="px-4 py-2 bg-btn-primary hover:bg-btn-hover text-white rounded font-medium transition-colors"
+                                onClick={() => downloadPDF([modalProduct || selectedProduct])}
+                            >
+                                Download PDF
+                            </button> */}
+                            <button
+                                className="px-6 py-2 bg-background hover:bg-textColor-tertiary text-textColor-primary rounded font-medium transition-colors"
+                                onClick={() => {
+                                    setSelectedProduct(null);
+                                    setModalProduct(null);
+                                }}
+                            >
+                                Close
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
                         </tbody>
                     </table>
                 </div>

@@ -241,23 +241,35 @@ const LowStockTable = ({ currentPage = 1 }) => {
         // Calculate totals
         let totalQuantity = 0;
         let totalAmount = 0;
-        
+
+        const formatPeso = (amount) => `₱${Number(amount).toLocaleString('en-PH', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+
         const summaryItems = selectedItemsData.map(item => {
             const unitPrice = parseFloat(item.unitPrice) || 10.00; // Use API provided unit price
             const quantity = item.toOrder || 0;
             const itemTotal = unitPrice * quantity;
-            
+
             totalQuantity += quantity;
             totalAmount += itemTotal;
-            
+
+            // Reference supplier name from database if available
+            let supplierName = '-';
+            if (item.supplier) {
+                supplierName = item.supplier;
+            } else if (item.curr_supplier_name) {
+                supplierName = item.curr_supplier_name;
+            } else if (item.curr_supplier_id && item.suppliers && Array.isArray(item.suppliers) && item.suppliers.length > 0) {
+                supplierName = item.suppliers[0].name;
+            }
+
             return {
                 id: item.id,
                 sku: item.sku,
                 name: item.name,
                 quantity: quantity,
-                unitPrice: unitPrice,
-                totalPrice: itemTotal,
-                supplier: 'ABC Suppliers Inc.' // Default supplier since not in database
+                unitPrice: formatPeso(unitPrice),
+                totalPrice: formatPeso(itemTotal),
+                supplier: supplierName
             };
         });
 
@@ -265,7 +277,7 @@ const LowStockTable = ({ currentPage = 1 }) => {
             items: summaryItems,
             date: new Date().toLocaleString(),
             totalQuantity: totalQuantity,
-            totalAmount: totalAmount
+            totalAmount: formatPeso(totalAmount)
         };
 
         setPurchaseOrderSummary(summary);
@@ -352,7 +364,7 @@ const LowStockTable = ({ currentPage = 1 }) => {
                 await fetchLowStockData();
                 
                 // Show success message
-                alert(`Purchase Order Generated Successfully!\n\nInvoice No: ${result.data.invoiceNo}\nTotal Items: ${result.data.itemCount}\nTotal Amount: $${result.data.totalAmount.toFixed(2)}\n\nStatus: Pending (awaiting procurement approval)\n\nYou can view this purchase order in Reports > Logs.`);
+                alert(`Purchase Order Generated Successfully!\n\nInvoice No: ${result.data.invoiceNo}\nTotal Items: ${result.data.itemCount}\nTotal Amount: ₱${result.data.totalAmount.toFixed(2)}\n\nStatus: Pending (awaiting procurement approval)\n\nYou can view this purchase order in Reports > Logs.`);
                 
                 // Open success modal (existing functionality)
                 if (window.lowStockManager && typeof window.lowStockManager.openSuccessModal === 'function') {
@@ -1386,7 +1398,7 @@ const LowStockTable = ({ currentPage = 1 }) => {
                                         <label className="text-textColor-primary font-medium w-36 text-right">Supplier:</label>
                                         <input 
                                             type="text" 
-                                            value={itemDetails.supplier} 
+                                            value={itemDetails.supplier ? itemDetails.supplier : '-'} 
                                             className="flex-1 px-3 py-2 bg-background text-textColor-tertiary rounded border border-textColor-tertiary" 
                                             disabled
                                         />
@@ -1474,7 +1486,7 @@ const LowStockTable = ({ currentPage = 1 }) => {
                                 </div>
                                 <div className="bg-background rounded-lg p-4">
                                     <h3 className="text-sm font-medium text-textColor-tertiary mb-1">Total Amount</h3>
-                                    <p className="text-lg font-semibold text-green">${purchaseOrderSummary.totalAmount.toFixed(2)}</p>
+                                    <p className="text-lg font-semibold text-green">{purchaseOrderSummary.totalAmount}</p>
                                 </div>
                             </div>
 
@@ -1493,6 +1505,7 @@ const LowStockTable = ({ currentPage = 1 }) => {
                                             <th className="text-center py-3 px-4 font-medium bg-primary">To Order</th>
                                             <th className="text-right py-3 px-4 font-medium bg-primary">Unit Price</th>
                                             <th className="text-right py-3 px-4 font-medium bg-primary">Total Price</th>
+                                            <th className="text-left py-3 px-4 font-medium bg-primary">Supplier</th>
                                         </tr>
                                     </thead>
                                     <tbody>
@@ -1501,8 +1514,9 @@ const LowStockTable = ({ currentPage = 1 }) => {
                                                 <td className="py-3 px-4 font-mono">{item.sku}</td>
                                                 <td className="py-3 px-4">{item.name}</td>
                                                 <td className="py-3 px-4 text-center">{item.quantity}</td>
-                                                <td className="py-3 px-4 text-right">${item.unitPrice.toFixed(2)}</td>
-                                                <td className="py-3 px-4 text-right font-semibold">${item.totalPrice.toFixed(2)}</td>
+                                                <td className="py-3 px-4 text-right">{item.unitPrice}</td>
+                                                <td className="py-3 px-4 text-right font-semibold">{item.totalPrice}</td>
+                                                <td className="py-3 px-4">{item.supplier || '-'}</td>
                                             </tr>
                                         ))}
                                     </tbody>

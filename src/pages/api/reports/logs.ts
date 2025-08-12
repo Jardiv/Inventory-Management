@@ -41,11 +41,10 @@ export const GET: APIRoute = async ({ url }) => {
         hour12: true
       });
 
-      // Format the total price as currency
-      const formattedAmount = new Intl.NumberFormat('en-US', {
-        style: 'currency',
-        currency: 'USD'
-      }).format(purchaseOrder.total_price || 0);
+      // Format the total price as Philippine Peso
+      const formattedAmount = purchaseOrder.total_price !== undefined
+        ? `₱${Number(purchaseOrder.total_price).toLocaleString('en-PH', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
+        : '₱0.00';
 
       // Determine status display - normalize status values
       let displayStatus = purchaseOrder.status || 'Unknown';

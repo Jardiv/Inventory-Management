@@ -38,9 +38,11 @@ export const GET: APIRoute = async ({ url }) => {
         min_quantity,
         max_quantity,
         unit_price,
+        curr_supplier_id,
         warehouse_items (
           quantity
-        )
+        ),
+        suppliers:curr_supplier_id (name)
       `)
       .eq('id', parseInt(itemId))
       .single();
@@ -95,7 +97,7 @@ export const GET: APIRoute = async ({ url }) => {
       id: item.id,
       sku: item.sku,
       name: item.name,
-      supplier: 'ABC Suppliers Inc.', // Default supplier since not in database
+      supplier: (item.suppliers && Array.isArray(item.suppliers) && item.suppliers.length > 0 && item.suppliers[0].name) ? item.suppliers[0].name : '-',
       current_quantity: currentQuantity,
       to_order: toOrder,
       min_quantity: item.min_quantity || 0,
