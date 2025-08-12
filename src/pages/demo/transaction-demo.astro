@@ -1,0 +1,255 @@
+---
+import Layout from "../../layouts/Layout.astro";
+---
+
+<div class="flex flex-col gap-4 p-4 text-textColor-primary">
+	<h1 class="text-2xl font-bold text-textColor-primary">Transaction Demo</h1>
+	<div class="row-span-1 col-span-1 bg-primary p-4 rounded-lg">
+		<button onclick="addTransaction()"
+			class="bg-btn-primary hover:bg-btn-hover text-textColor-secondary p-2 rounded-lg cursor-pointer">
+			Add Transaction
+		</button>
+		<div id="added-transaction" class="mt-4 p-4 bg-primary rounded text-textColor-primary"></div>
+	</div>
+</div>
+
+<!-- Modal -->
+<div id="transaction-modal" class="fixed inset-0 bg-black bg-opacity-50 hidden flex items-center justify-center">
+	<div class="bg-primary p-8 rounded-lg shadow-lg w-1/2 text-textColor-primary">
+		<h2 class="text-2xl font-bold mb-4">Add New Transaction</h2>
+		<form id="transaction-form">
+			<!-- Transaction Type -->
+			<div class="mb-4">
+				<label for="transaction_type" class="block text-textColor-tertiary">Transaction Type</label>
+				<select id="transaction_type" name="transaction_type"
+					class="w-full p-2 border border-border_color bg-background text-textColor-primary rounded">
+					<option value="stock_in">Stock In</option>
+					<option value="stock_out">Stock Out</option>
+				</select>
+			</div>
+
+			<!-- Invoice Number -->
+			<div class="mb-4">
+				<label for="invoice_no" class="block text-textColor-tertiary">Invoice Number</label>
+				<input type="text" id="invoice_no" name="invoice_no"
+					class="w-full p-2 border border-border_color bg-background text-textColor-primary rounded"
+					placeholder="e.g., INV-12345">
+			</div>
+
+			<!-- Created By -->
+			<div class="mb-4">
+				<label for="created_by" class="block text-textColor-tertiary">Created By</label>
+				<input type="text" id="created_by" name="created_by"
+					class="w-full p-2 border border-border_color bg-background text-textColor-primary rounded"
+					placeholder="e.g., user@example.com">
+			</div>
+
+			<!-- Warehouse ID (for stock_out) -->
+			<div id="warehouse-field" class="mb-4 hidden">
+				<label for="warehouse_id" class="block text-textColor-tertiary">Warehouse</label>
+				<select id="warehouse_id" name="warehouse_id"
+					class="w-full p-2 border border-border_color bg-background text-textColor-primary rounded">
+					<!-- Options will be populated by script -->
+				</select>
+			</div>
+
+			<h3 class="text-xl font-bold mt-6 mb-2">Item</h3>
+			<div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+				<div>
+					<label for="item_id" class="block text-textColor-tertiary">Item</label>
+					<select id="item_id" name="item_id"
+						class="w-full p-2 border border-border_color bg-background text-textColor-primary rounded"
+						required>
+						<!-- Options will be populated by script -->
+					</select>
+				</div>
+				<div>
+					<label for="quantity" class="block text-textColor-tertiary">Quantity</label>
+					<input type="number" id="quantity" name="quantity"
+						class="w-full p-2 border border-border_color bg-background text-textColor-primary rounded"
+						required value="10">
+				</div>
+			</div>
+
+			<!-- Buttons -->
+			<div class="mt-6 flex justify-end gap-4">
+				<button type="button" onclick="closeModal()"
+					class="bg-textColor-tertiary/10 hover:bg-textColor-tertiary/20 text-textColor-primary p-2 rounded-lg">Close</button>
+				<button type="submit"
+					class="bg-btn-primary hover:bg-btn-hover text-textColor-secondary p-2 rounded-lg">Submit</button>
+			</div>
+		</form>
+	</div>
+</div>
+
+<script is:inline>
+	const modal = document.getElementById('transaction-modal');
+	const transactionForm = document.getElementById('transaction-form');
+	const transactionTypeSelect = document.getElementById('transaction_type');
+	const warehouseField = document.getElementById('warehouse-field');
+	const itemSelect = document.getElementById('item_id');
+	const warehouseSelect = document.getElementById('warehouse_id');
+	let allItemsData = [];
+	let itemsData = []; // This will hold the filtered list of items
+	let warehousesData = [];
+	let warehouseStorageData = [];
+	let selectedSupplierId = null;
+	let selectedUnitPrice = 0;
+
+	const populateItems = () => {
+		const transactionType = transactionTypeSelect.value;
+		if (transactionType === 'stock_in') {
+			// For stock-in, only show items that have a current supplier
+			itemsData = allItemsData.filter(item => item.curr_supplier_id);
+		} else {
+			// For stock-out, show all items
+			itemsData = allItemsData;
+		}
+
+		// Clear previous options
+		itemSelect.innerHTML = '<option value="">Select an item</option>';
+		
+		itemsData.forEach(item => {
+			const option = document.createElement('option');
+			option.value = item.id;
+			option.textContent = `${item.name} (ID: ${item.id})`;
+			itemSelect.appendChild(option);
+		});
+
+		// Reset dependent fields
+		itemSelect.value = '';
+		selectedSupplierId = null;
+		selectedUnitPrice = 0;
+		warehouseSelect.innerHTML = '<option value="">Select an item first</option>';
+		warehouseSelect.disabled = true;
+	};
+
+	const populateSelects = async () => {
+		try {
+			const res = await fetch('/api/demo/transaction-demo-api');
+			if (!res.ok) {
+				throw new Error(`API request failed with status ${res.status}`);
+			}
+			const { items, warehouses, warehouseStorage } = await res.json();
+			allItemsData = items; // Store the full list
+			warehousesData = warehouses;
+			warehouseStorageData = warehouseStorage;
+
+			populateItems(); // Initial population of items
+
+			warehouseSelect.innerHTML = '<option value="">Select an item first</option>';
+			warehouseSelect.disabled = true;
+			
+		} catch (error) {
+			console.error("Failed to populate selects:", error);
+			itemSelect.innerHTML = '<option value="">Error loading items</option>';
+			warehouseSelect.innerHTML = '<option value="">Error loading warehouses</option>';
+		}
+	};
+
+	const openModal = () => {
+		modal.classList.remove('hidden');
+		populateSelects();
+	};
+
+	const closeModal = () => {
+		modal.classList.add('hidden');
+	};
+
+	// This function is now for opening the modal
+	const addTransaction = () => {
+		openModal();
+	};
+
+	itemSelect.addEventListener('change', (e) => {
+		const selectedItemId = parseInt(e.target.value);
+		// Use itemsData (the filtered list) to find the selected item
+		const selectedItem = itemsData.find(item => item.id === selectedItemId);
+		if (selectedItem) {
+			selectedSupplierId = selectedItem.curr_supplier_id;
+			selectedUnitPrice = selectedItem.unit_price;
+
+			const warehousesWithItem = warehouseStorageData
+				.filter(ws => ws.item_id === selectedItemId)
+				.map(ws => ws.warehouse_id);
+
+			const filteredWarehouses = warehousesData.filter(w => warehousesWithItem.includes(w.id));
+
+			warehouseSelect.innerHTML = '';
+			if (filteredWarehouses.length > 0) {
+				warehouseSelect.innerHTML = '<option value="">Select a warehouse</option>';
+				filteredWarehouses.forEach(warehouse => {
+					const option = document.createElement('option');
+					option.value = warehouse.id;
+					option.textContent = `${warehouse.name} (ID: ${warehouse.id})`;
+					warehouseSelect.appendChild(option);
+				});
+				warehouseSelect.disabled = false;
+			} else {
+				warehouseSelect.innerHTML = '<option value="">No warehouse has this item</option>';
+				warehouseSelect.disabled = true;
+			}
+
+		} else {
+			selectedSupplierId = null;
+			selectedUnitPrice = 0;
+			warehouseSelect.innerHTML = '<option value="">Select an item first</option>';
+			warehouseSelect.disabled = true;
+		}
+	});
+
+	transactionTypeSelect.addEventListener('change', (e) => {
+		if (e.target.value === 'stock_in') {
+			warehouseField.classList.add('hidden');
+		} else {
+			warehouseField.classList.remove('hidden');
+		}
+		// Re-populate items when transaction type changes
+		populateItems();
+	});
+
+	transactionForm.addEventListener('submit', async (e) => {
+		e.preventDefault();
+		const formData = new FormData(transactionForm);
+		const transactionType = formData.get('transaction_type');
+		const quantity = parseInt(formData.get('quantity'));
+		const totalPrice = quantity * selectedUnitPrice;
+
+		const body = {
+			transaction_type: transactionType,
+			invoice_no: formData.get('invoice_no') || "INV-" + Date.now(),
+			total_quantity: quantity,
+			total_price: totalPrice,
+			status: "Completed", // Hardcoding for now
+			created_by: formData.get('created_by') || "user@example.com",
+			supplier_id: transactionType === 'stock_in' ? selectedSupplierId : null,
+			warehouse_id: transactionType === 'stock_out' ? parseInt(formData.get('warehouse_id')) : null,
+			items: [
+				{
+					item_id: parseInt(formData.get('item_id')),
+					quantity: quantity,
+					expiration_date: null // Not available in form
+				}
+			]
+		};
+
+		if (transactionType === 'stock_in' && !body.supplier_id) {
+			alert('The selected item does not have a supplier. Please select a different item for stock in.');
+			return;
+		}
+
+		const res = await fetch("/api/transactions/insert-new-transaction", {
+			method: "POST",
+			headers: { "Content-Type": "application/json" },
+			body: JSON.stringify(body),
+		});
+
+		const data = await res.json();
+		console.log(data);
+
+		const addedTransaction = document.getElementById("added-transaction");
+		addedTransaction.innerHTML = `<pre>${JSON.stringify(data, null, 2)}</pre>`;
+
+		closeModal();
+	});
+</script>
