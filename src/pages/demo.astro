@@ -1,20 +1,47 @@
 ---
-import Layout from '../layouts/Layout.astro';
 import TransactionDemo from './demo/transaction-demo.astro';
 import PurchaseDemo from './demo/purchase-demo.astro';
+import "/src/styles/global.css";
 ---
 
-<Layout>
-  <div class="w-full min-h-screen px-2 py-4 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-2">
-    <div class="bg-primary p-4 rounded-lg shadow-sm">
-      {/* Add content or leave empty for spacing */}
-    </div>
-    <div class="bg-primary p-4 rounded-lg shadow-sm"></div>
-    <div class="bg-primary p-4 rounded-lg shadow-sm">
-      <TransactionDemo />
-    </div>
-    <div class="bg-primary p-4 rounded-lg shadow-sm">
-      <PurchaseDemo />
-    </div>
-  </div>
-</Layout>
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<meta charset="UTF-8" />
+		<meta name="viewport" content="width=device-width" />
+		<link rel="icon" type="image/svg+xml" href="/Favicon.png" />
+		<meta name="generator" content="{Astro.generator}" />
+		<!-- <link rel="stylesheet" href="../src/styles/global.css"> -->
+		<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet" />
+		<title>Inventory Management Module</title>
+
+		<!-- Theme initialization script - runs immediately to prevent flash -->
+		<script is:inline>
+			// Immediate theme initialization to prevent flash
+			(function () {
+				const savedTheme = localStorage.getItem("theme") || "dark";
+				if (savedTheme === "dark") {
+					document.documentElement.classList.add("dark");
+				} else {
+					document.documentElement.classList.remove("dark");
+				}
+			})();
+		</script>
+	</head>
+    <body class="h-[100dvh] w-[100dvw] bg-background flex text-textColor-primary overflow-hidden">
+        <div class="w-full min-h-screen px-2 py-4 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-2">
+            <div class="bg-primary p-4 rounded-lg shadow-sm">
+                {/* Add content or leave empty for spacing */}
+            </div>
+            <div class="bg-primary p-4 rounded-lg shadow-sm">
+
+            </div>
+            <div class="bg-primary p-4 rounded-lg shadow-sm">
+                <TransactionDemo />
+            </div>
+            <div class="bg-primary p-4 rounded-lg shadow-sm">
+                <PurchaseDemo />
+            </div>
+        </div>
+	</body>
+</html>

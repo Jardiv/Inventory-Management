@@ -28,42 +28,46 @@ export default function ProductInventoryPreview({ limit = 10, hidePageNumbers = 
   const totalPages = Math.ceil(total / limit);
 
   async function fetchProducts() {
-    setLoading(true);
+  setLoading(true);
 
-    const { count } = await supabase
-      .from("items")
-      .select("id, added_items!inner(status)", { count: "exact", head: true })
-      .eq("added_items.status", "Completed");
+  // Count active products (not deleted)
+  const { count } = await supabase
+    .from("items")
+    .select("id, added_items!inner(status)", { count: "exact", head: true })
+    .eq("added_items.status", "Completed")
+    .eq("isDeleted", false); // ✅ hide deleted from active count
 
-    setTotal(count || 0);
+  setTotal(count || 0);
 
-    const from = (page - 1) * limit;
-    const to = from + limit - 1;
+  const from = (page - 1) * limit;
+  const to = from + limit - 1;
 
-    const { data, error } = await supabase
-      .from("items")
-      .select(`
-        id,
-        sku,
-        name,
-        min_quantity,
-        max_quantity,
-        unit_price,
-        category ( name ),
-        added_items!inner ( status, created_at )
-      `)
-      .eq("added_items.status", "Completed")
-      .order("id", { ascending: true })
-      .range(from, to);
+  // Get active products only
+  const { data, error } = await supabase
+    .from("items")
+    .select(`
+      id,
+      sku,
+      name,
+      min_quantity,
+      max_quantity,
+      unit_price,
+      category ( name ),
+      added_items!inner ( status, created_at )
+    `)
+    .eq("added_items.status", "Completed")
+    .eq("isDeleted", false) // ✅ hide deleted from table
+    .order("id", { ascending: true })
+    .range(from, to);
 
-    if (!error) {
-      setProducts(data);
-    } else {
-      console.error(error);
-    }
-
-    setLoading(false);
+  if (!error) {
+    setProducts(data);
+  } else {
+    console.error(error);
   }
+
+  setLoading(false);
+}
 
   useEffect(() => {
     fetchProducts();
