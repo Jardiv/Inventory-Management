@@ -20,67 +20,54 @@ export default function ProductModal({ product, onClose, onUpdated }) {
         description: "",
     });
 
+    const [supplierName, setSupplierName] = useState("—");
     const [loadingSave, setLoadingSave] = useState(false);
     const [loadingDelete, setLoadingDelete] = useState(false);
 
     const tabsRef = useRef([]);
     const underlineRef = useRef(null);
 
+    // ✅ Fetch only needed product data for modal
     useEffect(() => {
-        if (product) {
+        if (!product?.id) return;
+
+        const fetchProductDetails = async () => {
+            const { data, error } = await supabase
+                .from("items")
+                .select(`
+                    id,
+                    name,
+                    sku,
+                    min_quantity,
+                    max_quantity,
+                    unit_price,
+                    description,
+                    category:category_id(name),
+                    suppliers:curr_supplier_id(name)
+                `)
+                .eq("id", product.id)
+                .single();
+
+            if (error) {
+                console.error("Error fetching product details:", error);
+                return;
+            }
+
             setFormData({
-                name: product.name || "",
-                sku: product.sku || "",
-                min_quantity: product.min_quantity || 0,
-                max_quantity: product.max_quantity || 0,
-                unit_price: product.unit_price || 0,
-                categoryName: product.category?.name || "",
-                description: product.description || "",
+                name: data.name || "",
+                sku: data.sku || "",
+                min_quantity: data.min_quantity || 0,
+                max_quantity: data.max_quantity || 0,
+                unit_price: data.unit_price || 0,
+                categoryName: data.category?.name || "",
+                description: data.description || "",
             });
-            setIsEditing(false);
-        }
+
+            setSupplierName(data.suppliers?.name || "—");
+        };
+
+        fetchProductDetails();
     }, [product]);
-
-    // Fetch stock data
-    useEffect(() => {
-        if (product?.id && activeTab === "stock") {
-            setLoadingStock(true);
-            supabase
-                .from("stock")
-                .select("id, warehouse_name, quantity")
-                .eq("product_id", product.id)
-                .then(({ data, error }) => {
-                    if (error) {
-                        console.error("Error fetching stock data:", error);
-                        setStockData([]);
-                    } else {
-                        setStockData(data || []);
-                    }
-                    setLoadingStock(false);
-                });
-        }
-    }, [product?.id, activeTab]);
-
-    // Fetch purchase history
-    useEffect(() => {
-        if (product?.id && activeTab === "purchase") {
-            setLoadingPurchase(true);
-            supabase
-                .from("purchase_history")
-                .select("id, date, supplier, quantity, price")
-                .eq("product_id", product.id)
-                .order("date", { ascending: false })
-                .then(({ data, error }) => {
-                    if (error) {
-                        console.error("Error fetching purchase history:", error);
-                        setPurchaseHistory([]);
-                    } else {
-                        setPurchaseHistory(data || []);
-                    }
-                    setLoadingPurchase(false);
-                });
-        }
-    }, [product?.id, activeTab]);
 
     // Animate underline
     useEffect(() => {
@@ -188,56 +175,23 @@ export default function ProductModal({ product, onClose, onUpdated }) {
                         className="space-y-2"
                         style={{ color: "var(--color-textColor-primary)" }}
                     >
-                        <p><strong>Item Name:</strong> {product.name}</p>
-                        <p><strong>Item Code:</strong> {product.sku}</p>
-                        <p><strong>Category:</strong> {product.category?.name || "—"}</p>
-                        <p><strong>Min Quantity:</strong> {product.min_quantity}</p>
-                        <p><strong>Max Quantity:</strong> {product.max_quantity}</p>
-                        <p><strong>Unit Price:</strong> ₱{product.unit_price?.toFixed(2)}</p>
-                        <p><strong>Description:</strong> {product.description || "No description provided"}</p>
+                        <p><strong>Item Name:</strong> {formData.name}</p>
+                        <p><strong>Item Code:</strong> {formData.sku}</p>
+                        <p><strong>Category:</strong> {formData.categoryName || "—"}</p>
+                        <p><strong>Min Quantity:</strong> {formData.min_quantity}</p>
+                        <p><strong>Max Quantity:</strong> {formData.max_quantity}</p>
+                        <p><strong>Unit Price:</strong> ₱{formData.unit_price?.toFixed(2)}</p>
+                        <p><strong>Supplier:</strong> {supplierName}</p>
+                        <p><strong>Description:</strong> {formData.description || "No description provided"}</p>
                     </div>
                 ) : (
                     <div className="space-y-2">
-                        <input
-                            name="name"
-                            value={formData.name}
-                            onChange={handleChange}
-                            className="w-full p-2 border rounded"
-                        />
-                        <input
-                            name="sku"
-                            value={formData.sku}
-                            onChange={handleChange}
-                            className="w-full p-2 border rounded"
-                        />
-                        <input
-                            name="min_quantity"
-                            type="number"
-                            value={formData.min_quantity}
-                            onChange={handleChange}
-                            className="w-full p-2 border rounded"
-                        />
-                        <input
-                            name="max_quantity"
-                            type="number"
-                            value={formData.max_quantity}
-                            onChange={handleChange}
-                            className="w-full p-2 border rounded"
-                        />
-                        <input
-                            name="unit_price"
-                            type="number"
-                            value={formData.unit_price}
-                            onChange={handleChange}
-                            className="w-full p-2 border rounded"
-                        />
-                        <textarea
-                            name="description"
-                            value={formData.description}
-                            onChange={handleChange}
-                            className="w-full p-2 border rounded"
-                            placeholder="Enter product description"
-                        />
+                        <input name="name" value={formData.name} onChange={handleChange} className="w-full p-2 border rounded" />
+                        <input name="sku" value={formData.sku} onChange={handleChange} className="w-full p-2 border rounded" />
+                        <input name="min_quantity" type="number" value={formData.min_quantity} onChange={handleChange} className="w-full p-2 border rounded" />
+                        <input name="max_quantity" type="number" value={formData.max_quantity} onChange={handleChange} className="w-full p-2 border rounded" />
+                        <input name="unit_price" type="number" value={formData.unit_price} onChange={handleChange} className="w-full p-2 border rounded" />
+                        <textarea name="description" value={formData.description} onChange={handleChange} className="w-full p-2 border rounded" placeholder="Enter product description" />
                     </div>
                 )}
 
@@ -293,77 +247,56 @@ export default function ProductModal({ product, onClose, onUpdated }) {
                         }}
                     >
                         {/* Stock Tab */}
-                        <div
-                            style={{
-                                visibility: activeTab === "stock" ? "visible" : "hidden",
-                                height: activeTab === "stock" ? "auto" : 0,
-                                overflow: "hidden",
-                            }}
-                        >
-                            <div
-                                className="grid grid-cols-4 font-semibold border-b pb-2"
-                                style={{
-                                    borderColor: "var(--color-border_color)",
-                                }}
-                            >
-                                <span>Warehouse Name</span>
-                                <span>Current Stock</span>
-                                <span>Min Stock</span>
-                                <span>Max Stock</span>
-                            </div>
-                            {loadingStock ? (
-                                <p>Loading stock data...</p>
-                            ) : stockData.length > 0 ? (
-                                stockData.map((item, idx) => (
-                                    <div key={idx} className="grid grid-cols-4">
-                                        <span>{item.warehouse_name}</span>
-                                        <span>{item.quantity}</span>
-                                        <span>{product.min_quantity}</span>
-                                        <span>{product.max_quantity}</span>
-                                    </div>
-                                ))
-                            ) : (
-                                <p>No stock data available</p>
-                            )}
-                        </div>
+                        {activeTab === "stock" && (
+                            <>
+                                <div className="grid grid-cols-4 font-semibold border-b pb-2" style={{ borderColor: "var(--color-border_color)" }}>
+                                    <span>Warehouse Name</span>
+                                    <span>Current Stock</span>
+                                    <span>Min Stock</span>
+                                    <span>Max Stock</span>
+                                </div>
+                                {loadingStock ? (
+                                    <p>Loading stock data...</p>
+                                ) : stockData.length > 0 ? (
+                                    stockData.map((item, idx) => (
+                                        <div key={idx} className="grid grid-cols-4">
+                                            <span>{item.warehouse_name}</span>
+                                            <span>{item.quantity}</span>
+                                            <span>{formData.min_quantity}</span>
+                                            <span>{formData.max_quantity}</span>
+                                        </div>
+                                    ))
+                                ) : (
+                                    <p>No stock data available</p>
+                                )}
+                            </>
+                        )}
 
                         {/* Purchase History Tab */}
-                        <div
-                            style={{
-                                visibility: activeTab === "purchase" ? "visible" : "hidden",
-                                height: activeTab === "purchase" ? "auto" : 0,
-                                overflow: "hidden",
-                            }}
-                        >
-                            <div
-                                className="grid grid-cols-4 font-semibold border-b pb-2"
-                                style={{
-                                    borderColor: "var(--color-border_color)",
-                                }}
-                            >
-                                <span>Date</span>
-                                <span>Supplier</span>
-                                <span>Quantity</span>
-                                <span>Total Cost</span>
-                            </div>
-                            {loadingPurchase ? (
-                                <p>Loading purchase history...</p>
-                            ) : purchaseHistory.length > 0 ? (
-                                purchaseHistory.map((purchase) => (
-                                    <div
-                                        key={purchase.id}
-                                        className="grid grid-cols-4"
-                                    >
-                                        <span>{purchase.date}</span>
-                                        <span>{purchase.supplier}</span>
-                                        <span>{purchase.quantity}</span>
-                                        <span>{purchase.price}</span>
-                                    </div>
-                                ))
-                            ) : (
-                                <p>No purchase history available</p>
-                            )}
-                        </div>
+                        {activeTab === "purchase" && (
+                            <>
+                                <div className="grid grid-cols-4 font-semibold border-b pb-2" style={{ borderColor: "var(--color-border_color)" }}>
+                                    <span>Date</span>
+                                    <span>Supplier</span>
+                                    <span>Quantity</span>
+                                    <span>Total Cost</span>
+                                </div>
+                                {loadingPurchase ? (
+                                    <p>Loading purchase history...</p>
+                                ) : purchaseHistory.length > 0 ? (
+                                    purchaseHistory.map((purchase) => (
+                                        <div key={purchase.id} className="grid grid-cols-4">
+                                            <span>{purchase.date}</span>
+                                            <span>{purchase.supplier}</span>
+                                            <span>{purchase.quantity}</span>
+                                            <span>{purchase.price}</span>
+                                        </div>
+                                    ))
+                                ) : (
+                                    <p>No purchase history available</p>
+                                )}
+                            </>
+                        )}
                     </div>
                 </div>
 
@@ -381,12 +314,6 @@ export default function ProductModal({ product, onClose, onUpdated }) {
                                     opacity: loadingDelete ? 0.6 : 1,
                                     cursor: loadingDelete ? "not-allowed" : "pointer",
                                 }}
-                                onMouseEnter={(e) => {
-                                    if (!loadingDelete) e.target.style.backgroundColor = "#b71c1c";
-                                }}
-                                onMouseLeave={(e) => {
-                                    if (!loadingDelete) e.target.style.backgroundColor = "var(--color-red)";
-                                }}
                             >
                                 {loadingDelete ? "Deleting..." : "Delete"}
                             </button>
@@ -397,8 +324,6 @@ export default function ProductModal({ product, onClose, onUpdated }) {
                                     backgroundColor: "var(--color-btn-primary)",
                                     color: "var(--color-textColor-secondary)",
                                 }}
-                                onMouseEnter={(e) => (e.target.style.backgroundColor = "var(--color-btn-hover)")}
-                                onMouseLeave={(e) => (e.target.style.backgroundColor = "var(--color-btn-primary)")}
                             >
                                 Edit
                             </button>
@@ -423,8 +348,6 @@ export default function ProductModal({ product, onClose, onUpdated }) {
                                     backgroundColor: "var(--color-red)",
                                     color: "var(--color-textColor-secondary)",
                                 }}
-                                onMouseEnter={(e) => (e.target.style.backgroundColor = "#b71c1c")}
-                                onMouseLeave={(e) => (e.target.style.backgroundColor = "var(--color-red)")}
                             >
                                 Cancel
                             </button>
@@ -437,12 +360,6 @@ export default function ProductModal({ product, onClose, onUpdated }) {
                                     color: "var(--color-textColor-secondary)",
                                     opacity: loadingSave ? 0.6 : 1,
                                     cursor: loadingSave ? "not-allowed" : "pointer",
-                                }}
-                                onMouseEnter={(e) => {
-                                    if (!loadingSave) e.target.style.backgroundColor = "var(--color-btn-hover)";
-                                }}
-                                onMouseLeave={(e) => {
-                                    if (!loadingSave) e.target.style.backgroundColor = "var(--color-btn-primary)";
                                 }}
                             >
                                 {loadingSave ? "Saving..." : "Save"}
