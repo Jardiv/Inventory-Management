@@ -59,6 +59,8 @@ export async function GET({ request }: { request: Request }) {
                 status = 'Out of Stock';
             } else if (quantity <= (item.min_quantity || 0)) {
                 status = 'Low Stock';
+            } else if ((item.max_quantity || 0) > 0 && quantity > item.max_quantity) {
+                status = 'Overstock';
             }
 
             return {

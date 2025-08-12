@@ -589,211 +589,226 @@ const PurchaseOrderLogs = () => {
       </div>
     );
   }
+// PDF download for purchase order details modal
+const handleDownloadPDF = async (po) => {
+  if (!po) return;
+  try {
+    const doc = new jsPDF();
+    const pageWidth = doc.internal.pageSize.getWidth();
+    const margin = 14;
 
-  // PDF download for purchase order details modal
-  const handleDownloadPDF = async (po) => {
-    if (!po) return;
+    // Helper function to format currency with peso sign
+    const formatCurrency = (value) => {
+      if (!value) return 'PHP 0.00';
+      // Remove any existing currency symbols and convert to number
+      const numValue = typeof value === 'string' ? 
+        parseFloat(value.replace(/[₱,PHPphp]/g, '')) : 
+        parseFloat(value);
+      
+      if (isNaN(numValue)) return 'PHP 0.00';
+      
+      return `PHP ${numValue.toLocaleString('en-US', {
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2
+      })}`;
+    };
+
+    // Helper to load public logo as data URL with fallbacks
+    const loadImageAsDataURL = async (paths) => {
+      const tryLoad = (src) => new Promise((resolve, reject) => {
+        const img = new Image();
+        img.crossOrigin = 'anonymous';
+        img.onload = () => {
+          const canvas = document.createElement('canvas');
+          canvas.width = img.width;
+          canvas.height = img.height;
+          const ctx = canvas.getContext('2d');
+          ctx.drawImage(img, 0, 0);
+          resolve(canvas.toDataURL('image/png'));
+        };
+        img.onerror = reject;
+        img.src = src;
+      });
+      for (const p of paths) {
+        try { return await tryLoad(p); } catch (_) { /* try next */ }
+      }
+      throw new Error('Logo not found');
+    };
+
+    // Helpers to embed Poppins if available in /public/fonts
+    const arrayBufferToBase64 = (buffer) => {
+      const bytes = new Uint8Array(buffer);
+      let binary = '';
+      const chunkSize = 0x8000;
+      for (let i = 0; i < bytes.length; i += chunkSize) {
+        const chunk = bytes.subarray(i, i + chunkSize);
+        binary += String.fromCharCode.apply(null, chunk);
+      }
+      return btoa(binary);
+    };
+
+    const tryEmbedFont = async (path, vfsName, family, style) => {
+      const res = await fetch(path);
+      if (!res.ok) throw new Error('font fetch failed');
+      const buf = await res.arrayBuffer();
+      doc.addFileToVFS(vfsName, arrayBufferToBase64(buf));
+      doc.addFont(vfsName, family, style);
+    };
+
+    let hasPoppins = false;
     try {
-      const doc = new jsPDF();
-      const pageWidth = doc.internal.pageSize.getWidth();
-      const margin = 14;
-
-      // Helper to load public logo as data URL with fallbacks
-      const loadImageAsDataURL = async (paths) => {
-        const tryLoad = (src) => new Promise((resolve, reject) => {
-          const img = new Image();
-          img.crossOrigin = 'anonymous';
-          img.onload = () => {
-            const canvas = document.createElement('canvas');
-            canvas.width = img.width;
-            canvas.height = img.height;
-            const ctx = canvas.getContext('2d');
-            ctx.drawImage(img, 0, 0);
-            resolve(canvas.toDataURL('image/png'));
-          };
-          img.onerror = reject;
-          img.src = src;
-        });
-        for (const p of paths) {
-          try { return await tryLoad(p); } catch (_) { /* try next */ }
-        }
-        throw new Error('Logo not found');
-      };
-
-      // Helpers to embed Poppins if available in /public/fonts
-      const arrayBufferToBase64 = (buffer) => {
-        const bytes = new Uint8Array(buffer);
-        let binary = '';
-        const chunkSize = 0x8000;
-        for (let i = 0; i < bytes.length; i += chunkSize) {
-          const chunk = bytes.subarray(i, i + chunkSize);
-          binary += String.fromCharCode.apply(null, chunk);
-        }
-        return btoa(binary);
-      };
-
-      const tryEmbedFont = async (path, vfsName, family, style) => {
-        const res = await fetch(path);
-        if (!res.ok) throw new Error('font fetch failed');
-        const buf = await res.arrayBuffer();
-        doc.addFileToVFS(vfsName, arrayBufferToBase64(buf));
-        doc.addFont(vfsName, family, style);
-      };
-
-      let hasPoppins = false;
-      try {
-        await Promise.all([
-          tryEmbedFont('/fonts/Poppins-Regular.ttf', 'Poppins-Regular.ttf', 'Poppins', 'normal'),
-          tryEmbedFont('/fonts/Poppins-Bold.ttf', 'Poppins-Bold.ttf', 'Poppins', 'bold')
-        ]);
-        hasPoppins = true;
-      } catch (_) {
-        // fallback to default fonts silently
-      }
-
-      // Branded header with improved spacing
-      let headerBottomY = 56; // default fallback
-      try {
-        const logoDataUrl = await loadImageAsDataURL([
-          '/ims_logo.png',           // preferred
-          '/ims%20logo.png',         // URL-encoded space
-          '/ims logo.png',           // literal space
-          '/logo.png'                // generic fallback
-        ]);
-
-        const logoX = margin;
-        const logoY = 12;
-        const logoW = 30;
-        const logoH = 30;
-        doc.addImage(logoDataUrl, 'PNG', logoX, logoY, logoW, logoH);
-
-        const textX = logoX + logoW + 6; // closer to logo
-        let lineY = logoY + Math.round(logoH / 2); // align IMS vertically to logo center
-        if (hasPoppins) { doc.setFont('Poppins', 'bold'); } else { doc.setFont('helvetica', 'bold'); }
-        doc.setFontSize(26);
-        doc.text('IMS', textX, lineY);
-        const imsBaselineY = lineY; // keep IMS baseline for alignment
-
-        lineY += 6; // tight spacing for subtitle
-        if (hasPoppins) { doc.setFont('Poppins', 'normal'); } else { doc.setFont('helvetica', 'normal'); }
-        doc.setFontSize(12);
-        doc.text('Inventory Management System', textX, lineY);
-
-        lineY += 6; // tight spacing for contact line
-        doc.setFontSize(9);
-        doc.text('Address • Phone • Email • Website', textX, lineY);
-
-        // Right-aligned stacked PURCHASE / ORDER (not bold), back to original placement
-        const rightX = pageWidth - margin;
-        if (hasPoppins) { doc.setFont('Poppins', 'normal'); } else { doc.setFont('helvetica', 'normal'); }
-        doc.setFontSize(28);
-        const purchaseTop = imsBaselineY; // align PURCHASE baseline with IMS
-        doc.text('PURCHASE', rightX, purchaseTop, { align: 'right' });
-        doc.text('ORDER', rightX, purchaseTop + 14, { align: 'right' });
-        // Ensure modest bottom padding beneath left text block, closer line to header
-        const leftTextBottom = lineY; // after contact line
-        headerBottomY = Math.max(logoY + logoH, leftTextBottom + 6, purchaseTop + 14) + 4; // reduced spacing
-      } catch (e) {
-        // Text-only fallback header
-        if (hasPoppins) { doc.setFont('Poppins', 'bold'); } else { doc.setFont('helvetica', 'bold'); }
-        doc.setFontSize(26);
-        doc.text('IMS', margin, 24);
-        if (hasPoppins) { doc.setFont('Poppins', 'normal'); } else { doc.setFont('helvetica', 'normal'); }
-        doc.setFontSize(12);
-        doc.text('Inventory Management System', margin, 30);
-        // Stacked PURCHASE / ORDER (not bold) on the right
-        if (hasPoppins) { doc.setFont('Poppins', 'normal'); } else { doc.setFont('helvetica', 'normal'); }
-        doc.setFontSize(28);
-        doc.text('PURCHASE', pageWidth - margin, 24, { align: 'right' }); // align to IMS baseline 24
-        doc.text('ORDER', pageWidth - margin, 38, { align: 'right' });
-        // Ensure modest bottom padding beneath left text block (fallback)
-        const leftTextBottomFallback = 30;
-        headerBottomY = Math.max(46, leftTextBottomFallback + 6);
-      }
-
-      // Divider line below header (even closer)
-      // Removed divider line and 'Purchase Order Details' text as requested
-      let cursorY = headerBottomY + 8; // adjust spacing after header
-
-      // Color constants for table headers
-      const HEADER_PURPLE = [143, 0, 179]; // slightly darker
-
-      // Primary Details
-      if (hasPoppins) doc.setFont('Poppins', 'bold');
-      doc.setFontSize(14);
-      doc.text('Primary Details', margin, cursorY);
-      const primaryDetails = [
-        ['Invoice Number', po.poNumber],
-        ['Date Generated', po.dateCreated],
-        ['Transaction Type', 'Purchase Order'],
-        ['Status', po.status],
-      ];
-      autoTable(doc, {
-        head: [['Field', 'Value']],
-        body: primaryDetails,
-        startY: cursorY + 4,
-        theme: 'grid',
-        styles: { fontSize: 12 },
-        headStyles: { fillColor: HEADER_PURPLE, textColor: 255 },
-        margin: { left: margin },
-      });
-
-      // Summary
-      let summaryY = doc.lastAutoTable.finalY + 8;
-      if (hasPoppins) doc.setFont('Poppins', 'bold');
-      doc.setFontSize(14);
-      doc.text('Summary', margin, summaryY);
-      const summaryDetails = [
-        ['Total Quantity', po.totalQuantity + ' pcs'],
-        ['Total Amount', po.totalAmount],
-        ['Created By', po.createdBy],
-      ];
-      autoTable(doc, {
-        head: [['Field', 'Value']],
-        body: summaryDetails,
-        startY: summaryY + 4,
-        theme: 'grid',
-        styles: { fontSize: 12 },
-        headStyles: { fillColor: HEADER_PURPLE, textColor: 255 },
-        margin: { left: margin },
-      });
-
-      // Purchased Products Table
-      let productsY = doc.lastAutoTable.finalY + 8;
-      if (hasPoppins) doc.setFont('Poppins', 'bold');
-      doc.setFontSize(14);
-      doc.text('Purchased Products', margin, productsY);
-      let products = [];
-      if (poDetails && Array.isArray(poDetails.items)) {
-        products = poDetails.items;
-      } else if (po.items) {
-        products = po.items;
-      } else if (po.products) {
-        products = po.products;
-      }
-      const productRows = products.map(item => [
-        item.name,
-        item.supplier,
-        (item.quantity !== undefined ? item.quantity : '') + ' pcs',
-        item.unitPrice,
-        item.totalPrice
+      await Promise.all([
+        tryEmbedFont('/fonts/Poppins-Regular.ttf', 'Poppins-Regular.ttf', 'Poppins', 'normal'),
+        tryEmbedFont('/fonts/Poppins-Bold.ttf', 'Poppins-Bold.ttf', 'Poppins', 'bold')
       ]);
-      autoTable(doc, {
-        head: [['Product Name', 'Supplier', 'Quantity', 'Unit Price', 'Total Price']],
-        body: productRows,
-        startY: productsY + 4,
-        theme: 'grid',
-        styles: { fontSize: 12 },
-        headStyles: { fillColor: HEADER_PURPLE, textColor: 255 },
-        margin: { left: margin },
-      });
-
-      doc.save(`purchase_order_${po.poNumber || 'details'}.pdf`);
-    } catch (err) {
-      alert('PDF generation failed. Please check your browser console for errors and ensure jsPDF and jspdf-autotable are installed. Error: ' + err.message);
-      console.error('PDF generation error:', err);
+      hasPoppins = true;
+    } catch (_) {
+      // fallback to default fonts silently
     }
-  };
+
+    // Branded header with improved spacing
+    let headerBottomY = 56; // default fallback
+    try {
+      const logoDataUrl = await loadImageAsDataURL([
+        '/ims_logo.png',           // preferred
+        '/ims%20logo.png',         // URL-encoded space
+        '/ims logo.png',           // literal space
+        '/logo.png'                // generic fallback
+      ]);
+
+      const logoX = margin;
+      const logoY = 12;
+      const logoW = 30;
+      const logoH = 30;
+      doc.addImage(logoDataUrl, 'PNG', logoX, logoY, logoW, logoH);
+
+      const textX = logoX + logoW + 6; // closer to logo
+      let lineY = logoY + Math.round(logoH / 2); // align IMS vertically to logo center
+      if (hasPoppins) { doc.setFont('Poppins', 'bold'); } else { doc.setFont('helvetica', 'bold'); }
+      doc.setFontSize(26);
+      doc.text('IMS', textX, lineY);
+      const imsBaselineY = lineY; // keep IMS baseline for alignment
+
+      lineY += 6; // tight spacing for subtitle
+      if (hasPoppins) { doc.setFont('Poppins', 'normal'); } else { doc.setFont('helvetica', 'normal'); }
+      doc.setFontSize(12);
+      doc.text('Inventory Management System', textX, lineY);
+
+      lineY += 6; // tight spacing for contact line
+      doc.setFontSize(9);
+      doc.text('Address • Phone • Email • Website', textX, lineY);
+
+      // Right-aligned stacked PURCHASE / ORDER (not bold), back to original placement
+      const rightX = pageWidth - margin;
+      if (hasPoppins) { doc.setFont('Poppins', 'normal'); } else { doc.setFont('helvetica', 'normal'); }
+      doc.setFontSize(28);
+      const purchaseTop = imsBaselineY; // align PURCHASE baseline with IMS
+      doc.text('PURCHASE', rightX, purchaseTop, { align: 'right' });
+      doc.text('ORDER', rightX, purchaseTop + 14, { align: 'right' });
+      // Ensure modest bottom padding beneath left text block, closer line to header
+      const leftTextBottom = lineY; // after contact line
+      headerBottomY = Math.max(logoY + logoH, leftTextBottom + 6, purchaseTop + 14) + 4; // reduced spacing
+    } catch (e) {
+      // Text-only fallback header
+      if (hasPoppins) { doc.setFont('Poppins', 'bold'); } else { doc.setFont('helvetica', 'bold'); }
+      doc.setFontSize(26);
+      doc.text('IMS', margin, 24);
+      if (hasPoppins) { doc.setFont('Poppins', 'normal'); } else { doc.setFont('helvetica', 'normal'); }
+      doc.setFontSize(12);
+      doc.text('Inventory Management System', margin, 30);
+      // Stacked PURCHASE / ORDER (not bold) on the right
+      if (hasPoppins) { doc.setFont('Poppins', 'normal'); } else { doc.setFont('helvetica', 'normal'); }
+      doc.setFontSize(28);
+      doc.text('PURCHASE', pageWidth - margin, 24, { align: 'right' }); // align to IMS baseline 24
+      doc.text('ORDER', pageWidth - margin, 38, { align: 'right' });
+      // Ensure modest bottom padding beneath left text block (fallback)
+      const leftTextBottomFallback = 30;
+      headerBottomY = Math.max(46, leftTextBottomFallback + 6);
+    }
+
+    // Divider line below header (even closer)
+    // Removed divider line and 'Purchase Order Details' text as requested
+    let cursorY = headerBottomY + 8; // adjust spacing after header
+
+    // Color constants for table headers
+    const HEADER_PURPLE = [143, 0, 179]; // slightly darker
+
+    // Primary Details
+    if (hasPoppins) doc.setFont('Poppins', 'bold');
+    doc.setFontSize(14);
+    doc.text('Primary Details', margin, cursorY);
+    const primaryDetails = [
+      ['Invoice Number', po.poNumber],
+      ['Date Generated', po.dateCreated],
+      ['Transaction Type', 'Purchase Order'],
+      ['Status', po.status],
+    ];
+    autoTable(doc, {
+      head: [['Field', 'Value']],
+      body: primaryDetails,
+      startY: cursorY + 4,
+      theme: 'grid',
+      styles: { fontSize: 12 },
+      headStyles: { fillColor: HEADER_PURPLE, textColor: 255 },
+      margin: { left: margin },
+    });
+
+    // Summary
+    let summaryY = doc.lastAutoTable.finalY + 8;
+    if (hasPoppins) doc.setFont('Poppins', 'bold');
+    doc.setFontSize(14);
+    doc.text('Summary', margin, summaryY);
+    const summaryDetails = [
+      ['Total Quantity', po.totalQuantity + ' pcs'],
+      ['Total Amount', formatCurrency(po.totalAmount)], // Apply peso formatting
+      ['Created By', po.createdBy],
+    ];
+    autoTable(doc, {
+      head: [['Field', 'Value']],
+      body: summaryDetails,
+      startY: summaryY + 4,
+      theme: 'grid',
+      styles: { fontSize: 12 },
+      headStyles: { fillColor: HEADER_PURPLE, textColor: 255 },
+      margin: { left: margin },
+    });
+
+    // Purchased Products Table
+    let productsY = doc.lastAutoTable.finalY + 8;
+    if (hasPoppins) doc.setFont('Poppins', 'bold');
+    doc.setFontSize(14);
+    doc.text('Purchased Products', margin, productsY);
+    let products = [];
+    if (poDetails && Array.isArray(poDetails.items)) {
+      products = poDetails.items;
+    } else if (po.items) {
+      products = po.items;
+    } else if (po.products) {
+      products = po.products;
+    }
+    const productRows = products.map(item => [
+      item.name,
+      item.supplier,
+      (item.quantity !== undefined ? item.quantity : '') + ' pcs',
+      formatCurrency(item.unitPrice), // Apply peso formatting
+      formatCurrency(item.totalPrice) // Apply peso formatting
+    ]);
+    autoTable(doc, {
+      head: [['Product Name', 'Supplier', 'Quantity', 'Unit Price', 'Total Price']],
+      body: productRows,
+      startY: productsY + 4,
+      theme: 'grid',
+      styles: { fontSize: 12 },
+      headStyles: { fillColor: HEADER_PURPLE, textColor: 255 },
+      margin: { left: margin },
+    });
+
+    doc.save(`purchase_order_${po.poNumber || 'details'}.pdf`);
+  } catch (err) {
+    alert('PDF generation failed. Please check your browser console for errors and ensure jsPDF and jspdf-autotable are installed. Error: ' + err.message);
+    console.error('PDF generation error:', err);
+  }
+};
   
   return (
     <div className="flex-1 overflow-hidden flex flex-col">
