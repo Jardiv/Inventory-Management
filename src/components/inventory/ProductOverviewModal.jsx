@@ -120,26 +120,36 @@ export default function ProductModal({ product, onClose, onUpdated }) {
         setLoadingSave(false);
     }
 
-    async function handleDelete() {
-        if (!confirm("Are you sure you want to delete this product?")) return;
-
-        setLoadingDelete(true);
-        try {
-            const { error } = await supabase
-                .from("items")
-                .delete()
-                .eq("id", product.id);
-            if (error) throw error;
-
-            alert("Product deleted successfully!");
-            setLoadingDelete(false);
-            onClose();
-            if (onUpdated) onUpdated();
-        } catch (err) {
-            alert("Error deleting product: " + err.message);
-            setLoadingDelete(false);
-        }
+async function handleDelete() {
+    if (!product?.id) {
+        alert("No product selected to delete.");
+        return;
     }
+
+    if (!confirm(`Are you sure you want to delete "${formData.name}"? This cannot be undone.`)) {
+        return;
+    }
+
+    setLoadingDelete(true);
+    try {
+        const { error } = await supabase
+            .from("items")
+            .delete()
+            .eq("id", product.id);
+
+        if (error) throw error;
+
+        alert(`"${formData.name}" deleted successfully!`);
+        setLoadingDelete(false);
+
+        if (onUpdated) onUpdated(); // refresh the product list
+        onClose(); // close the modal
+    } catch (err) {
+        alert("Error deleting product: " + err.message);
+        setLoadingDelete(false);
+    }
+}
+
 
     return (
         <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-50">
