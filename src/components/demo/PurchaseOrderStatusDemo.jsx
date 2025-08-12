@@ -62,7 +62,13 @@ const PurchaseOrderStatusDemo = () => {
       const result = await res.json();
       setLoading(false);
       if (result.success) {
-        window.alert('✅ Status updated successfully!');
+        let successMsg = '✅ Status updated successfully!';
+        if (selectedStatus === 'Pending') {
+            successMsg = '✅ Status updated to Pending! A new transaction has been created.';
+        } else if (selectedStatus === 'Completed') {
+            successMsg = '✅ Status updated to Completed! The corresponding transaction has been marked as Delivered.';
+        }
+        window.alert(successMsg);
         setShowModal(false);
       } else {
         errorMsg = result.error || 'Failed to update status.';
