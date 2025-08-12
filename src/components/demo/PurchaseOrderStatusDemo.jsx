@@ -55,7 +55,7 @@ const PurchaseOrderStatusDemo = () => {
   return (
     <div className="bg-primary  flex flex-col items-center justify-center">
       <h1 className="text-2xl font-bold mb-6">Demo: Update Purchase Order Status</h1>
-      <button className="px-6 py-3 bg-purple text-textColor-primary rounded shadow" onClick={() => setShowModal(true)}>
+      <button className="px-6 py-3 bg-btn-primary hover:bg-btn-hover text-textColor-secondary rounded shadow" onClick={() => setShowModal(true)}>
         Show Modal
       </button>
       {showModal && (
