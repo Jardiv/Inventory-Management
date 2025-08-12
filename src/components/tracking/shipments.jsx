@@ -290,6 +290,7 @@ const Shipments = () => {
   };
 
   // FIXED: Better error handling and validation
+  // CORRECTED: Updated handleAddShipment function to match shipments table schema
   const handleAddShipment = async () => {
     if (!newShipment.item_id || !newShipment.quantity) {
       alert('Please fill in all required fields (Item ID and Quantity)');
@@ -354,7 +355,13 @@ const Shipments = () => {
         const res = await fetch('/api/tracking/shipments');
         const shipmentsData = await res.json();
         if (res.ok) {
-          setShipments(shipmentsData);
+          // Sort so that Pending shipments appear at the top
+          const sortedShipments = shipmentsData.sort((a, b) => {
+            if (a.status === 'Pending' && b.status !== 'Pending') return -1;
+            if (a.status !== 'Pending' && b.status === 'Pending') return 1;
+            return 0;
+          });
+          setShipments(sortedShipments);
         }
         
       } else {
