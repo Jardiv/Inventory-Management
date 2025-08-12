@@ -43,11 +43,13 @@ export async function GET({ request }: { request: Request }) {
                 
                 // Determine status based on actual quantities
                 let status = 'Normal';
-                
+                const max = item.max_quantity || 0;
                 if (current === 0) {
                     status = 'Out of Stock';
                 } else if (current <= minimum) {
                     status = 'Low Stock';
+                } else if (max > 0 && current > max) {
+                    status = 'Overstock';
                 }
 
                 return {
