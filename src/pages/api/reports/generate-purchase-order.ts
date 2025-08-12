@@ -195,7 +195,16 @@ export const POST: APIRoute = async ({ request }) => {
       dateCreated
     });
 
-    // Return success response with purchase order details
+    // Format totalAmount and item prices as Philippine Peso
+    const formatPeso = (amount: number) => `₱${Number(amount).toLocaleString('en-PH', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+
+    // If items have unitPrice/totalPrice, format them as peso
+    const formattedItems = items.map(item => ({
+      ...item,
+      unitPrice: formatPeso(item.unitPrice),
+      totalPrice: formatPeso(item.totalPrice)
+    }));
+
     return new Response(JSON.stringify({
       success: true,
       data: {
@@ -204,10 +213,11 @@ export const POST: APIRoute = async ({ request }) => {
         dateCreated,
         createdBy: createdBy.trim(),
         totalQuantity,
-        totalAmount,
+        totalAmount: formatPeso(totalAmount),
         itemCount: poItems.length,
         status: purchaseOrder.status,
         message: `Purchase order created with ${poItems.length} items under invoice: ${invoiceNo}`,
+        items: formattedItems,
         purchaseOrderItems: poItems.map(item => ({
           id: item.id,
           item_id: item.item_id,

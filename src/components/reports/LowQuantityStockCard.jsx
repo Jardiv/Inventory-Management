@@ -23,7 +23,7 @@ const LowQuantityStockCard = () => {
     <div className="bg-primary col-span-2 row-span-3 rounded-lg p-6 flex flex-col justify-between overflow-hidden">
       <div className="flex justify-between items-center mb-4">
         <h2 className="text-textColor-primary text-xl font-bold">Low Quantity Items</h2>
-        <a href="/reports/lowstock" className="text-btn-primary hover:text-purple-300 text-sm sm:text-base">See All</a>
+        <a href="/reports/LowStock" className="text-btn-primary hover:text-purple-300 text-sm sm:text-base">See All</a>
       </div>
       <div className="flex flex-col h-full">
         <div className="overflow-auto flex-1 sticky">

@@ -111,14 +111,8 @@ export const GET: APIRoute = async ({ url }) => {
         name: productName,
         supplier: supplierName,
         quantity: item.quantity,
-        unitPrice: new Intl.NumberFormat('en-US', {
-          style: 'currency',
-          currency: 'USD'
-        }).format(actualUnitPrice),
-        totalPrice: new Intl.NumberFormat('en-US', {
-          style: 'currency',
-          currency: 'USD'
-        }).format(totalPrice)
+        unitPrice: `₱${Number(actualUnitPrice).toLocaleString('en-PH', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
+        totalPrice: `₱${Number(totalPrice).toLocaleString('en-PH', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
       };
     });
 
@@ -136,10 +130,7 @@ export const GET: APIRoute = async ({ url }) => {
         hour12: true
       }),
       totalQuantity: purchaseOrderData.total_quantity,
-      totalAmount: new Intl.NumberFormat('en-US', {
-        style: 'currency',
-        currency: 'USD'
-      }).format(purchaseOrderData.total_price),
+      totalAmount: `₱${Number(purchaseOrderData.total_price).toLocaleString('en-PH', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
       status: purchaseOrderData.status,
       createdBy: purchaseOrderData.created_by,
       items: productDetails
