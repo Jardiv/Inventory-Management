@@ -201,6 +201,28 @@ const Shipments = () => {
       return;
     }
 
+    // NEW: Calculate total quantity to be assigned
+    const totalQuantityToAssign = assignedProducts.reduce((sum, product) => sum + product.quantity, 0);
+    
+    // NEW: Check if warehouse has enough capacity
+    const availableCapacity = warehouseCapacity.max - warehouseCapacity.current;
+    
+    if (totalQuantityToAssign > availableCapacity) {
+      alert(`Cannot assign items. Warehouse capacity exceeded!\n\nTrying to assign: ${totalQuantityToAssign} items\nAvailable capacity: ${availableCapacity} items\n\nCurrent: ${warehouseCapacity.current}/${warehouseCapacity.max}`);
+      return;
+    }
+
+    // NEW: Warn if assignment will fill warehouse to near capacity (e.g., 90% or more)
+    const newTotal = warehouseCapacity.current + totalQuantityToAssign;
+    const capacityPercentage = (newTotal / warehouseCapacity.max) * 100;
+    
+    if (capacityPercentage >= 90) {
+      const confirmed = confirm(`Warning: This assignment will fill the warehouse to ${capacityPercentage.toFixed(1)}% capacity (${newTotal}/${warehouseCapacity.max}).\n\nDo you want to continue?`);
+      if (!confirmed) {
+        return;
+      }
+    }
+
     setIsAssigning(true);
 
     try {
@@ -493,7 +515,17 @@ const Shipments = () => {
                     <div>{t.id}</div>
                     <div>{t.name}</div>
                     <div>{t.qty}</div>
-                    <div>{t.status}</div>
+                    <div>
+                      <span className={`px-3 py-1 rounded-full text-sm font-medium ${
+                        t.status === 'Pending' 
+                          ? 'bg-yellow-100 text-yellow-800'  
+                          : t.status === 'Delivered' 
+                          ? 'bg-green-100 text-green-800'
+                          : 'bg-gray-100 text-gray-800' // fallback for any other status
+                      }`}>
+                        {t.status}
+                      </span>
+                    </div>
                   </div>
                 ))}
                 {/* Empty rows to maintain height */}
@@ -793,11 +825,13 @@ const Shipments = () => {
                   className="w-full h-full bg-primary border border-border_color rounded-md text-textColor-primary text-lg px-4 appearance-none disabled:opacity-50"
                 >
                   <option value="" disabled>Select a product</option>
-                  {shipmentProducts.map((product, idx) => (
-                    <option key={idx} value={product.name}>
-                      {product.name}
-                    </option>
-                  ))}
+                  {shipmentProducts
+                    .filter(product => !assignedProducts.some(assigned => assigned.name === product.name))
+                    .map((product, idx) => (
+                      <option key={idx} value={product.name}>
+                        {product.name}
+                      </option>
+                    ))}
                 </select>
 
                 {/* Down arrow icon */}
@@ -809,7 +843,15 @@ const Shipments = () => {
                 </div>
               </div>
             </div>
-            {/* Add Button */}
+
+            {/* Optional: Add a message when no products are available */}
+            {shipmentProducts.filter(product => !assignedProducts.some(assigned => assigned.name === product.name)).length === 0 && (
+              <div className="absolute top-[340px] left-[39px] text-textColor-tertiary text-sm italic">
+                All available products have been added to the list
+              </div>
+            )}
+
+            {/* Add Button - Also add a check to disable when no product is selected */}
             <button
               onClick={() => {
                 const selectedName = selectedProducts[0];
@@ -825,12 +867,13 @@ const Shipments = () => {
                     }
                   ]);
 
+                  // Reset the dropdown selection
                   const updated = [...selectedProducts];
                   updated[0] = '';
                   setSelectedProducts(updated);
                 }
               }}
-              disabled={isAssigning}
+              disabled={isAssigning || !selectedProducts[0] || assignedProducts.some(assigned => assigned.name === selectedProducts[0])}
               className="absolute top-[267px] right-[25px] w-[65px] h-[65px] bg-green rounded-md flex items-center justify-center disabled:opacity-50"
             >
               <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-6 h-6">

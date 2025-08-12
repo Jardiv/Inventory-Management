@@ -5,7 +5,7 @@ import type { APIRoute } from 'astro';
 export const POST: APIRoute = async ({ request }) => {
   try {
     const body = await request.json();
-    const { warehouse_name, description } = body;
+    const { warehouse_name, location, description } = body;
 
     // Validate required fields
     if (!warehouse_name || warehouse_name.trim() === '') {
@@ -17,12 +17,23 @@ export const POST: APIRoute = async ({ request }) => {
       });
     }
 
+    // NEW: Validate location field
+    if (!location || location.trim() === '') {
+      return new Response(JSON.stringify({ 
+        error: 'Location is required' 
+      }), {
+        status: 400,
+        headers: { 'Content-Type': 'application/json' }
+      });
+    }
+ 
     // Insert into warehouse_requests table with automatic 'pending' status
     const { data, error } = await supabase
       .from('warehouse_requests')
       .insert([
         {
           warehouse_name: warehouse_name.trim(),
+          location: location.trim(), // NEW: Include location field
           description: description?.trim() || null,
           status: 'pending', // Automatically set to 'pending' for all new requests
           request_date: new Date().toISOString()

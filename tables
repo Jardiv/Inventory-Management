@@ -1,149 +1,170 @@
--- Table: added_items
-CREATE TABLE added_items (
-    id SERIAL PRIMARY KEY,
-    sku VARCHAR UNIQUE NOT NULL,
-    name VARCHAR NOT NULL,
-    description VARCHAR,
-    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    status VARCHAR NOT NULL CHECK (status IN ('Pending', 'Completed', 'To Review', 'Canceled'))
-);
+-- WARNING: This schema is for context only and is not meant to be run.
+-- Table order and constraints may not be valid for execution.
 
--- Table: added_suppliers
-CREATE TABLE added_suppliers (
-    id SERIAL PRIMARY KEY,
-    name VARCHAR NOT NULL,
-    phone_num BIGINT NOT NULL,
-    email VARCHAR NOT NULL,
-    location VARCHAR NOT NULL,
-    sku VARCHAR NOT NULL REFERENCES added_items(sku),
-    price_per_unit FLOAT NOT NULL
+CREATE TABLE public.added_items (
+  id integer NOT NULL DEFAULT nextval('added_items_id_seq'::regclass),
+  sku character varying NOT NULL UNIQUE,
+  name character varying NOT NULL,
+  description character varying,
+  created_at timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  status character varying NOT NULL CHECK (status::text = ANY (ARRAY['Pending'::character varying, 'Completed'::character varying, 'To Review'::character varying, 'Canceled'::character varying]::text[])),
+  CONSTRAINT added_items_pkey PRIMARY KEY (id)
 );
-
--- Table: category
-CREATE TABLE category (
-	id SERIAL PRIMARY KEY,
-	name VARCHAR NOT NULL
+CREATE TABLE public.added_suppliers (
+  id integer NOT NULL DEFAULT nextval('added_suppliers_id_seq'::regclass),
+  name character varying NOT NULL,
+  phone_num bigint NOT NULL,
+  email character varying NOT NULL,
+  location character varying NOT NULL,
+  sku character varying NOT NULL,
+  price_per_unit double precision NOT NULL,
+  CONSTRAINT added_suppliers_pkey PRIMARY KEY (id),
+  CONSTRAINT added_suppliers_sku_fkey FOREIGN KEY (sku) REFERENCES public.added_items(sku)
 );
-
--- Table: items
-CREATE TABLE items (
-    id SERIAL PRIMARY KEY,
-    sku VARCHAR NOT NULL REFERENCES added_items(sku),
-    name VARCHAR NOT NULL,
-    category_id INT NOT NULL,
-    image VARCHAR,
-    min_quantity INT NOT NULL,
-    max_quantity INT NOT NULL,
-    unit_price FLOAT NOT NULL,
-    updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    accepted_at TIMESTAMP
+CREATE TABLE public.auto_order (
+  id integer NOT NULL DEFAULT nextval('auto_order_id_seq'::regclass),
+  item_id integer NOT NULL,
+  order_quantity integer NOT NULL,
+  is_auto_order boolean NOT NULL DEFAULT false,
+  CONSTRAINT auto_order_pkey PRIMARY KEY (id),
+  CONSTRAINT auto_order_item_id_fkey FOREIGN KEY (item_id) REFERENCES public.items(id)
 );
-
--- Table: suppliers
-CREATE TABLE suppliers (
-    id SERIAL PRIMARY KEY,
-    name VARCHAR NOT NULL UNIQUE,
-    phone_num BIGINT NOT NULL,
-    email VARCHAR NOT NULL,
-    location VARCHAR NOT NULL
+CREATE TABLE public.category (
+  id integer NOT NULL DEFAULT nextval('category_id_seq'::regclass),
+  name character varying NOT NULL UNIQUE,
+  CONSTRAINT category_pkey PRIMARY KEY (id)
 );
-
--- Table: warehouse
-CREATE TABLE warehouse (
-    id SERIAL PRIMARY KEY,
-    name VARCHAR NOT NULL,
-    location VARCHAR NOT NULL,
-    max_capacity INT NOT NULL
+CREATE TABLE public.items (
+  id integer NOT NULL DEFAULT nextval('items_id_seq'::regclass),
+  sku character varying NOT NULL,
+  name character varying NOT NULL,
+  category_id integer NOT NULL,
+  image character varying,
+  min_quantity integer NOT NULL,
+  max_quantity integer NOT NULL,
+  unit_price double precision NOT NULL,
+  updated_at timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  accepted_at timestamp without time zone,
+  description text,
+  curr_supplier_id integer CHECK (curr_supplier_id > 0),
+  CONSTRAINT items_pkey PRIMARY KEY (id),
+  CONSTRAINT items_category_id_fkey FOREIGN KEY (category_id) REFERENCES public.category(id),
+  CONSTRAINT items_curr_supplier_id_fkey FOREIGN KEY (curr_supplier_id) REFERENCES public.suppliers(id),
+  CONSTRAINT items_sku_fkey FOREIGN KEY (sku) REFERENCES public.added_items(sku)
 );
-
--- Table: warehouse_items
-CREATE TABLE warehouse_items (
-    id SERIAL PRIMARY KEY,
-    item_id INT NOT NULL REFERENCES items(id),
-    quantity INT NOT NULL,
-    date_assigned TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    status VARCHAR NOT NULL,
-    warehouse_id INT NOT NULL REFERENCES warehouse(id)
+CREATE TABLE public.purchase_orders (
+  id integer NOT NULL DEFAULT nextval('purchase_orders_id_seq'::regclass),
+  invoice_no character varying NOT NULL UNIQUE,
+  date_created timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  created_by character varying NOT NULL,
+  total_quantity integer NOT NULL,
+  total_price double precision NOT NULL,
+  status character varying NOT NULL,
+  description text,
+  CONSTRAINT purchase_orders_pkey PRIMARY KEY (id)
 );
-
--- Table: shipments
-CREATE TABLE shipments (
-    id SERIAL PRIMARY KEY,
-    -- shipment_id INT UNIQUE NOT NULL,
-    item_id INT NOT NULL REFERENCES items(id),
-    quantity INT NOT NULL,
-    date TIMESTAMP,
-    status VARCHAR CHECK (status IN ('Pending', 'Delivered'))
+CREATE TABLE public.purchase_orders_items (
+  id integer NOT NULL DEFAULT nextval('purchase_orders_items_id_seq'::regclass),
+  item_id integer NOT NULL,
+  quantity integer NOT NULL,
+  supplier_id integer NOT NULL,
+  invoice_no character varying NOT NULL,
+  CONSTRAINT purchase_orders_items_pkey PRIMARY KEY (id),
+  CONSTRAINT purchase_orders_items_invoice_no_fkey FOREIGN KEY (invoice_no) REFERENCES public.purchase_orders(invoice_no),
+  CONSTRAINT purchase_orders_items_item_id_fkey FOREIGN KEY (item_id) REFERENCES public.items(id),
+  CONSTRAINT purchase_orders_items_supplier_id_fkey FOREIGN KEY (supplier_id) REFERENCES public.suppliers(id)
 );
-
--- Table: transfers
-CREATE TABLE transfers (
-    id SERIAL PRIMARY KEY,
-    item_id INT NOT NULL REFERENCES items(id),
-    from_warehouse INT NOT NULL REFERENCES warehouse(id),
-    to_warehouse INT NOT NULL REFERENCES warehouse(id),
-    quantity INT NOT NULL,
-    transfer_date TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    status VARCHAR NOT NULL 
+CREATE TABLE public.shipments (
+  id integer NOT NULL DEFAULT nextval('shipments_id_seq'::regclass),
+  item_id integer NOT NULL,
+  quantity integer NOT NULL,
+  date timestamp without time zone,
+  status character varying CHECK (status::text = ANY (ARRAY['Pending'::character varying, 'Delivered'::character varying]::text[])),
+  note text,
+  CONSTRAINT shipments_pkey PRIMARY KEY (id),
+  CONSTRAINT shipments_item_id_fkey FOREIGN KEY (item_id) REFERENCES public.items(id)
 );
-
--- Table: purchase_orders
-CREATE TABLE purchase_orders (
-    id SERIAL PRIMARY KEY,
-    invoice_no VARCHAR UNIQUE NOT NULL,
-    date_created TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    created_by VARCHAR NOT NULL,
-    total_quantity INT NOT NULL,
-    total_price FLOAT NOT NULL,
-    status VARCHAR NOT NULL
+CREATE TABLE public.stock_in (
+  id integer NOT NULL DEFAULT nextval('stock_in_id_seq'::regclass),
+  transaction_id integer NOT NULL,
+  supplier_id integer NOT NULL,
+  CONSTRAINT stock_in_pkey PRIMARY KEY (id),
+  CONSTRAINT stock_in_transaction_id_fkey FOREIGN KEY (transaction_id) REFERENCES public.transactions(id),
+  CONSTRAINT stock_in_supplier_id_fkey FOREIGN KEY (supplier_id) REFERENCES public.suppliers(id)
 );
-
--- Table: purchase_orders_items
-CREATE TABLE purchase_orders_items (
-    id SERIAL PRIMARY KEY,
-    item_id INT NOT NULL REFERENCES items(id),
-    quantity INT NOT NULL,
-    supplier_id INT NOT NULL REFERENCES suppliers(id),
-    invoice_no VARCHAR NOT NULL REFERENCES purchase_orders(invoice_no)
+CREATE TABLE public.stock_out (
+  id integer NOT NULL DEFAULT nextval('stock_out_id_seq'::regclass),
+  transaction_id integer NOT NULL,
+  warehouse_id integer,
+  CONSTRAINT stock_out_pkey PRIMARY KEY (id),
+  CONSTRAINT stock_out_transaction_id_fkey FOREIGN KEY (transaction_id) REFERENCES public.transactions(id),
+  CONSTRAINT stock_out_warehouse_id_fkey FOREIGN KEY (warehouse_id) REFERENCES public.warehouse(id)
 );
-
--- Table: auto_order
-CREATE TABLE auto_order (
-    id SERIAL PRIMARY KEY,
-    item_id INT NOT NULL REFERENCES items(id),
-    order_quantity INT NOT NULL
+CREATE TABLE public.suppliers (
+  id integer NOT NULL DEFAULT nextval('suppliers_id_seq'::regclass),
+  name character varying NOT NULL UNIQUE,
+  phone_num bigint NOT NULL,
+  email character varying NOT NULL,
+  location character varying NOT NULL,
+  CONSTRAINT suppliers_pkey PRIMARY KEY (id)
 );
-
--- Table: transactions
-CREATE TABLE transactions (
-    id SERIAL PRIMARY KEY,
-    invoice_no VARCHAR UNIQUE NOT NULL,
-    transaction_datetime TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    total_quantity INT NOT NULL,
-    total_price FLOAT NOT NULL,
-    status VARCHAR NOT NULL,
-    created_by VARCHAR NOT NULL
+CREATE TABLE public.transaction_items (
+  id integer NOT NULL DEFAULT nextval('transaction_items_id_seq'::regclass),
+  invoice_no character varying NOT NULL,
+  item_id integer NOT NULL,
+  quantity integer NOT NULL,
+  expiration_date date,
+  CONSTRAINT transaction_items_pkey PRIMARY KEY (id),
+  CONSTRAINT transaction_items_item_id_fkey FOREIGN KEY (item_id) REFERENCES public.items(id),
+  CONSTRAINT transaction_items_invoice_no_fkey FOREIGN KEY (invoice_no) REFERENCES public.transactions(invoice_no)
 );
-
--- Table: stock_in
-CREATE TABLE stock_in (
-    id SERIAL PRIMARY KEY,
-    transaction_id INT NOT NULL REFERENCES transactions(id),
-    supplier_id INT NOT NULL REFERENCES suppliers(id)
+CREATE TABLE public.transactions (
+  id integer NOT NULL DEFAULT nextval('transactions_id_seq'::regclass),
+  invoice_no character varying NOT NULL UNIQUE,
+  transaction_datetime timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  total_quantity integer NOT NULL,
+  total_price double precision NOT NULL,
+  status character varying NOT NULL,
+  created_by character varying NOT NULL,
+  updated_at timestamp without time zone NOT NULL DEFAULT now(),
+  CONSTRAINT transactions_pkey PRIMARY KEY (id)
 );
-
--- Table: stock_out
-CREATE TABLE stock_out (
-    id SERIAL PRIMARY KEY,
-    transaction_id INT NOT NULL REFERENCES transactions(id),
-    warehouse_id INT NOT NULL REFERENCES warehouse(id)
+CREATE TABLE public.transfers (
+  id integer NOT NULL DEFAULT nextval('transfers_id_seq'::regclass),
+  item_id integer NOT NULL,
+  from_warehouse integer NOT NULL,
+  to_warehouse integer NOT NULL,
+  quantity integer NOT NULL,
+  transfer_date timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  status character varying NOT NULL,
+  CONSTRAINT transfers_pkey PRIMARY KEY (id),
+  CONSTRAINT transfers_from_warehouse_fkey FOREIGN KEY (from_warehouse) REFERENCES public.warehouse(id),
+  CONSTRAINT transfers_to_warehouse_fkey FOREIGN KEY (to_warehouse) REFERENCES public.warehouse(id),
+  CONSTRAINT transfers_item_id_fkey FOREIGN KEY (item_id) REFERENCES public.items(id)
 );
-
--- Table: transaction_items
-CREATE TABLE transaction_items (
-    id SERIAL PRIMARY KEY,
-    invoice_no VARCHAR NOT NULL REFERENCES transactions(invoice_no),
-    item_id INT NOT NULL REFERENCES items(id),
-    quantity INT NOT NULL,
-    expiration_date DATE
+CREATE TABLE public.warehouse (
+  id integer NOT NULL DEFAULT nextval('warehouse_id_seq'::regclass),
+  name character varying NOT NULL,
+  location character varying NOT NULL,
+  max_capacity integer NOT NULL,
+  CONSTRAINT warehouse_pkey PRIMARY KEY (id)
 );
+CREATE TABLE public.warehouse_items (
+  id integer NOT NULL DEFAULT nextval('warehouse_items_id_seq'::regclass),
+  item_id integer NOT NULL,
+  quantity integer NOT NULL,
+  date_assigned timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  status character varying NOT NULL,
+  warehouse_id integer NOT NULL,
+  CONSTRAINT warehouse_items_pkey PRIMARY KEY (id),
+  CONSTRAINT warehouse_items_warehouse_id_fkey FOREIGN KEY (warehouse_id) REFERENCES public.warehouse(id),
+  CONSTRAINT warehouse_items_item_id_fkey FOREIGN KEY (item_id) REFERENCES public.items(id)
+);
+CREATE TABLE public.warehouse_requests (
+  id uuid NOT NULL DEFAULT gen_random_uuid(),
+  request_date timestamp with time zone DEFAULT now(),
+  warehouse_name text NOT NULL,
+  description text,
+  status text DEFAULT 'pending'::text CHECK (status = ANY (ARRAY['pending'::text, 'approved'::text, 'rejected'::text])),
+  CONSTRAINT warehouse_requests_pkey PRIMARY KEY (id)
+)

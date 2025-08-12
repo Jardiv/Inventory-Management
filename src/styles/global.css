@@ -298,7 +298,7 @@
 		@apply w-full text-left table-fixed;
 	}
 	.skeleton-loading {
-		@apply h-[1rem] bg-gray-700 rounded animate-pulse;
+		@apply h-[1rem] bg-gray-700/50 rounded animate-pulse;
 	}
 	.stock-table td, .stock-table th {
 		@apply h-[3rem] px-6;
