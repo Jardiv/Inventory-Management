@@ -28,42 +28,61 @@ export default function ProductInventoryPreview({ limit = 10, hidePageNumbers = 
   const totalPages = Math.ceil(total / limit);
 
   async function fetchProducts() {
-    setLoading(true);
+  setLoading(true);
 
-    const { count } = await supabase
-      .from("items")
-      .select("id, added_items!inner(status)", { count: "exact", head: true })
-      .eq("added_items.status", "Completed");
+  // Count all products where added_items.status = "Completed" regardless of isDeleted
+  const { count } = await supabase
+    .from("items")
+    .select("id, added_items!inner(status)", { count: "exact", head: true })
+    .eq("added_items.status", "Completed");
+    // Removed .eq("isDeleted", false) to include deleted too
 
-    setTotal(count || 0);
+  setTotal(count || 0);
 
-    const from = (page - 1) * limit;
-    const to = from + limit - 1;
+  const from = (page - 1) * limit;
+  const to = from + limit - 1;
 
-    const { data, error } = await supabase
-      .from("items")
-      .select(`
-        id,
-        sku,
-        name,
-        min_quantity,
-        max_quantity,
-        unit_price,
-        category ( name ),
-        added_items!inner ( status, created_at )
-      `)
-      .eq("added_items.status", "Completed")
-      .order("id", { ascending: true })
-      .range(from, to);
+  // Get all products where added_items.status = "Completed" regardless of isDeleted
+  const { data, error } = await supabase
+    .from("items")
+    .select(`
+      id,
+      sku,
+      name,
+      min_quantity,
+      max_quantity,
+      unit_price,
+      category ( name ),
+      added_items!inner ( status, created_at ),
+      isDeleted
+    `)
+    .eq("added_items.status", "Completed")
+    // Removed .eq("isDeleted", false) to include deleted products
+    .order("id", { ascending: true })
+    .range(from, to);
 
-    if (!error) {
-      setProducts(data);
-    } else {
-      console.error(error);
-    }
+  if (!error) {
+    // Override status for deleted items
+    const processedData = data.map(item => {
+      if (item.isDeleted) {
+        return {
+          ...item,
+          added_items: {
+            ...item.added_items,
+            status: "Deleted"
+          }
+        };
+      }
+      return item;
+    });
 
-    setLoading(false);
+    setProducts(processedData);
+  } else {
+    console.error(error);
   }
+
+  setLoading(false);
+}
 
   useEffect(() => {
     fetchProducts();
