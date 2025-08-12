@@ -24,7 +24,7 @@ const Shipments = () => {
     item_id: '',
     quantity: '',
     note: ''
-  });
+  }); 
   const [isAddingShipment, setIsAddingShipment] = useState(false);
   const [itemPreview, setItemPreview] = useState(null); // To show item details when valid ID is entered
   const [validationTimeout, setValidationTimeout] = useState(null); // For debouncing validation
