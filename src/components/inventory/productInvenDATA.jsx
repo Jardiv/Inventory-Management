@@ -30,19 +30,19 @@ export default function ProductInventoryPreview({ limit = 10, hidePageNumbers = 
   async function fetchProducts() {
   setLoading(true);
 
-  // Count all products where added_items.status = "Completed" regardless of isDeleted
+  // Count active products (not deleted)
   const { count } = await supabase
     .from("items")
     .select("id, added_items!inner(status)", { count: "exact", head: true })
-    .eq("added_items.status", "Completed");
-    // Removed .eq("isDeleted", false) to include deleted too
+    .eq("added_items.status", "Completed")
+    .eq("isDeleted", false); // ✅ hide deleted from active count
 
   setTotal(count || 0);
 
   const from = (page - 1) * limit;
   const to = from + limit - 1;
 
-  // Get all products where added_items.status = "Completed" regardless of isDeleted
+  // Get active products only
   const { data, error } = await supabase
     .from("items")
     .select(`
@@ -53,30 +53,15 @@ export default function ProductInventoryPreview({ limit = 10, hidePageNumbers = 
       max_quantity,
       unit_price,
       category ( name ),
-      added_items!inner ( status, created_at ),
-      isDeleted
+      added_items!inner ( status, created_at )
     `)
     .eq("added_items.status", "Completed")
-    // Removed .eq("isDeleted", false) to include deleted products
+    .eq("isDeleted", false) // ✅ hide deleted from table
     .order("id", { ascending: true })
     .range(from, to);
 
   if (!error) {
-    // Override status for deleted items
-    const processedData = data.map(item => {
-      if (item.isDeleted) {
-        return {
-          ...item,
-          added_items: {
-            ...item.added_items,
-            status: "Deleted"
-          }
-        };
-      }
-      return item;
-    });
-
-    setProducts(processedData);
+    setProducts(data);
   } else {
     console.error(error);
   }
