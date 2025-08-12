@@ -245,7 +245,17 @@ const LowStockTable = ({ currentPage = 1 }) => {
         const formatPeso = (amount) => `₱${Number(amount).toLocaleString('en-PH', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 
         const summaryItems = selectedItemsData.map(item => {
-            const unitPrice = parseFloat(item.unitPrice) || 10.00; // Use API provided unit price
+            // Always use actual price from database if available
+            let unitPrice = 0;
+            if (item.unit_price !== undefined && item.unit_price !== null && !isNaN(parseFloat(item.unit_price))) {
+                unitPrice = parseFloat(item.unit_price);
+            } else if (item.price !== undefined && item.price !== null && !isNaN(parseFloat(item.price))) {
+                unitPrice = parseFloat(item.price);
+            } else if (item.unitPrice !== undefined && item.unitPrice !== null && !isNaN(parseFloat(item.unitPrice))) {
+                unitPrice = parseFloat(item.unitPrice);
+            } else {
+                unitPrice = 0;
+            }
             const quantity = item.toOrder || 0;
             const itemTotal = unitPrice * quantity;
 

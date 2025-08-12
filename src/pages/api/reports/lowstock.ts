@@ -110,7 +110,8 @@ export const GET: APIRoute = async ({ url }) => {
           quantity: totalQuantity,
           minimum: item.min_quantity,
           toOrder: suggestedOrder,
-          unitPrice: formatPeso(item.unit_price || 10.00),
+          unitPrice: formatPeso(item.unit_price || 0),
+          unit_price: item.unit_price || 0, // Raw numeric value for calculations
           supplier: supplierName,
           status: status
         };

@@ -18,6 +18,27 @@ interface PurchaseOrderRequest {
   totalAmount: number;
 }
 
+// Helper function to sanitize currency values and convert to float
+const sanitizeCurrencyValue = (value: any): number => {
+  if (typeof value === 'number') {
+    return value;
+  }
+  
+  if (typeof value === 'string') {
+    // Remove currency symbols (₱, $, €, £, etc.) and common formatting
+    const cleanValue = value
+      .replace(/[₱$€£¥₹₽₩¢]/g, '') // Remove currency symbols
+      .replace(/[,\s]/g, '') // Remove commas and spaces
+      .replace(/[^\d.-]/g, '') // Keep only digits, dots, and minus signs
+      .trim();
+    
+    const parsed = parseFloat(cleanValue);
+    return isNaN(parsed) ? 0 : parsed;
+  }
+  
+  return 0;
+};
+
 export const POST: APIRoute = async ({ request }) => {
   try {
     const body: PurchaseOrderRequest = await request.json();
@@ -33,7 +54,8 @@ export const POST: APIRoute = async ({ request }) => {
       });
     }
 
-    // Validate item structure
+    // Sanitize and validate item structure
+    const sanitizedItems = [];
     for (const item of items) {
       if (!item.id || typeof item.id !== 'number') {
         return new Response(JSON.stringify({
@@ -45,7 +67,9 @@ export const POST: APIRoute = async ({ request }) => {
         });
       }
       
-      if (!item.quantity || item.quantity <= 0) {
+      // Sanitize quantity
+      const sanitizedQuantity = Math.max(0, Math.floor(sanitizeCurrencyValue(item.quantity)));
+      if (sanitizedQuantity <= 0) {
         return new Response(JSON.stringify({
           success: false,
           error: `Invalid quantity for item ${item.sku}: ${item.quantity}`
@@ -55,7 +79,11 @@ export const POST: APIRoute = async ({ request }) => {
         });
       }
       
-      if (!item.totalPrice || item.totalPrice <= 0) {
+      // Sanitize unit price and total price
+      const sanitizedUnitPrice = sanitizeCurrencyValue(item.unitPrice);
+      const sanitizedTotalPrice = sanitizeCurrencyValue(item.totalPrice);
+      
+      if (sanitizedTotalPrice <= 0) {
         return new Response(JSON.stringify({
           success: false,
           error: `Invalid total price for item ${item.sku}: ${item.totalPrice}`
@@ -64,6 +92,14 @@ export const POST: APIRoute = async ({ request }) => {
           headers: { 'Content-Type': 'application/json' }
         });
       }
+
+      // Create sanitized item object
+      sanitizedItems.push({
+        ...item,
+        quantity: sanitizedQuantity,
+        unitPrice: sanitizedUnitPrice,
+        totalPrice: sanitizedTotalPrice
+      });
     }
 
     if (!createdBy || createdBy.trim() === '') {
@@ -76,6 +112,22 @@ export const POST: APIRoute = async ({ request }) => {
       });
     }
 
+    // Calculate actual total amount from all sanitized items
+    const calculatedTotalAmount = sanitizedItems.reduce((sum, item) => sum + item.totalPrice, 0);
+    const calculatedTotalQuantity = sanitizedItems.reduce((sum, item) => sum + item.quantity, 0);
+    
+    // Use calculated values instead of the potentially incorrect request values
+    const sanitizedTotalAmount = calculatedTotalAmount;
+    const sanitizedTotalQuantity = calculatedTotalQuantity;
+    
+    console.log('💰 Calculated totals:', {
+      itemCount: sanitizedItems.length,
+      calculatedTotalAmount,
+      calculatedTotalQuantity,
+      requestTotalAmount: sanitizeCurrencyValue(totalAmount),
+      difference: calculatedTotalAmount - sanitizeCurrencyValue(totalAmount)
+    });
+
     // Generate unique invoice number with timestamp and random component
     const timestamp = new Date().toISOString().replace(/[:.]/g, '').replace('T', '').substring(0, 14);
     const randomSuffix = Math.random().toString(36).substring(2, 5).toUpperCase();
@@ -84,7 +136,13 @@ export const POST: APIRoute = async ({ request }) => {
     // Get the current timestamp for the purchase order
     const dateCreated = new Date().toISOString();
 
-    console.log('🔨 Generating purchase order:', { invoiceNo, itemCount: items.length, totalAmount, createdBy });
+    console.log('🔨 Generating purchase order:', { 
+      invoiceNo, 
+      itemCount: sanitizedItems.length, 
+      calculatedTotalAmount: sanitizedTotalAmount,
+      calculatedTotalQuantity: sanitizedTotalQuantity,
+      createdBy 
+    });
 
     // First, create the main purchase order record
     const { data: purchaseOrder, error: poError } = await supabase
@@ -93,8 +151,8 @@ export const POST: APIRoute = async ({ request }) => {
         invoice_no: invoiceNo,
         date_created: dateCreated,
         created_by: createdBy.trim(),
-        total_quantity: totalQuantity,
-        total_price: totalAmount,
+        total_quantity: sanitizedTotalQuantity,
+        total_price: sanitizedTotalAmount,
         status: 'Pending'
       })
       .select('*')
@@ -110,12 +168,18 @@ export const POST: APIRoute = async ({ request }) => {
     // Prepare purchase order items data
     const purchaseOrderItems = [];
     
-    console.log(`🔨 Preparing purchase order items for ${items.length} items under invoice: ${invoiceNo}`);
+    console.log(`🔨 Preparing purchase order items for ${sanitizedItems.length} items under invoice: ${invoiceNo}`);
     
-    for (let i = 0; i < items.length; i++) {
-      const item = items[i];
+    for (let i = 0; i < sanitizedItems.length; i++) {
+      const item = sanitizedItems[i];
       
-      console.log(`🔨 Processing item ${i + 1}/${items.length}:`, { id: item.id, sku: item.sku, quantity: item.quantity });
+      console.log(`🔨 Processing item ${i + 1}/${sanitizedItems.length}:`, { 
+        id: item.id, 
+        sku: item.sku, 
+        quantity: item.quantity,
+        unitPrice: item.unitPrice,
+        totalPrice: item.totalPrice
+      });
       
       // Find a supplier for this item
       let supplierId = 1; // Default supplier ID, you might want to adjust this
@@ -144,7 +208,7 @@ export const POST: APIRoute = async ({ request }) => {
       // Create purchase order item record
       const purchaseOrderItem = {
         item_id: item.id,
-        quantity: item.quantity,
+        quantity: item.quantity, // Now sanitized as integer
         supplier_id: supplierId,
         invoice_no: invoiceNo
       };
@@ -191,20 +255,12 @@ export const POST: APIRoute = async ({ request }) => {
     console.log('✅ Purchase order generated successfully:', { 
       invoiceNo, 
       itemCount: poItems.length,
-      totalAmount,
+      calculatedTotalAmount: sanitizedTotalAmount,
+      totalQuantity: sanitizedTotalQuantity,
       dateCreated
     });
 
-    // Format totalAmount and item prices as Philippine Peso
-    const formatPeso = (amount: number) => `₱${Number(amount).toLocaleString('en-PH', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
-
-    // If items have unitPrice/totalPrice, format them as peso
-    const formattedItems = items.map(item => ({
-      ...item,
-      unitPrice: formatPeso(item.unitPrice),
-      totalPrice: formatPeso(item.totalPrice)
-    }));
-
+    // Return success response with purchase order details
     return new Response(JSON.stringify({
       success: true,
       data: {
@@ -212,12 +268,11 @@ export const POST: APIRoute = async ({ request }) => {
         invoiceNo,
         dateCreated,
         createdBy: createdBy.trim(),
-        totalQuantity,
-        totalAmount: formatPeso(totalAmount),
+        totalQuantity: sanitizedTotalQuantity,
+        totalAmount: sanitizedTotalAmount,
         itemCount: poItems.length,
         status: purchaseOrder.status,
         message: `Purchase order created with ${poItems.length} items under invoice: ${invoiceNo}`,
-        items: formattedItems,
         purchaseOrderItems: poItems.map(item => ({
           id: item.id,
           item_id: item.item_id,
