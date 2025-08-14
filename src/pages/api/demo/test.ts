@@ -8,11 +8,11 @@ export const GET: APIRoute = async ({ request }) => {
   let errorLogs = [];
 
   try {
-    // 1. Fetch all POs that are 'In Transit' or 'Completed'
+    // 1. Fetch all POs that are 'In Transit', 'Completed', or 'Canceled'
     const { data: purchaseOrders, error: poFetchError } = await supabase
       .from('purchase_orders')
       .select('*')
-      .in('status', ['In Transit', 'Completed']);
+      .in('status', ['In Transit', 'Completed', 'Canceled']);
 
     if (poFetchError) {
       throw new Error(`Failed to fetch purchase orders: ${poFetchError.message}`);
@@ -46,6 +46,11 @@ export const GET: APIRoute = async ({ request }) => {
           .eq('invoice_no', poData.invoice_no);
 
         if (poItemsError || !poItems || poItems.length === 0) {
+          // If a PO is canceled, it might not have items, which is okay.
+          if (poData.status === 'Canceled') {
+            processedCount++;
+            continue;
+          }
           throw new Error(`Failed to fetch items for PO ${poData.invoice_no}.`);
         }
 
@@ -62,12 +67,19 @@ export const GET: APIRoute = async ({ request }) => {
             const total_price = typedItems.reduce((sum, item) => sum + (item.quantity * item.items.unit_price), 0);
             const transaction_invoice_no = `${poData.invoice_no}-S${supplier_id}`;
 
+            const statusMapping = {
+                'In Transit': 'Pending',
+                'Completed': 'Delivered',
+                'Canceled': 'Canceled'
+            };
+            const transactionStatus = statusMapping[poData.status] || 'Pending';
+
             const transactionPayload = {
                 transaction_type: 'stock_in',
                 invoice_no: transaction_invoice_no,
                 total_quantity,
                 total_price,
-                status: poData.status === 'Completed' ? 'Delivered' : 'In Transit',
+                status: transactionStatus,
                 created_by: poData.created_by,
                 supplier_id: parseInt(supplier_id),
                 items: typedItems.map(item => ({
