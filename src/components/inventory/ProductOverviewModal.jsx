@@ -1,5 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import { supabase } from "../../utils/supabaseClient";
+import jsPDF from "jspdf";
+import "jspdf-autotable";
 
 export default function ProductModal({ product, onClose, onUpdated }) {
   const [activeTab, setActiveTab] = useState("stock");
@@ -26,6 +28,47 @@ export default function ProductModal({ product, onClose, onUpdated }) {
 
   const tabsRef = useRef([]);
   const underlineRef = useRef(null);
+
+  // 📌 Export as PDF
+  const exportPDF = () => {
+    const doc = new jsPDF();
+
+    const tableColumn = ["Item Code", "Name", "Category", "Quantity", "Supplier"];
+    const tableRows = stockData.map(item => [
+      item.item_code,
+      item.name,
+      item.category,
+      item.quantity,
+      item.supplier
+    ]);
+
+    doc.text("Product Inventory Report", 14, 15);
+    doc.autoTable({
+      head: [tableColumn],
+      body: tableRows,
+      startY: 20,
+      theme: "grid",
+      styles: { fontSize: 10 },
+      headStyles: { fillColor: [41, 128, 185] },
+    });
+
+    doc.save("inventory_report.pdf");
+  };
+
+  // 📌 Export as CSV
+  const exportCSV = () => {
+    const headers = ["Item Code", "Name", "Category", "Quantity", "Supplier"];
+    const rows = stockData.map(item =>
+      [item.item_code, item.name, item.category, item.quantity, item.supplier].join(",")
+    );
+
+    const csvContent = [headers.join(","), ...rows].join("\n");
+    const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+    const link = document.createElement("a");
+    link.href = URL.createObjectURL(blob);
+    link.download = "inventory_report.csv";
+    link.click();
+  };
 
   // Fetch product details
   useEffect(() => {
@@ -146,8 +189,8 @@ export default function ProductModal({ product, onClose, onUpdated }) {
       alert(`"${formData.name}" marked as deleted successfully!`);
       setLoadingDelete(false);
 
-      if (onUpdated) onUpdated(); // refresh product list
-      onClose(); // close modal
+      if (onUpdated) onUpdated();
+      onClose();
     } catch (err) {
       alert("Error deleting product: " + err.message);
       setLoadingDelete(false);
@@ -160,14 +203,57 @@ export default function ProductModal({ product, onClose, onUpdated }) {
         className="backdrop-blur-lg p-6 rounded-2xl shadow-lg max-w-3xl w-full relative animate-fadeIn"
         style={{ backgroundColor: "var(--color-primary)" }}
       >
+
+        {/* Export Dropdown */}
+        <div className="absolute top-3 right-12">
+          <div className="group relative inline-block">
+            <button
+              className="p-2 text-textColor-primary hover:bg-btn-hover hover:text-white rounded"
+              disabled={loadingSave || loadingDelete}
+            >
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                fill="none"
+                stroke="currentColor"
+                className="w-5 h-5"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth="1.5"
+                  d="M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5M16.5 12 12 16.5m0 0L7.5 12m4.5 4.5V3"
+                />
+              </svg>
+            </button>
+            {/* Dropdown Menu */}
+            <div className="absolute hidden group-hover:block right-0 mt-1 w-40 bg-white border rounded shadow-lg z-50">
+              <button
+                onClick={exportCSV}
+                className="block w-full text-left px-4 py-2 hover:bg-gray-100"
+              >
+                Export CSV
+              </button>
+              <button
+                onClick={exportPDF}
+                className="block w-full text-left px-4 py-2 hover:bg-gray-100"
+              >
+                Export PDF
+              </button>
+            </div>
+          </div>
+        </div>
+
         {/* Close Button */}
         <button
           onClick={onClose}
-          className="absolute px-2 py-1 rounded-md top-3 right-3 text-xl text-textColor-primary hover:bg-btn-hover hover:text-textColor-secondary"
+          className="absolute top-3 right-3 px-2 py-1 rounded-md text-xl text-textColor-primary hover:bg-btn-hover hover:text-textColor-secondary"
           disabled={loadingSave || loadingDelete}
         >
           ✖
         </button>
+
+
 
         {/* Title */}
         <div>

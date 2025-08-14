@@ -18,7 +18,9 @@ export default function PendingItemsPreview({ limit = 10, paginated = true }) {
       let query = supabase.from("added_items").select("*", { count: "exact" });
 
       // Exclude Completed items
-      query = query.neq("status", "Completed");
+      // Include Pending, Canceled, and Deleted only
+query = query.in("status", ["Pending", "Canceled", "Deleted"]);
+
 
       // Apply status filter logic
       if (sortBy === "recently_added") {
@@ -223,5 +225,6 @@ export default function PendingItemsPreview({ limit = 10, paginated = true }) {
         </div>
       )}
     </div>
+    
   );
 }
