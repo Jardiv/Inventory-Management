@@ -455,6 +455,150 @@ const TransferList = () => {
   };
 
   const emptyRows = Math.max(11 - transfers.length, 0);
+
+  // NEW: Floating Capacity Panel Component - Now Standalone
+  const FloatingCapacityPanel = ({ warehouseId, selectedItems }) => {
+    const capacityInfo = getWarehouseCapacityInfo(warehouseId);
+    const totalToTransfer = selectedItems.reduce((sum, item) => sum + item.selectedQty, 0);
+    const selectedWarehouse = warehouses.find(w => w.id === parseInt(warehouseId));
+
+    if (!capacityInfo || !selectedWarehouse) return null;
+
+    return (
+      <>
+        <div className="flex items-center justify-between mb-4">
+          <h3 className="text-lg font-semibold text-white">{selectedWarehouse.name}</h3>
+          <div className={`w-3 h-3 rounded-full ${
+            capacityInfo.isFull 
+              ? 'bg-red-500' 
+              : capacityInfo.isNearFull 
+              ? 'bg-yellow-500' 
+              : 'bg-green-500'
+          }`} />
+        </div>
+        
+        <div className="space-y-3 text-sm">
+          <div className="flex justify-between items-center">
+            <span className="text-gray-300">Current Capacity:</span>
+            <span className={`font-medium ${
+              capacityInfo.percentage >= 90 
+                ? 'text-red-400' 
+                : capacityInfo.percentage >= 70 
+                ? 'text-yellow-400' 
+                : 'text-green-400'
+            }`}>
+              {capacityInfo.current}/{capacityInfo.max}
+            </span>
+          </div>
+          
+          <div className="flex justify-between items-center">
+            <span className="text-gray-300">Usage:</span>
+            <span className="text-white font-medium">
+              {capacityInfo.percentage.toFixed(1)}%
+            </span>
+          </div>
+          
+          <div className="flex justify-between items-center">
+            <span className="text-gray-300">Available Space:</span>
+            <span className={`font-medium ${
+              capacityInfo.availableSpace <= 0 
+                ? 'text-red-400' 
+                : capacityInfo.availableSpace < 50 
+                ? 'text-yellow-400' 
+                : 'text-green-400'
+            }`}>
+              {capacityInfo.availableSpace}
+            </span>
+          </div>
+          
+          {totalToTransfer > 0 && (
+            <>
+              <div className="flex justify-between items-center">
+                <span className="text-gray-300">To Transfer:</span>
+                <span className={`font-medium ${
+                  totalToTransfer > capacityInfo.availableSpace 
+                    ? 'text-red-400' 
+                    : 'text-blue-400'
+                }`}>
+                  {totalToTransfer}
+                </span>
+              </div>
+              
+              <div className="flex justify-between items-center">
+                <span className="text-gray-300">After Transfer:</span>
+                <span className={`font-medium ${
+                  (capacityInfo.current + totalToTransfer) > capacityInfo.max 
+                    ? 'text-red-400' 
+                    : 'text-green-400'
+                }`}>
+                  {capacityInfo.current + totalToTransfer}/{capacityInfo.max}
+                </span>
+              </div>
+            </>
+          )}
+        </div>
+        
+        {/* Visual Progress Bar */}
+        <div className="mt-4">
+          <div className="w-full bg-gray-700 rounded-full h-3 relative overflow-hidden">
+            {/* Current capacity */}
+            <div 
+              className={`h-3 rounded-full transition-all duration-300 ${
+                capacityInfo.percentage >= 90 
+                  ? 'bg-red-500' 
+                  : capacityInfo.percentage >= 70 
+                  ? 'bg-yellow-500' 
+                  : 'bg-green-500'
+              }`}
+              style={{ width: `${Math.min(capacityInfo.percentage, 100)}%` }}
+            />
+            
+            {/* Projected capacity overlay */}
+            {totalToTransfer > 0 && (
+              <div 
+                className="absolute top-0 h-3 bg-blue-400 opacity-60 transition-all duration-300"
+                style={{ 
+                  left: `${Math.min(capacityInfo.percentage, 100)}%`,
+                  width: `${Math.min(((totalToTransfer) / capacityInfo.max) * 100, 100 - Math.min(capacityInfo.percentage, 100))}%` 
+                }}
+              />
+            )}
+          </div>
+          
+          <div className="flex justify-between text-xs text-gray-400 mt-1">
+            <span>0</span>
+            <span>{capacityInfo.max}</span>
+          </div>
+          
+          {totalToTransfer > 0 && (
+            <div className="text-xs text-blue-400 mt-2 text-center">
+              Blue section shows projected capacity after transfer
+            </div>
+          )}
+        </div>
+        
+        {/* Status Indicator */}
+        <div className={`mt-4 p-2 rounded-md text-center text-sm font-medium ${
+          totalToTransfer > capacityInfo.availableSpace
+            ? 'bg-red-900/30 text-red-400 border border-red-500/30'
+            : capacityInfo.isFull
+            ? 'bg-red-900/30 text-red-400 border border-red-500/30'
+            : capacityInfo.isNearFull
+            ? 'bg-yellow-900/30 text-yellow-400 border border-yellow-500/30'
+            : 'bg-green-900/30 text-green-400 border border-green-500/30'
+        }`}>
+          {totalToTransfer > capacityInfo.availableSpace
+            ? 'CAPACITY EXCEEDED'
+            : capacityInfo.isFull
+            ? 'WAREHOUSE FULL'
+            : capacityInfo.isNearFull
+            ? 'NEAR CAPACITY'
+            : 'CAPACITY OK'
+          }
+        </div>
+      </>
+    );
+  };
   
   return (
     <div className="w-full max-w-[100%] min-w-[300px] bg-primary rounded-md px-4 sm:px-6 lg:px-8 py-6 text-textColor-primary font-[Poppins] mx-auto">
@@ -609,7 +753,9 @@ const TransferList = () => {
       {/* Transfer Modal */}
       {showTransferModal && (
         <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50">
-          <div className="w-[996px] max-w-[95%] bg-primary border border-border_color rounded-md shadow-lg text-textColor-primary font-[Poppins] relative overflow-auto max-h-[90vh]">
+          <div className="relative flex items-center gap-4">
+            {/* Main Modal */}
+            <div className="w-[996px] max-w-[95%] bg-primary border border-border_color rounded-md shadow-lg text-textColor-primary font-[Poppins] overflow-auto max-h-[90vh]">
             <div className="flex justify-between items-center p-6 border-b border-border_color">
               <h2 className="text-2xl font-semibold">Transfer Items</h2>
               <button onClick={closeTransferModal} className="w-8 h-8 hover:bg-border_color rounded-full flex items-center justify-center">
@@ -641,7 +787,7 @@ const TransferList = () => {
               )}
 
               <div className="grid grid-cols-2 gap-6">
-                {/* From Warehouse (No capacity restrictions) */}
+                {/* From Warehouse */}
                 <div className="relative">
                   <label className="text-lg mb-2 block">From:</label>
                   <div className="relative">
@@ -668,9 +814,32 @@ const TransferList = () => {
                     </div>
                   </div>
                 </div>
-                {/* To Warehouse (WITH capacity restrictions) */}
+                
+                {/* To Warehouse with Capacity Info Button */}
                 <div className="relative">
-                  <label className="text-lg mb-2 block">To:</label>
+                  <div className="flex items-center gap-2 mb-2">
+                    <label className="text-lg">To:</label>
+                    {toWarehouse && !loadingCapacities && (
+                      <div className="relative group">
+                        <button
+                          type="button"
+                          className="w-6 h-6 bg-blue-500 hover:bg-blue-600 text-white rounded-full flex items-center justify-center text-sm font-bold transition-colors"
+                        >
+                          ?
+                        </button>
+                        
+                        {/* Tooltip with Capacity Panel */}
+                        <div className="absolute left-8 top-0 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-300 z-[70]">
+                          <div className="w-80 bg-slate-800 border border-slate-600 rounded-lg shadow-2xl p-4">
+                            <FloatingCapacityPanel 
+                              warehouseId={toWarehouse} 
+                              selectedItems={selectedItems}
+                            />
+                          </div>
+                        </div>
+                      </div>
+                    )}
+                  </div>
                   <div className="relative">
                     <select 
                       value={toWarehouse}
@@ -705,81 +874,6 @@ const TransferList = () => {
                       </svg>
                     </div>
                   </div>
-                  
-                  {/* Capacity Info for Selected To Warehouse */}
-                  {toWarehouse && (
-                    <div className="mt-2 text-sm">
-                      {(() => {
-                        const capacityInfo = getWarehouseCapacityInfo(toWarehouse);
-                        const totalToTransfer = selectedItems.reduce((sum, item) => sum + item.selectedQty, 0);
-                        
-                        if (!capacityInfo) return null;
-                        
-                        return (
-                          <div className="space-y-1">
-                            <div className="flex justify-between">
-                              <span>Current Capacity:</span>
-                              <span className={capacityInfo.percentage >= 90 ? 'text-red-600 font-medium' : capacityInfo.percentage >= 70 ? 'text-yellow-600' : 'text-green-600'}>
-                                {capacityInfo.current}/{capacityInfo.max} ({capacityInfo.percentage.toFixed(1)}%)
-                              </span>
-                            </div>
-                            <div className="flex justify-between">
-                              <span>Available Space:</span>
-                              <span className={capacityInfo.availableSpace <= 0 ? 'text-red-600 font-medium' : 'text-green-600'}>
-                                {capacityInfo.availableSpace}
-                              </span>
-                            </div>
-                            {totalToTransfer > 0 && (
-                              <div className="flex justify-between">
-                                <span>To Transfer:</span>
-                                <span className={totalToTransfer > capacityInfo.availableSpace ? 'text-red-600 font-medium' : 'text-blue-600'}>
-                                  {totalToTransfer}
-                                </span>
-                              </div>
-                            )}
-                            {totalToTransfer > 0 && (
-                              <div className="flex justify-between">
-                                <span>After Transfer:</span>
-                                <span className={(capacityInfo.current + totalToTransfer) > capacityInfo.max ? 'text-red-600 font-medium' : 'text-green-600'}>
-                                  {capacityInfo.current + totalToTransfer}/{capacityInfo.max}
-                                </span>
-                              </div>
-                            )}
-                            
-                            {/* Visual Progress Bar */}
-                            <div className="mt-2">
-                              <div className="w-full bg-gray-200 rounded-full h-2">
-                                <div 
-                                  className={`h-2 rounded-full ${
-                                    capacityInfo.percentage >= 90 
-                                      ? 'bg-red-500' 
-                                      : capacityInfo.percentage >= 70 
-                                      ? 'bg-yellow-500' 
-                                      : 'bg-green-500'
-                                  }`}
-                                  style={{ width: `${Math.min(capacityInfo.percentage, 100)}%` }}
-                                />
-                                {/* Show projected capacity if items are selected */}
-                                {totalToTransfer > 0 && (
-                                  <div 
-                                    className="h-2 rounded-full bg-blue-300 opacity-60 relative -mt-2"
-                                    style={{ 
-                                      width: `${Math.min(((capacityInfo.current + totalToTransfer) / capacityInfo.max) * 100, 100)}%` 
-                                    }}
-                                  />
-                                )}
-                              </div>
-                              {totalToTransfer > 0 && (
-                                <div className="text-xs text-blue-600 mt-1">
-                                  Blue overlay shows projected capacity after transfer
-                                </div>
-                              )}
-                            </div>
-                          </div>
-                        );
-                      })()}
-                    </div>
-                  )}
                 </div>
               </div>
 
@@ -862,6 +956,7 @@ const TransferList = () => {
                 )}
                 {isTransferring ? 'Processing...' : 'Initiate Transfer'}
               </button>
+            </div>
             </div>
           </div>
         </div>
