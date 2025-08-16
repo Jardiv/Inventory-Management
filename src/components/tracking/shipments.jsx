@@ -14,6 +14,8 @@ const Shipments = () => {
   const [assignedProducts, setAssignedProducts] = useState([]);
   const [warehouses, setWarehouses] = useState([]); 
   const [shipmentProducts, setShipmentProducts] = useState([]);
+  const [availableShipments, setAvailableShipments] = useState([]); // New: detailed shipment data
+  const [selectedShipmentDetails, setSelectedShipmentDetails] = useState([]); // New: selected specific shipments
   const [isAssigning, setIsAssigning] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 10;
@@ -45,19 +47,13 @@ const Shipments = () => {
 
           setShipments(sortedShipments);
 
-          // Extract unique products
-          // Keep name and quantity of each product from shipments
-          const uniqueProductsMap = new Map();
-          data.forEach(item => {
-            if (item.status !== 'Delivered' && !uniqueProductsMap.has(item.name)) {
-              uniqueProductsMap.set(item.name, {
-                name: item.name,
-                quantity: item.qty,
-                item_id: item.item_id
-              });
-            }
-          });
-          setShipmentProducts(Array.from(uniqueProductsMap.values()));
+          // NEW: Extract detailed shipment information for pending items
+          const pendingShipments = data.filter(item => item.status === 'Pending');
+          setAvailableShipments(pendingShipments);
+
+          // Extract unique product names (for the dropdown)
+          const uniqueProductNames = [...new Set(pendingShipments.map(item => item.name))];
+          setShipmentProducts(uniqueProductNames.map(name => ({ name })));
         } else {
           console.error('Error fetching shipments:', data.error);
         }
@@ -190,19 +186,42 @@ const Shipments = () => {
     }
   };
 
+  // NEW: Get available shipments for a specific product name
+  const getShipmentsForProduct = (productName) => {
+    return availableShipments.filter(shipment => 
+      shipment.name === productName && 
+      !selectedShipmentDetails.some(selected => selected.id === shipment.id)
+    );
+  };
+
+  // NEW: Add specific shipment to selection
+  const addShipmentToSelection = (shipment) => {
+    setSelectedShipmentDetails(prev => [...prev, {
+      id: shipment.id,
+      name: shipment.name,
+      quantity: shipment.qty,
+      item_id: shipment.item_id || null
+    }]);
+  };
+
+  // NEW: Remove specific shipment from selection
+  const removeShipmentFromSelection = (shipmentId) => {
+    setSelectedShipmentDetails(prev => prev.filter(item => item.id !== shipmentId));
+  };
+
   const handleAssignItems = async () => {
     if (!selectedWarehouse) {
       alert('Please select a warehouse first');
       return;
     }
 
-    if (assignedProducts.length === 0) {
-      alert('Please add at least one product to assign');
+    if (selectedShipmentDetails.length === 0) {
+      alert('Please add at least one shipment to assign');
       return;
     }
 
     // NEW: Calculate total quantity to be assigned
-    const totalQuantityToAssign = assignedProducts.reduce((sum, product) => sum + product.quantity, 0);
+    const totalQuantityToAssign = selectedShipmentDetails.reduce((sum, shipment) => sum + shipment.quantity, 0);
     
     // NEW: Check if warehouse has enough capacity
     const availableCapacity = warehouseCapacity.max - warehouseCapacity.current;
@@ -228,9 +247,10 @@ const Shipments = () => {
     try {
       console.log('Sending assignment request:', {
         warehouseId: selectedWarehouse,
-        items: assignedProducts.map(product => ({
-          name: product.name,
-          quantity: product.quantity
+        shipments: selectedShipmentDetails.map(shipment => ({
+          shipmentId: shipment.id,
+          name: shipment.name,
+          quantity: shipment.quantity
         }))
       });
 
@@ -241,9 +261,10 @@ const Shipments = () => {
         },
         body: JSON.stringify({
           warehouseId: selectedWarehouse,
-          items: assignedProducts.map(product => ({
-            name: product.name,
-            quantity: product.quantity
+          items: selectedShipmentDetails.map(shipment => ({
+            name: shipment.name,
+            quantity: shipment.quantity,
+            shipmentId: shipment.id // NEW: Include shipment ID for more precise tracking
           }))
         })
       });
@@ -252,10 +273,10 @@ const Shipments = () => {
       console.log('Assignment response:', data);
 
       if (response.ok) {
-        alert(`Successfully assigned ${assignedProducts.length} items to warehouse!`);
+        alert(`Successfully assigned ${selectedShipmentDetails.length} shipments to warehouse!`);
         
         // Reset modal state
-        setAssignedProducts([]);
+        setSelectedShipmentDetails([]);
         setSelectedWarehouse('');
         setSelectedProducts(Array(5).fill(''));
         setWarehouseCapacity({ current: 0, max: 0 });
@@ -265,7 +286,16 @@ const Shipments = () => {
         const res = await fetch('/api/tracking/shipments');
         const shipmentsData = await res.json();
         if (res.ok) {
-          setShipments(shipmentsData);
+          const sortedShipments = shipmentsData.sort((a, b) => {
+            if (a.status === 'Pending' && b.status !== 'Pending') return -1;
+            if (a.status !== 'Pending' && b.status === 'Pending') return 1;
+            return 0;
+          });
+          setShipments(sortedShipments);
+          
+          // Update available shipments
+          const pendingShipments = shipmentsData.filter(item => item.status === 'Pending');
+          setAvailableShipments(pendingShipments);
         }
 
         // Show success message with details if available
@@ -758,19 +788,23 @@ const Shipments = () => {
         </div>
       )}
 
-      {/* Assign Items Modal */}
+      {/* ENHANCED Assign Items Modal */}
       {showModal && (
         <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-4">
           <div className="relative bg-primary border border-border_color shadow-lg rounded-lg 
                          w-full max-w-[95vw] h-full max-h-[95vh] 
                          sm:max-w-[90vw] sm:max-h-[90vh]
                          md:max-w-[80vw] md:max-h-[85vh] 
-                         lg:max-w-[711px] lg:h-[854px]
+                         lg:max-w-[900px] lg:h-[854px]
                          text-textColor-primary font-sans overflow-hidden">
             
             {/* Close Button - Responsive positioning */}
             <button 
-              onClick={() => setShowModal(false)} 
+              onClick={() => {
+                setShowModal(false);
+                setSelectedShipmentDetails([]);
+                setSelectedProducts(Array(5).fill(''));
+              }} 
               disabled={isAssigning}
               className="absolute top-2 right-2 sm:top-4 sm:right-4 w-8 h-8 sm:w-[34px] sm:h-[34px] 
                         flex items-center justify-center disabled:opacity-50 z-10"
@@ -785,58 +819,68 @@ const Shipments = () => {
               Assign Items
             </h2>
 
-            {/* Content Container - Responsive layout */}
+            {/* Content Container - Enhanced layout */}
             <div className="absolute top-12 sm:top-16 left-4 right-4 sm:left-7 sm:right-7 bottom-20 sm:bottom-24 
-                           flex flex-col space-y-4 sm:space-y-6">
+                           flex gap-4 sm:gap-6">
               
-              {/* Warehouse Section */}
-              <div className="flex-shrink-0">
-                <div className="text-textColor-primary text-base sm:text-lg lg:text-xl mb-2 sm:mb-4">Warehouse</div>
-                <div className="relative w-full h-12 sm:h-14 lg:h-[65px]">
-                  <select
-                    value={selectedWarehouse}
-                    onChange={async (e) => {
-                      const warehouseId = e.target.value;
-                      setSelectedWarehouse(warehouseId);
+              {/* Left Panel - Product Selection */}
+              <div className="flex-1 flex flex-col space-y-4 sm:space-y-6 min-w-0">
+                
+                {/* Warehouse Section */}
+                <div className="flex-shrink-0">
+                  <div className="text-textColor-primary text-base sm:text-lg lg:text-xl mb-2 sm:mb-4">Warehouse</div>
+                  <div className="relative w-full h-12 sm:h-14 lg:h-[65px]">
+                    <select
+                      value={selectedWarehouse}
+                      onChange={async (e) => {
+                        const warehouseId = e.target.value;
+                        setSelectedWarehouse(warehouseId);
 
-                      try {
-                        const res = await fetch(`/api/tracking/warehouse-capacity?warehouse_id=${warehouseId}`);
-                        const data = await res.json();
+                        try {
+                          const res = await fetch(`/api/tracking/warehouse-capacity?warehouse_id=${warehouseId}`);
+                          const data = await res.json();
 
-                        if (res.ok) {
-                          setWarehouseCapacity({ current: data.current_quantity, max: data.max_capacity });
-                        } else {
-                          console.error('Failed to fetch capacity:', data.error);
+                          if (res.ok) {
+                            setWarehouseCapacity({ current: data.current_quantity, max: data.max_capacity });
+                          } else {
+                            console.error('Failed to fetch capacity:', data.error);
+                          }
+                        } catch (err) {
+                          console.error('Error fetching warehouse capacity:', err);
                         }
-                      } catch (err) {
-                        console.error('Error fetching warehouse capacity:', err);
-                      }
-                    }}
-                    disabled={isAssigning}
-                    className="w-full h-full bg-primary border border-border_color rounded-md text-textColor-primary 
-                              text-sm sm:text-base lg:text-lg px-3 sm:px-4 appearance-none disabled:opacity-50"
-                  >
-                    <option value="" disabled>Select a warehouse</option>
-                    {warehouses?.map((wh) => (
-                      <option key={wh.id} value={wh.id}>
-                        {wh.name}
-                      </option>
-                    ))}
-                  </select>
-                  {/* Down Arrow Icon */}
-                  <div className="pointer-events-none absolute top-1/2 right-3 sm:right-4 transform -translate-y-1/2 text-textColor-primary">
-                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth="1.5" stroke="currentColor" className="w-3 h-3 sm:w-4 sm:h-4">
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7"/>
-                    </svg>
+                      }}
+                      disabled={isAssigning}
+                      className="w-full h-full bg-primary border border-border_color rounded-md text-textColor-primary 
+                                text-sm sm:text-base lg:text-lg px-3 sm:px-4 appearance-none disabled:opacity-50"
+                    >
+                      <option value="" disabled>Select a warehouse</option>
+                      {warehouses?.map((wh) => (
+                        <option key={wh.id} value={wh.id}>
+                          {wh.name}
+                        </option>
+                      ))}
+                    </select>
+                    {/* Down Arrow Icon */}
+                    <div className="pointer-events-none absolute top-1/2 right-3 sm:right-4 transform -translate-y-1/2 text-textColor-primary">
+                      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth="1.5" stroke="currentColor" className="w-3 h-3 sm:w-4 sm:h-4">
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7"/>
+                      </svg>
+                    </div>
                   </div>
+                  
+                  {/* Warehouse Capacity Display */}
+                  {selectedWarehouse && (
+                    <div className="mt-2 text-sm text-textColor-tertiary">
+                      Capacity: {warehouseCapacity.current}/{warehouseCapacity.max} 
+                      ({Math.round((warehouseCapacity.current / warehouseCapacity.max) * 100)}% full)
+                    </div>
+                  )}
                 </div>
-              </div>
 
-              {/* Product Section */}
-              <div className="flex-shrink-0">
-                <div className="text-textColor-primary text-base sm:text-lg lg:text-xl mb-2 sm:mb-4">Product</div>
-                <div className="flex gap-2 sm:gap-4">
-                  <div className="relative flex-1 h-12 sm:h-14 lg:h-[65px]">
+                {/* Product Selection Section */}
+                <div className="flex-shrink-0">
+                  <div className="text-textColor-primary text-base sm:text-lg lg:text-xl mb-2 sm:mb-4">Select Product</div>
+                  <div className="relative w-full h-12 sm:h-14 lg:h-[65px]">
                     <select
                       value={selectedProducts[0]}
                       onChange={(e) => {
@@ -848,14 +892,12 @@ const Shipments = () => {
                       className="w-full h-full bg-primary border border-border_color rounded-md text-textColor-primary 
                                 text-sm sm:text-base lg:text-lg px-3 sm:px-4 appearance-none disabled:opacity-50"
                     >
-                      <option value="" disabled>Select a product</option>
-                      {shipmentProducts
-                        .filter(product => !assignedProducts.some(assigned => assigned.name === product.name))
-                        .map((product, idx) => (
-                          <option key={idx} value={product.name}>
-                            {product.name}
-                          </option>
-                        ))}
+                      <option value="" disabled>Select a product to see shipments</option>
+                      {shipmentProducts.map((product, idx) => (
+                        <option key={idx} value={product.name}>
+                          {product.name}
+                        </option>
+                      ))}
                     </select>
                     {/* Down arrow icon */}
                     <div className="pointer-events-none absolute top-1/2 right-3 sm:right-4 transform -translate-y-1/2 text-textColor-primary">
@@ -865,113 +907,126 @@ const Shipments = () => {
                       </svg>
                     </div>
                   </div>
-
-                  {/* Add Button - Responsive sizing */}
-                  <button
-                    onClick={() => {
-                      const selectedName = selectedProducts[0];
-                      const productDetails = shipmentProducts.find(p => p.name === selectedName);
-
-                      if (productDetails) {
-                        setAssignedProducts((prev) => [
-                          ...prev,
-                          {
-                            name: productDetails.name,
-                            quantity: productDetails.quantity,
-                            item_id: productDetails.item_id
-                          }
-                        ]);
-
-                        // Reset the dropdown selection
-                        const updated = [...selectedProducts];
-                        updated[0] = '';
-                        setSelectedProducts(updated);
-                      }
-                    }}
-                    disabled={isAssigning || !selectedProducts[0] || assignedProducts.some(assigned => assigned.name === selectedProducts[0])}
-                    className="w-12 h-12 sm:w-14 sm:h-14 lg:w-[65px] lg:h-[65px] bg-green rounded-md 
-                              flex items-center justify-center disabled:opacity-50 flex-shrink-0"
-                  >
-                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-5 h-5 sm:w-6 sm:h-6">
-                      <path fillRule="evenodd" d="M12 3.75a.75.75 0 0 1 .75.75v6.75h6.75a.75.75 0 0 1 0 1.5h-6.75v6.75a.75.75 0 0 1-1.5 0v-6.75H4.5a.75.75 0 0 1 0-1.5h6.75V4.5a.75.75 0 0 1 .75-.75Z" clipRule="evenodd" />
-                    </svg>
-                  </button>
                 </div>
 
-                {/* No products message */}
-                {shipmentProducts.filter(product => !assignedProducts.some(assigned => assigned.name === product.name)).length === 0 && (
-                  <div className="mt-2 text-textColor-tertiary text-xs sm:text-sm italic">
-                    All available products have been added to the list
+                {/* Available Shipments for Selected Product */}
+                {selectedProducts[0] && (
+                  <div className="flex-1 border border-border_color rounded-md overflow-hidden flex flex-col min-h-0">
+                    <div className="bg-primary/50 px-3 sm:px-4 py-2 border-b border-border_color">
+                      <h3 className="text-sm sm:text-base font-medium">
+                        Available Shipments for "{selectedProducts[0]}"
+                      </h3>
+                    </div>
+                    
+                    <div className="flex-1 overflow-y-auto px-2 sm:px-4 py-3">
+                      {getShipmentsForProduct(selectedProducts[0]).length === 0 ? (
+                        <div className="text-center text-textColor-tertiary text-sm py-4">
+                          No available shipments for this product
+                        </div>
+                      ) : (
+                        <div className="space-y-2">
+                          {getShipmentsForProduct(selectedProducts[0]).map((shipment) => (
+                            <div 
+                              key={shipment.id}
+                              className="flex items-center justify-between p-3 bg-primary/30 rounded-lg hover:bg-primary/50 transition-colors"
+                            >
+                              <div className="flex-1 min-w-0">
+                                <div className="font-medium text-sm sm:text-base">
+                                  Shipment ID: {shipment.id}
+                                </div>
+                                <div className="text-xs sm:text-sm text-textColor-tertiary">
+                                  Quantity: {shipment.qty}
+                                </div>
+                              </div>
+                              <button
+                                onClick={() => addShipmentToSelection(shipment)}
+                                disabled={isAssigning}
+                                className="ml-3 w-8 h-8 bg-green rounded-md flex items-center justify-center 
+                                         disabled:opacity-50 hover:bg-green/80 transition-colors flex-shrink-0"
+                              >
+                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-4 h-4 text-white">
+                                  <path fillRule="evenodd" d="M12 3.75a.75.75 0 0 1 .75.75v6.75h6.75a.75.75 0 0 1 0 1.5h-6.75v6.75a.75.75 0 0 1-1.5 0v-6.75H4.5a.75.75 0 0 1 0-1.5h6.75V4.5a.75.75 0 0 1 .75-.75Z" clipRule="evenodd" />
+                                </svg>
+                              </button>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </div>
                   </div>
                 )}
               </div>
 
-              {/* Products Table - Responsive with flex-grow */}
-              <div className="flex-1 border border-border_color rounded-md overflow-hidden flex flex-col min-h-0">
-                <div className="flex-1 overflow-y-auto px-2 sm:px-4 py-3 sm:py-6">
-                  {/* Table Header */}
-                  <div className="grid grid-cols-3 text-sm sm:text-base lg:text-xl mb-2 sm:mb-4 px-1 sm:px-2 font-medium">
-                    <div className="text-left">Product</div>
-                    <div className="text-center">Quantity</div>
-                    <div className="text-right">Action</div>
-                  </div>
-                  <hr className="border-border_color opacity-50 mb-2 sm:mb-4" />
-
-                  {/* Product Rows */}
-                  {assignedProducts.length === 0 ? (
-                    <div className="text-center text-textColor-tertiary text-sm sm:text-base py-8">
-                      No products assigned yet
+              {/* Right Panel - Selected Shipments */}
+              <div className="flex-1 border border-border_color rounded-md overflow-hidden flex flex-col min-w-0">
+                <div className="bg-primary/50 px-3 sm:px-4 py-2 border-b border-border_color">
+                  <h3 className="text-sm sm:text-base font-medium">Selected Shipments ({selectedShipmentDetails.length})</h3>
+                </div>
+                
+                <div className="flex-1 overflow-y-auto px-2 sm:px-4 py-3">
+                  {selectedShipmentDetails.length === 0 ? (
+                    <div className="text-center text-textColor-tertiary text-sm py-8">
+                      No shipments selected yet
                     </div>
                   ) : (
-                    assignedProducts.map((product, idx) => (
-                      <div key={idx} className="mb-2 sm:mb-4">
-                        <div className="grid grid-cols-3 items-center py-2 sm:py-4 px-1 sm:px-2">
-                          <div className="text-sm sm:text-base lg:text-lg text-left truncate pr-2">{product.name}</div>
-                          <div className="text-sm sm:text-base lg:text-lg text-center">{product.quantity}</div>
-                          <div className="flex justify-end">
-                            <button
-                              className="text-red hover:text-red/80 transition disabled:opacity-50 p-1"
-                              disabled={isAssigning}
-                              onClick={() =>
-                                setAssignedProducts((prev) => prev.filter((_, i) => i !== idx))
-                              }
-                            >
-                              <svg
-                                xmlns="http://www.w3.org/2000/svg"
-                                fill="none"
-                                viewBox="0 0 24 24"
-                                strokeWidth="1.5"
-                                stroke="currentColor"
-                                className="w-5 h-5 sm:w-6 sm:h-6"
-                              >
-                                <path
-                                  strokeLinecap="round"
-                                  strokeLinejoin="round"
-                                  d="M15 12H9m12 0a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"
-                                />
-                              </svg>
-                            </button>
+                    <div className="space-y-2">
+                      {selectedShipmentDetails.map((shipment) => (
+                        <div 
+                          key={shipment.id}
+                          className="flex items-center justify-between p-3 bg-blue-50 border border-blue-200 rounded-lg"
+                        >
+                          <div className="flex-1 min-w-0">
+                            <div className="font-medium text-sm sm:text-base text-blue-900">
+                              {shipment.name}
+                            </div>
+                            <div className="text-xs sm:text-sm text-blue-700">
+                              Shipment ID: {shipment.id} | Qty: {shipment.quantity}
+                            </div>
                           </div>
+                          <button
+                            onClick={() => removeShipmentFromSelection(shipment.id)}
+                            disabled={isAssigning}
+                            className="ml-3 w-8 h-8 bg-red rounded-md flex items-center justify-center 
+                                     disabled:opacity-50 hover:bg-red/80 transition-colors flex-shrink-0"
+                          >
+                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth="2" stroke="currentColor" className="w-4 h-4 text-white">
+                              <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                            </svg>
+                          </button>
                         </div>
-                        {idx < assignedProducts.length - 1 && <hr className="border-border_color opacity-50" />}
-                      </div>
-                    ))
+                      ))}
+                    </div>
                   )}
                 </div>
 
-                {/* Warehouse Capacity - Inside table container but fixed at bottom */}
-                <div className="border-t border-border_color px-2 sm:px-4 py-2 sm:py-3 bg-primary/50">
-                  <div className="text-textColor-primary text-sm sm:text-base lg:text-lg text-right">
-                    Warehouse Capacity: {warehouseCapacity.current}/{warehouseCapacity.max}
+                {/* Total Summary */}
+                {selectedShipmentDetails.length > 0 && (
+                  <div className="border-t border-border_color px-3 sm:px-4 py-3 bg-primary/20">
+                    <div className="text-sm">
+                      <div className="flex justify-between">
+                        <span>Total Shipments:</span>
+                        <span className="font-medium">{selectedShipmentDetails.length}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span>Total Quantity:</span>
+                        <span className="font-medium">
+                          {selectedShipmentDetails.reduce((sum, item) => sum + item.quantity, 0)}
+                        </span>
+                      </div>
+                    </div>
                   </div>
-                </div>
+                )}
               </div>
             </div>
 
             {/* Modal Footer Buttons - Responsive positioning and sizing */}
             <div className="absolute bottom-4 right-4 sm:bottom-6 sm:right-8 flex gap-2 sm:gap-4">
               <button 
-                onClick={() => setShowModal(false)} 
+                onClick={() => {
+                  setShowModal(false);
+                  setSelectedShipmentDetails([]);
+                  setSelectedProducts(Array(5).fill(''));
+                }} 
                 disabled={isAssigning}
                 className="bg-red w-20 h-9 sm:w-28 sm:h-10 lg:w-[153px] lg:h-[42px] rounded-md 
                           text-textColor-secondary text-sm sm:text-base lg:text-[17px] font-medium disabled:opacity-50"
@@ -980,7 +1035,7 @@ const Shipments = () => {
               </button>
               <button 
                 onClick={handleAssignItems}
-                disabled={isAssigning || !selectedWarehouse || assignedProducts.length === 0}
+                disabled={isAssigning || !selectedWarehouse || selectedShipmentDetails.length === 0}
                 className="bg-green w-20 h-9 sm:w-28 sm:h-10 lg:w-[153px] lg:h-[42px] rounded-md 
                           text-textColor-secondary text-sm sm:text-base lg:text-[17px] font-medium 
                           disabled:opacity-50 flex items-center justify-center"
