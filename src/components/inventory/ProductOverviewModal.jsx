@@ -33,13 +33,12 @@ export default function ProductModal({ product, onClose, onUpdated }) {
   const exportPDF = () => {
     const doc = new jsPDF();
 
-    const tableColumn = ["Item Code", "Name", "Category", "Quantity", "Supplier"];
+    const tableColumn = ["Warehouse Name", "Current Stock", "Min Stock", "Max Stock"];
     const tableRows = stockData.map(item => [
-      item.item_code,
-      item.name,
-      item.category,
-      item.quantity,
-      item.supplier
+      item.warehouse_name,
+      item.quantity.toString(),
+      formData.min_quantity.toString(),
+      formData.max_quantity.toString()
     ]);
 
     doc.text("Product Inventory Report", 14, 15);
@@ -52,22 +51,113 @@ export default function ProductModal({ product, onClose, onUpdated }) {
       headStyles: { fillColor: [41, 128, 185] },
     });
 
-    doc.save("inventory_report.pdf");
+    doc.save(`${formData.name}_inventory_report.pdf`);
   };
 
   // 📌 Export as CSV
   const exportCSV = () => {
-    const headers = ["Item Code", "Name", "Category", "Quantity", "Supplier"];
+    const headers = ["Warehouse Name", "Current Stock", "Min Stock", "Max Stock"];
     const rows = stockData.map(item =>
-      [item.item_code, item.name, item.category, item.quantity, item.supplier].join(",")
+      [item.warehouse_name, item.quantity, formData.min_quantity, formData.max_quantity].join(",")
     );
 
     const csvContent = [headers.join(","), ...rows].join("\n");
     const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
     const link = document.createElement("a");
     link.href = URL.createObjectURL(blob);
-    link.download = "inventory_report.csv";
+    link.download = `${formData.name}_inventory_report.csv`;
     link.click();
+  };
+
+  // 🔹 Fetch stock information for the product
+  const fetchStockData = async () => {
+    if (!product?.id) return;
+
+    setLoadingStock(true);
+    try {
+      const { data, error } = await supabase
+        .from("warehouse_items")
+        .select(`
+          quantity,
+          warehouse_id,
+          warehouse (
+            id,
+            name,
+            location
+          )
+        `)
+        .eq("item_id", product.id);
+
+      if (error) {
+        console.error("Error fetching stock data:", error);
+        setStockData([]);
+      } else {
+        console.log("Stock data received:", data);
+        
+        // Transform the data for display
+        const transformedData = data.map(item => ({
+          warehouse_id: item.warehouse_id,
+          warehouse_name: item.warehouse?.name || 'Unknown Warehouse',
+          warehouse_location: item.warehouse?.location || 'Unknown Location',
+          quantity: item.quantity || 0
+        }));
+
+        setStockData(transformedData);
+      }
+    } catch (err) {
+      console.error("Error in fetchStockData:", err);
+      setStockData([]);
+    }
+    setLoadingStock(false);
+  };
+
+  // 🔹 Fetch purchase history for the product
+  const fetchPurchaseHistory = async () => {
+    if (!product?.id) return;
+
+    setLoadingPurchase(true);
+    try {
+      const { data, error } = await supabase
+        .from("purchase_orders_items")
+        .select(`
+          quantity,
+          purchase_orders (
+            date_created,
+            total_price
+          ),
+          suppliers (
+            name
+          )
+        `)
+        .eq("item_id", product.id)
+        .order("purchase_orders.date_created", { ascending: false });
+
+      if (error) {
+        console.error("Error fetching purchase history:", error);
+        setPurchaseHistory([]);
+      } else {
+        console.log("Purchase history received:", data);
+        
+        // Transform the data for display
+        const transformedHistory = data.map((item, index) => ({
+          id: index,
+          date: item.purchase_orders?.date_created 
+            ? new Date(item.purchase_orders.date_created).toLocaleDateString()
+            : 'Unknown Date',
+          supplier: item.suppliers?.name || 'Unknown Supplier',
+          quantity: item.quantity || 0,
+          price: item.purchase_orders?.total_price 
+            ? `₱${item.purchase_orders.total_price.toLocaleString()}`
+            : 'N/A'
+        }));
+
+        setPurchaseHistory(transformedHistory);
+      }
+    } catch (err) {
+      console.error("Error in fetchPurchaseHistory:", err);
+      setPurchaseHistory([]);
+    }
+    setLoadingPurchase(false);
   };
 
   // Fetch product details
@@ -110,7 +200,20 @@ export default function ProductModal({ product, onClose, onUpdated }) {
     };
 
     fetchProductDetails();
+    fetchStockData();
+    fetchPurchaseHistory();
   }, [product]);
+
+  // 🔹 Refetch data when switching tabs
+  useEffect(() => {
+    if (!product?.id) return;
+    
+    if (activeTab === "stock") {
+      fetchStockData();
+    } else if (activeTab === "purchase") {
+      fetchPurchaseHistory();
+    }
+  }, [activeTab, product]);
 
   // Animate underline for tabs
   useEffect(() => {
@@ -169,6 +272,14 @@ export default function ProductModal({ product, onClose, onUpdated }) {
       return;
     }
 
+    // Check if product is out of stock before allowing deletion
+    if (totalStock > 0) {
+      alert(
+        `Cannot delete "${formData.name}" because it still has ${totalStock} items in stock. Products can only be deleted when they are out of stock.`
+      );
+      return;
+    }
+
     if (
       !confirm(
         `Are you sure you want to delete "${formData.name}"? This cannot be undone.`
@@ -197,10 +308,23 @@ export default function ProductModal({ product, onClose, onUpdated }) {
     }
   }
 
+  // Calculate total stock across all warehouses
+  const totalStock = stockData.reduce((sum, item) => sum + (item.quantity || 0), 0);
+  
+  // Determine stock status
+  const getStockStatus = () => {
+    if (totalStock === 0) return { status: "Out of Stock", color: "var(--color-red)" };
+    if (totalStock < formData.min_quantity) return { status: "Low Stock", color: "var(--color-orange)" };
+    if (totalStock > formData.max_quantity) return { status: "Overstocked", color: "var(--color-blue)" };
+    return { status: "Normal", color: "var(--color-green)" };
+  };
+
+  const stockStatus = getStockStatus();
+
   return (
     <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-50">
       <div
-        className="backdrop-blur-lg p-6 rounded-2xl shadow-lg max-w-3xl w-full relative animate-fadeIn"
+        className="backdrop-blur-lg p-6 rounded-2xl shadow-lg max-w-4xl w-full relative animate-fadeIn max-h-[90vh] overflow-y-auto"
         style={{ backgroundColor: "var(--color-primary)" }}
       >
 
@@ -230,13 +354,13 @@ export default function ProductModal({ product, onClose, onUpdated }) {
             <div className="absolute hidden group-hover:block right-0 mt-1 w-40 bg-white border rounded shadow-lg z-50">
               <button
                 onClick={exportCSV}
-                className="block w-full text-left px-4 py-2 hover:bg-gray-100"
+                className="block w-full text-left px-4 py-2 hover:bg-gray-100 text-gray-800"
               >
                 Export CSV
               </button>
               <button
                 onClick={exportPDF}
-                className="block w-full text-left px-4 py-2 hover:bg-gray-100"
+                className="block w-full text-left px-4 py-2 hover:bg-gray-100 text-gray-800"
               >
                 Export PDF
               </button>
@@ -252,8 +376,6 @@ export default function ProductModal({ product, onClose, onUpdated }) {
         >
           ✖
         </button>
-
-
 
         {/* Title */}
         <div>
@@ -284,10 +406,7 @@ export default function ProductModal({ product, onClose, onUpdated }) {
               <strong>Category:</strong> {formData.categoryName || "—"}
             </p>
             <p>
-              <strong>Min Quantity:</strong> {formData.min_quantity}
-            </p>
-            <p>
-              <strong>Max Quantity:</strong> {formData.max_quantity}
+              <strong>Status:</strong> <span style={{ color: stockStatus.color, fontWeight: "bold" }}>{stockStatus.status}</span>
             </p>
             <p>
               <strong>Unit Price:</strong> ₱{formData.unit_price?.toFixed(2)}
@@ -306,33 +425,41 @@ export default function ProductModal({ product, onClose, onUpdated }) {
               name="name"
               value={formData.name}
               onChange={handleChange}
+              placeholder="Item Name"
               className="w-full p-2 border rounded"
             />
             <input
               name="sku"
               value={formData.sku}
               onChange={handleChange}
+              placeholder="Item Code"
               className="w-full p-2 border rounded"
             />
-            <input
-              name="min_quantity"
-              type="number"
-              value={formData.min_quantity}
-              onChange={handleChange}
-              className="w-full p-2 border rounded"
-            />
-            <input
-              name="max_quantity"
-              type="number"
-              value={formData.max_quantity}
-              onChange={handleChange}
-              className="w-full p-2 border rounded"
-            />
+            <div className="grid grid-cols-2 gap-2">
+              <input
+                name="min_quantity"
+                type="number"
+                value={formData.min_quantity}
+                onChange={handleChange}
+                placeholder="Min Quantity"
+                className="w-full p-2 border rounded"
+              />
+              <input
+                name="max_quantity"
+                type="number"
+                value={formData.max_quantity}
+                onChange={handleChange}
+                placeholder="Max Quantity"
+                className="w-full p-2 border rounded"
+              />
+            </div>
             <input
               name="unit_price"
               type="number"
+              step="0.01"
               value={formData.unit_price}
               onChange={handleChange}
+              placeholder="Unit Price"
               className="w-full p-2 border rounded"
             />
             <textarea
@@ -341,13 +468,14 @@ export default function ProductModal({ product, onClose, onUpdated }) {
               onChange={handleChange}
               className="w-full p-2 border rounded"
               placeholder="Enter product description"
+              rows="3"
             />
           </div>
         )}
 
         {/* Tabs */}
         <div
-          className="relative flex border-b select-none mt-4"
+          className="relative flex border-b select-none mt-6"
           style={{ borderColor: "var(--color-border_color)" }}
         >
           <button
@@ -389,9 +517,9 @@ export default function ProductModal({ product, onClose, onUpdated }) {
         </div>
 
         {/* Content */}
-        <div className="mt-4 flex gap-6">
+        <div className="mt-4">
           <div
-            className="flex-grow border p-4 rounded-lg space-y-2"
+            className="border p-4 rounded-lg"
             style={{
               borderColor: "var(--color-border_color)",
               backgroundColor: "var(--color-primary)",
@@ -402,7 +530,7 @@ export default function ProductModal({ product, onClose, onUpdated }) {
             {activeTab === "stock" && (
               <>
                 <div
-                  className="grid grid-cols-4 font-semibold border-b pb-2"
+                  className="grid grid-cols-4 font-semibold border-b pb-2 mb-3"
                   style={{ borderColor: "var(--color-border_color)" }}
                 >
                   <span>Warehouse Name</span>
@@ -411,18 +539,33 @@ export default function ProductModal({ product, onClose, onUpdated }) {
                   <span>Max Stock</span>
                 </div>
                 {loadingStock ? (
-                  <p>Loading stock data...</p>
+                  <div className="text-center py-4">
+                    <p>Loading stock data...</p>
+                  </div>
                 ) : stockData.length > 0 ? (
-                  stockData.map((item, idx) => (
-                    <div key={idx} className="grid grid-cols-4">
-                      <span>{item.warehouse_name}</span>
-                      <span>{item.quantity}</span>
-                      <span>{formData.min_quantity}</span>
-                      <span>{formData.max_quantity}</span>
+                  <div className="space-y-2">
+                    {stockData.map((item, idx) => (
+                      <div key={idx} className="grid grid-cols-4 py-2 hover:bg-gray-50/10 rounded">
+                        <span>{item.warehouse_name}</span>
+                        <span className="font-semibold">{item.quantity}</span>
+                        <span>{formData.min_quantity}</span>
+                        <span>{formData.max_quantity}</span>
+                      </div>
+                    ))}
+                    <div 
+                      className="grid grid-cols-4 py-2 mt-3 pt-3 font-bold border-t"
+                      style={{ borderColor: "var(--color-border_color)" }}
+                    >
+                      <span>Total Stock:</span>
+                      <span style={{ color: stockStatus.color }}>{totalStock}</span>
+                      <span>-</span>
+                      <span>-</span>
                     </div>
-                  ))
+                  </div>
                 ) : (
-                  <p>No stock data available</p>
+                  <div className="text-center py-4">
+                    <p>No stock data available</p>
+                  </div>
                 )}
               </>
             )}
@@ -431,7 +574,7 @@ export default function ProductModal({ product, onClose, onUpdated }) {
             {activeTab === "purchase" && (
               <>
                 <div
-                  className="grid grid-cols-4 font-semibold border-b pb-2"
+                  className="grid grid-cols-4 font-semibold border-b pb-2 mb-3"
                   style={{ borderColor: "var(--color-border_color)" }}
                 >
                   <span>Date</span>
@@ -440,18 +583,24 @@ export default function ProductModal({ product, onClose, onUpdated }) {
                   <span>Total Cost</span>
                 </div>
                 {loadingPurchase ? (
-                  <p>Loading purchase history...</p>
+                  <div className="text-center py-4">
+                    <p>Loading purchase history...</p>
+                  </div>
                 ) : purchaseHistory.length > 0 ? (
-                  purchaseHistory.map((purchase) => (
-                    <div key={purchase.id} className="grid grid-cols-4">
-                      <span>{purchase.date}</span>
-                      <span>{purchase.supplier}</span>
-                      <span>{purchase.quantity}</span>
-                      <span>{purchase.price}</span>
-                    </div>
-                  ))
+                  <div className="space-y-2">
+                    {purchaseHistory.map((purchase) => (
+                      <div key={purchase.id} className="grid grid-cols-4 py-2 hover:bg-gray-50/10 rounded">
+                        <span>{purchase.date}</span>
+                        <span>{purchase.supplier}</span>
+                        <span>{purchase.quantity}</span>
+                        <span>{purchase.price}</span>
+                      </div>
+                    ))}
+                  </div>
                 ) : (
-                  <p>No purchase history available</p>
+                  <div className="text-center py-4">
+                    <p>No purchase history available</p>
+                  </div>
                 )}
               </>
             )}
@@ -464,14 +613,15 @@ export default function ProductModal({ product, onClose, onUpdated }) {
             <>
               <button
                 onClick={handleDelete}
-                disabled={loadingDelete}
+                disabled={loadingDelete || totalStock > 0}
                 className="px-4 py-2 rounded transition-colors duration-200"
                 style={{
-                  backgroundColor: "var(--color-red)",
+                  backgroundColor: totalStock > 0 ? "var(--color-textColor-tertiary)" : "var(--color-red)",
                   color: "var(--color-textColor-secondary)",
-                  opacity: loadingDelete ? 0.6 : 1,
-                  cursor: loadingDelete ? "not-allowed" : "pointer",
+                  opacity: (loadingDelete || totalStock > 0) ? 0.6 : 1,
+                  cursor: (loadingDelete || totalStock > 0) ? "not-allowed" : "pointer",
                 }}
+                title={totalStock > 0 ? `Cannot delete: ${totalStock} items still in stock` : "Delete product"}
               >
                 {loadingDelete ? "Deleting..." : "Delete"}
               </button>
@@ -491,6 +641,7 @@ export default function ProductModal({ product, onClose, onUpdated }) {
               <button
                 onClick={() => {
                   setIsEditing(false);
+                  // Reset form data to original product data
                   setFormData({
                     name: product.name || "",
                     sku: product.sku || "",
