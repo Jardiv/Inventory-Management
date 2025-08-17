@@ -26,47 +26,245 @@ export default function ProductModal({ product, onClose, onUpdated }) {
   const [loadingSave, setLoadingSave] = useState(false);
   const [loadingDelete, setLoadingDelete] = useState(false);
 
+  // State for dropdown visibility
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+
   const tabsRef = useRef([]);
   const underlineRef = useRef(null);
+  const dropdownRef = useRef(null);
 
-  // 📌 Export as PDF
+  // Handle clicks outside dropdown to close it
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+        setIsDropdownOpen(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, []);
+
+  // 📌 Export as PDF with formal layout
   const exportPDF = () => {
     const doc = new jsPDF();
+    const pageWidth = doc.internal.pageSize.width;
+    const pageHeight = doc.internal.pageSize.height;
 
-    const tableColumn = ["Warehouse Name", "Current Stock", "Min Stock", "Max Stock"];
-    const tableRows = stockData.map(item => [
+    // Header
+    doc.setFontSize(20);
+    doc.setFont("helvetica", "bold");
+    doc.text("PRODUCT OVERVIEW REPORT", pageWidth / 2, 25, { align: "center" });
+
+    // Add horizontal line
+    doc.setLineWidth(0.5);
+    doc.line(20, 30, pageWidth - 20, 30);
+
+    // Product Information Section
+    doc.setFontSize(14);
+    doc.setFont("helvetica", "bold");
+    doc.text("Product Information", 20, 45);
+
+    doc.setFontSize(11);
+    doc.setFont("helvetica", "normal");
+    let yPos = 55;
+
+    const productInfo = [
+      [`Item Name:`, formData.name],
+      [`Item Code:`, formData.sku],
+      [`Category:`, formData.categoryName || "—"],
+      [`Status:`, stockStatus.status],
+      [`Unit Price:`, `₱${formData.unit_price?.toFixed(2)}`],
+      [`Supplier:`, supplierName],
+      [`Description:`, formData.description || "No description provided"]
+    ];
+
+    productInfo.forEach(([label, value]) => {
+      doc.setFont("helvetica", "bold");
+      doc.text(label, 20, yPos);
+      doc.setFont("helvetica", "normal");
+      doc.text(value, 80, yPos);
+      yPos += 8;
+    });
+
+    // Stock Information Section
+    yPos += 10;
+    doc.setFontSize(14);
+    doc.setFont("helvetica", "bold");
+    doc.text("Stock Information", 20, yPos);
+    yPos += 10;
+
+    // Stock Table
+    const stockTableData = stockData.map(item => [
       item.warehouse_name,
       item.quantity.toString(),
       formData.min_quantity.toString(),
       formData.max_quantity.toString()
     ]);
 
-    doc.text("Product Inventory Report", 14, 15);
+    // Add total row
+    stockTableData.push([
+      "TOTAL STOCK",
+      totalStock.toString(),
+      "-",
+      "-"
+    ]);
+
     doc.autoTable({
-      head: [tableColumn],
-      body: tableRows,
-      startY: 20,
+      head: [["Warehouse Name", "Current Stock", "Min Stock", "Max Stock"]],
+      body: stockTableData,
+      startY: yPos,
       theme: "grid",
-      styles: { fontSize: 10 },
-      headStyles: { fillColor: [41, 128, 185] },
+      styles: { 
+        fontSize: 10,
+        cellPadding: 4
+      },
+      headStyles: { 
+        fillColor: [41, 128, 185],
+        textColor: 255,
+        fontStyle: "bold"
+      },
+      bodyStyles: {
+        fillColor: [245, 245, 245]
+      },
+      alternateRowStyles: {
+        fillColor: 255
+      },
+      // Style the total row differently
+      didParseCell: function (data) {
+        if (data.row.index === stockTableData.length - 1) {
+          data.cell.styles.fontStyle = 'bold';
+          data.cell.styles.fillColor = [220, 220, 220];
+        }
+      }
     });
 
-    doc.save(`${formData.name}_inventory_report.pdf`);
+    // Purchase History Section
+    yPos = doc.lastAutoTable.finalY + 20;
+    
+    // Check if we need a new page
+    if (yPos > pageHeight - 80) {
+      doc.addPage();
+      yPos = 20;
+    }
+
+    doc.setFontSize(14);
+    doc.setFont("helvetica", "bold");
+    doc.text("Purchase History", 20, yPos);
+    yPos += 10;
+
+    if (purchaseHistory.length > 0) {
+      const purchaseTableData = purchaseHistory.map(purchase => [
+        purchase.date,
+        purchase.supplier,
+        purchase.quantity.toString(),
+        purchase.price
+      ]);
+
+      doc.autoTable({
+        head: [["Date", "Supplier", "Quantity", "Total Cost"]],
+        body: purchaseTableData,
+        startY: yPos,
+        theme: "grid",
+        styles: { 
+          fontSize: 10,
+          cellPadding: 4
+        },
+        headStyles: { 
+          fillColor: [41, 128, 185],
+          textColor: 255,
+          fontStyle: "bold"
+        },
+        bodyStyles: {
+          fillColor: [245, 245, 245]
+        },
+        alternateRowStyles: {
+          fillColor: 255
+        }
+      });
+    } else {
+      doc.setFont("helvetica", "italic");
+      doc.text("No purchase history available", 20, yPos);
+    }
+
+    // Footer
+    const footerY = pageHeight - 20;
+    doc.setFontSize(9);
+    doc.setFont("helvetica", "normal");
+    doc.text(`Generated on: ${new Date().toLocaleString()}`, 20, footerY);
+    doc.text(`Page 1 of 1`, pageWidth - 40, footerY);
+
+    // Save the PDF
+    doc.save(`${formData.name}_Product_Report.pdf`);
+    setIsDropdownOpen(false);
   };
 
-  // 📌 Export as CSV
+  // 📌 Export as CSV with comprehensive data
   const exportCSV = () => {
-    const headers = ["Warehouse Name", "Current Stock", "Min Stock", "Max Stock"];
-    const rows = stockData.map(item =>
-      [item.warehouse_name, item.quantity, formData.min_quantity, formData.max_quantity].join(",")
-    );
+    const csvData = [];
+    
+    // Product Information Section
+    csvData.push(["PRODUCT OVERVIEW REPORT"]);
+    csvData.push([]);
+    csvData.push(["Product Information"]);
+    csvData.push(["Item Name", formData.name]);
+    csvData.push(["Item Code", formData.sku]);
+    csvData.push(["Category", formData.categoryName || "—"]);
+    csvData.push(["Status", stockStatus.status]);
+    csvData.push(["Unit Price", `₱${formData.unit_price?.toFixed(2)}`]);
+    csvData.push(["Supplier", supplierName]);
+    csvData.push(["Description", formData.description || "No description provided"]);
+    csvData.push([]);
+    
+    // Stock Information Section
+    csvData.push(["Stock Information"]);
+    csvData.push(["Warehouse Name", "Current Stock", "Min Stock", "Max Stock"]);
+    
+    stockData.forEach(item => {
+      csvData.push([
+        item.warehouse_name,
+        item.quantity,
+        formData.min_quantity,
+        formData.max_quantity
+      ]);
+    });
+    
+    csvData.push(["TOTAL STOCK", totalStock, "-", "-"]);
+    csvData.push([]);
+    
+    // Purchase History Section
+    csvData.push(["Purchase History"]);
+    if (purchaseHistory.length > 0) {
+      csvData.push(["Date", "Supplier", "Quantity", "Total Cost"]);
+      purchaseHistory.forEach(purchase => {
+        csvData.push([
+          purchase.date,
+          purchase.supplier,
+          purchase.quantity,
+          purchase.price
+        ]);
+      });
+    } else {
+      csvData.push(["No purchase history available"]);
+    }
+    
+    csvData.push([]);
+    csvData.push([`Generated on: ${new Date().toLocaleString()}`]);
 
-    const csvContent = [headers.join(","), ...rows].join("\n");
+    // Convert to CSV string
+    const csvContent = csvData.map(row => 
+      row.map(cell => `"${cell}"`).join(",")
+    ).join("\n");
+
+    // Download CSV
     const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
     const link = document.createElement("a");
     link.href = URL.createObjectURL(blob);
-    link.download = `${formData.name}_inventory_report.csv`;
+    link.download = `${formData.name}_Product_Report.csv`;
     link.click();
+    setIsDropdownOpen(false);
   };
 
   // 🔹 Fetch stock information for the product
@@ -329,10 +527,13 @@ export default function ProductModal({ product, onClose, onUpdated }) {
       >
 
         {/* Export Dropdown */}
-        <div className="absolute top-3 right-12">
-          <div className="group relative inline-block">
+        <div className="absolute top-3 right-12" ref={dropdownRef}>
+          <div className="relative">
             <button
-              className="p-2 text-textColor-primary hover:bg-btn-hover hover:text-white rounded"
+              onClick={() => setIsDropdownOpen(!isDropdownOpen)}
+              className={`p-2 text-textColor-primary hover:bg-btn-hover hover:text-white rounded transition-colors duration-200 ${
+                isDropdownOpen ? 'bg-btn-hover text-white' : ''
+              }`}
               disabled={loadingSave || loadingDelete}
             >
               <svg
@@ -350,21 +551,24 @@ export default function ProductModal({ product, onClose, onUpdated }) {
                 />
               </svg>
             </button>
+            
             {/* Dropdown Menu */}
-            <div className="absolute hidden group-hover:block right-0 mt-1 w-40 bg-white border rounded shadow-lg z-50">
-              <button
-                onClick={exportCSV}
-                className="block w-full text-left px-4 py-2 hover:bg-gray-100 text-gray-800"
-              >
-                Export CSV
-              </button>
-              <button
-                onClick={exportPDF}
-                className="block w-full text-left px-4 py-2 hover:bg-gray-100 text-gray-800"
-              >
-                Export PDF
-              </button>
-            </div>
+            {isDropdownOpen && (
+              <div className="absolute right-0 mt-1 w-40 bg-white border rounded shadow-lg z-50 animate-fadeIn">
+                <button
+                  onClick={exportCSV}
+                  className="block w-full text-left px-4 py-2 hover:bg-gray-100 text-gray-800 transition-colors duration-150"
+                >
+                  Export CSV
+                </button>
+                <button
+                  onClick={exportPDF}
+                  className="block w-full text-left px-4 py-2 hover:bg-gray-100 text-gray-800 transition-colors duration-150"
+                >
+                  Export PDF
+                </button>
+              </div>
+            )}
           </div>
         </div>
 
