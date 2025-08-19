@@ -1,6 +1,8 @@
 import { useEffect, useState } from "react";
 import { supabase } from "../../utils/supabaseClient";
 import ProductOverviewModal from "./ProductOverviewModal.jsx";
+import { useToast } from '../common/ToastProvider.jsx';
+import { notifyLowQuantity, notifyOutOfStock, notifyActionSuccess, notifyActionFailed } from '../../utils/notifications.js';
 
 const getStatusStyle = (status) => {
   switch (status) {
@@ -23,6 +25,15 @@ export default function ProductInventoryPreview({ limit = 10, hidePageNumbers = 
   const [page, setPage] = useState(1);
   const [total, setTotal] = useState(0);
   const [paginated, setPaginated] = useState(true);
+  
+  // Make toast optional to avoid errors when not wrapped in ToastProvider
+  let toast = null;
+  try {
+    toast = useToast();
+  } catch (e) {
+    // Component is not wrapped in ToastProvider, toast will be null
+    console.warn('ProductInventoryPreview: ToastProvider not found, notifications disabled');
+  }
 
   const [categories, setCategories] = useState([]);
   const [filtersOpen, setFiltersOpen] = useState(false);
@@ -46,69 +57,88 @@ export default function ProductInventoryPreview({ limit = 10, hidePageNumbers = 
 
   // 📌 Export as CSV
   const exportCSV = () => {
-    const headers = ["SKU", "Name", "Category", "Created At", "Unit Price", "Status"];
-    const rows = products.map(item => {
-      return [
-        item.sku || '',
-        item.name || '',
-        item.category?.name || '—',
-        item.added_items?.created_at 
-          ? new Date(item.added_items.created_at).toLocaleDateString()
-          : '—',
-        `₱${item.unit_price?.toLocaleString() || '0'}`,
-        getStatusLabel(item)
-      ].join(",");
-    });
+    try {
+      const headers = ["SKU", "Name", "Category", "Created At", "Unit Price", "Status"];
+      const rows = products.map(item => {
+        return [
+          item.sku || '',
+          item.name || '',
+          item.category?.name || '—',
+          item.added_items?.created_at 
+            ? new Date(item.added_items.created_at).toLocaleDateString()
+            : '—',
+          `₱${item.unit_price?.toLocaleString() || '0'}`,
+          getStatusLabel(item)
+        ].join(",");
+      });
 
-    const csvContent = [headers.join(","), ...rows].join("\n");
-    const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
-    const link = document.createElement("a");
-    link.href = URL.createObjectURL(blob);
-    link.download = `product_inventory_${new Date().toISOString().split('T')[0]}.csv`;
-    link.click();
+      const csvContent = [headers.join(","), ...rows].join("\n");
+      const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+      const link = document.createElement("a");
+      link.href = URL.createObjectURL(blob);
+      link.download = `product_inventory_${new Date().toISOString().split('T')[0]}.csv`;
+      link.click();
+      
+      if (toast) {
+        notifyActionSuccess(toast, 'export inventory data to CSV');
+      }
+    } catch (error) {
+      if (toast) {
+        notifyActionFailed(toast, 'export CSV file', error.message);
+      }
+    }
   };
 
   // 📌 Export as PDF (using jsPDF)
   const exportPDF = async () => {
-    // Dynamic import to avoid bundling issues
-    const { default: jsPDF } = await import('jspdf');
-    await import('jspdf-autotable');
+    try {
+      // Dynamic import to avoid bundling issues
+      const { default: jsPDF } = await import('jspdf');
+      await import('jspdf-autotable');
 
-    const doc = new jsPDF();
-    
-    const tableColumn = ["SKU", "Name", "Category", "Created At", "Unit Price", "Status"];
-    const tableRows = products.map(item => {
-      return [
-        item.sku || '',
-        item.name || '',
-        item.category?.name || '—',
-        item.added_items?.created_at 
-          ? new Date(item.added_items.created_at).toLocaleDateString()
-          : '—',
-        `₱${item.unit_price?.toLocaleString() || '0'}`,
-        getStatusLabel(item)
-      ];
-    });
+      const doc = new jsPDF();
+      
+      const tableColumn = ["SKU", "Name", "Category", "Created At", "Unit Price", "Status"];
+      const tableRows = products.map(item => {
+        return [
+          item.sku || '',
+          item.name || '',
+          item.category?.name || '—',
+          item.added_items?.created_at 
+            ? new Date(item.added_items.created_at).toLocaleDateString()
+            : '—',
+          `₱${item.unit_price?.toLocaleString() || '0'}`,
+          getStatusLabel(item)
+        ];
+      });
 
-    doc.text("Product Inventory Report", 14, 15);
-    doc.autoTable({
-      head: [tableColumn],
-      body: tableRows,
-      startY: 20,
-      theme: "grid",
-      styles: { fontSize: 8 },
-      headStyles: { fillColor: [41, 128, 185] },
-      columnStyles: {
-        0: { cellWidth: 25 }, // SKU
-        1: { cellWidth: 40 }, // Name
-        2: { cellWidth: 30 }, // Category
-        3: { cellWidth: 30 }, // Created At
-        4: { cellWidth: 30 }, // Unit Price
-        5: { cellWidth: 25 }, // Status
+      doc.text("Product Inventory Report", 14, 15);
+      doc.autoTable({
+        head: [tableColumn],
+        body: tableRows,
+        startY: 20,
+        theme: "grid",
+        styles: { fontSize: 8 },
+        headStyles: { fillColor: [41, 128, 185] },
+        columnStyles: {
+          0: { cellWidth: 25 }, // SKU
+          1: { cellWidth: 40 }, // Name
+          2: { cellWidth: 30 }, // Category
+          3: { cellWidth: 30 }, // Created At
+          4: { cellWidth: 30 }, // Unit Price
+          5: { cellWidth: 25 }, // Status
+        }
+      });
+
+      doc.save(`product_inventory_${new Date().toISOString().split('T')[0]}.pdf`);
+      if (toast) {
+        notifyActionSuccess(toast, 'export inventory data to PDF');
       }
-    });
-
-    doc.save(`product_inventory_${new Date().toISOString().split('T')[0]}.pdf`);
+    } catch (error) {
+      if (toast) {
+        notifyActionFailed(toast, 'export PDF file', error.message);
+      }
+    }
   };
 
   // 🔹 Fetch categories
@@ -217,8 +247,24 @@ export default function ProductInventoryPreview({ limit = 10, hidePageNumbers = 
 
       setProducts(paginatedProducts);
       setTotal(total);
+      
+      // Check for stock alerts in the loaded products (only if toast is available)
+      if (toast) {
+        const outOfStockCount = processedProducts.filter(p => p.status === "Out of Stock").length;
+        const lowStockCount = processedProducts.filter(p => p.status === "Low Stock").length;
+        
+        if (outOfStockCount > 0) {
+          notifyOutOfStock(toast, `${outOfStockCount} products are out of stock`);
+        }
+        if (lowStockCount > 0) {
+          notifyLowQuantity(toast, `${lowStockCount} products`, lowStockCount, 'minimum threshold');
+        }
+      }
     } else {
       console.error(error);
+      if (toast) {
+        notifyActionFailed(toast, 'load inventory data', error?.message || 'Database connection failed');
+      }
       setProducts([]);
       setTotal(0);
     }

@@ -1,0 +1,86 @@
+---
+import Layout from '../../layouts/Layout.astro';
+import ToastContainer from '../../components/common/ToastContainer.jsx';
+import ToastDemo from '../../components/demo/ToastDemo.jsx';
+---
+
+<Layout title="Toast Notifications - Inventory Management">
+    <div class="max-w-6xl mx-auto">
+      <div class="mb-8">
+        <h1 class="text-3xl font-bold text-gray-800 dark:text-white mb-2">
+          Toast Notification System
+        </h1>
+        <p class="text-gray-600 dark:text-gray-300">
+          Comprehensive notification system for inventory management operations
+        </p>
+      </div>
+      
+      <ToastDemo client:load />
+      
+      <div class="mt-8 bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6">
+        <h2 class="text-xl font-bold mb-4 text-gray-800 dark:text-white">
+          Notification Categories
+        </h2>
+        
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div>
+            <h3 class="font-semibold text-red-600 dark:text-red-400 mb-2">🚨 Critical Errors</h3>
+            <ul class="text-sm text-gray-600 dark:text-gray-300 space-y-1">
+              <li>• Out of stock alerts</li>
+              <li>• Item expiration notices</li>
+              <li>• System failures</li>
+              <li>• Order cancellations</li>
+              <li>• Network connection issues</li>
+            </ul>
+          </div>
+          
+          <div>
+            <h3 class="font-semibold text-yellow-600 dark:text-yellow-400 mb-2">⚠️ Warnings</h3>
+            <ul class="text-sm text-gray-600 dark:text-gray-300 space-y-1">
+              <li>• Low quantity alerts</li>
+              <li>• Items expiring soon</li>
+              <li>• Order delays</li>
+              <li>• Supplier unavailability</li>
+              <li>• Attention needed alerts</li>
+            </ul>
+          </div>
+          
+          <div>
+            <h3 class="font-semibold text-green-600 dark:text-green-400 mb-2">✅ Success Messages</h3>
+            <ul class="text-sm text-gray-600 dark:text-gray-300 space-y-1">
+              <li>• Item restocked confirmations</li>
+              <li>• Order placement success</li>
+              <li>• Bulk updates completed</li>
+              <li>• Reports generated</li>
+              <li>• Data synchronization</li>
+            </ul>
+          </div>
+          
+          <div>
+            <h3 class="font-semibold text-blue-600 dark:text-blue-400 mb-2">ℹ️ Information</h3>
+            <ul class="text-sm text-gray-600 dark:text-gray-300 space-y-1">
+              <li>• Price updates</li>
+              <li>• System maintenance</li>
+              <li>• Item additions/removals</li>
+              <li>• Backup notifications</li>
+              <li>• General status updates</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+      
+      <div class="mt-8 bg-gradient-to-r from-purple-100 to-pink-100 dark:from-purple-900 dark:to-pink-900 rounded-lg shadow-lg p-6">
+        <h2 class="text-xl font-bold mb-4 text-gray-800 dark:text-white">
+          Integration Guide
+        </h2>
+        <div class="text-sm text-gray-700 dark:text-gray-300 space-y-2">
+          <p><strong>For developers:</strong> Import the notification utilities and use them in your components:</p>
+          <pre class="bg-gray-800 text-green-400 p-3 rounded mt-2 overflow-x-auto"><code>import { useToast } from '../components/common/ToastProvider.jsx';
+import { notifyOutOfStock, notifyActionSuccess } from '../utils/notifications.js';
+
+const toast = useToast();
+notifyOutOfStock(toast, 'Product Name');</code></pre>
+        </div>
+      </div>
+    </div>
+</Layout>

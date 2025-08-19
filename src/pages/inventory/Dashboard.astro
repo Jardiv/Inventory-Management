@@ -3,10 +3,12 @@ import Layout from '../../layouts/Layout.astro';
 import Addmodal from '../../components/inventory/Addmodal.astro';
 import QuickSummary from '../../components/inventory/QuickSummary.jsx';
 import ProductInventoryPreview from '../../components/inventory/productInvenDATA.jsx';
+import ToastContainer from '../../components/common/ToastContainer.jsx';
 ---
 
-<Layout>
-  <Addmodal />
+<Layout title="Inventory Dashboard">
+  <ToastContainer client:load>
+    <Addmodal />
 
   <section id="overviewSection">
     <div class="bg-primary p-6 rounded-lg mb-6">  
@@ -32,4 +34,5 @@ import ProductInventoryPreview from '../../components/inventory/productInvenDATA
   </section>
 
   <script src="/scripts/inventory/inventory.js" is:inline></script>
+  </ToastContainer>
 </Layout>

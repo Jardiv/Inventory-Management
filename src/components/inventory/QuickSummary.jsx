@@ -1,9 +1,20 @@
 import { useState, useEffect } from 'react';
+import { useToast } from '../common/ToastProvider.jsx';
+import { notifyLowQuantity, notifyOutOfStock, notifyActionFailed } from '../../utils/notifications.js';
 
 const QuickSummary = () => {
     const [summaryData, setSummaryData] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
+    
+    // Make toast optional to avoid errors when not wrapped in ToastProvider
+    let toast = null;
+    try {
+        toast = useToast();
+    } catch (e) {
+        // Component is not wrapped in ToastProvider, toast will be null
+        console.warn('QuickSummary: ToastProvider not found, notifications disabled');
+    }
 
     // Icons for Quick Summary
     const summaryIcons = ["📦", "📊", "⚠️", "❌", "🏭"];
@@ -20,11 +31,29 @@ const QuickSummary = () => {
             
             if (result.success) {
                 setSummaryData(result.data);
+                
+                // Check for alerts based on summary data (only if toast is available)
+                if (toast) {
+                    result.data.forEach((item, index) => {
+                        if (index === 2 && item.value > 0) { // Low Stock items
+                            notifyLowQuantity(toast, `${item.value} products`, item.value, 10);
+                        }
+                        if (index === 3 && item.value > 0) { // Out of Stock items
+                            notifyOutOfStock(toast, `${item.value} products are out of stock`);
+                        }
+                    });
+                }
             } else {
                 setError(result.error || 'Failed to fetch summary data');
+                if (toast) {
+                    notifyActionFailed(toast, 'fetch inventory summary', result.error);
+                }
             }
         } catch (err) {
             setError('Network error occurred');
+            if (toast) {
+                notifyActionFailed(toast, 'connect to inventory system', 'Network connection failed');
+            }
             console.error('Error fetching quick summary:', err);
         } finally {
             setLoading(false);
